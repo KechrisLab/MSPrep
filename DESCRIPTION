@@ -1,0 +1,13 @@
+Package: MSPrep
+Type: Package
+Title: Package for summarizing, filtering, imputing, and normalizing
+        metabolomics data.
+Depends: pcaMethods (>= 1.24.0), crmn, preprocessCore, sva
+Version: 1.1
+Date: 2014-03-29
+Author: Grant Hughes
+Maintainer: Grant Hughes <dydxhughes@gmail.com>
+Description: Package performs summarization of replicates, filtering by frequency, three different options for missing data, and five options for normalizing dataset.  Also generates diagnostic plots of imputations and normalizations.
+License: GPL-3
+Packaged: 2014-03-29 15:11:35 UTC; grant
+Built: R 3.0.3; ; 2014-03-29 15:32:01 UTC; windows
