@@ -1,0 +1,10 @@
+SubjectID,Operator,Spike
+1x_O1,1,1
+1x_O2,2,1
+1x_O3,3,1
+2x_O1,1,2
+2x_O2,2,2
+2x_O3,3,2
+4x_O1,1,4
+4x_O2,2,4
+4x_O3,3,4
