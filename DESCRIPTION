@@ -1,0 +1,11 @@
+Package: MSProcess
+Type: Package
+Title: Package for summarizing, filtering, imputing, and normalizing metabolomics data.
+Depends: pcaMethods (>= 1.24.0), crmn, preprocessCore, sva
+Version: 1.0
+Date: 2013-08-17
+Author: Grant Hughes
+Maintainer: Grant Hughes <dydxhughes@gmail.com>
+Description: Package performs summarization of replicates, filtering by frequency, three different options for missing data, and five options for normalizing dataset.  Also generates diagnostic plots of imputations and normalizations.
+License: GPL-3
+Packaged: 2013-08-19 04:34:21 UTC; grant

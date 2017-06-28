@@ -54,7 +54,7 @@ Must have unique compounds in raw data file.  Raw quantification data should hav
 }
 \examples{
 ### Specify primary directory
-directory<-c("C:/Users/Hazy/Dropbox/Metabolomics/Programs/MSProcess/data/")
+directory<-c("/MSProcess/data/")
 
 ### Specify location of data files
 clinicalfile<-c("Clinical.csv")

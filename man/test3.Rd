@@ -2,10 +2,10 @@
 \alias{test3}
 \docType{data}
 \title{
-%%   ~~ data name/kind ... ~~
+Object exported from the normdata() function.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+Object exported from the normdata() function.
 }
 \usage{data(test3)}
 \format{

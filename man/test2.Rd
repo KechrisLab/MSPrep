@@ -2,11 +2,10 @@
 \alias{test2}
 \docType{data}
 \title{
-%%   ~~ data name/kind ... ~~
+Object exported from the filterft() function.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
-}
+Object exported from the filterft() function.  Contains filtered and imputation datasets}
 \usage{data(test2)}
 \format{
   The format is:
@@ -318,13 +317,10 @@ List of 4
   ..$ V1: num [1:2654] 1 1 0 0 4 0 0 0 0 0 ...
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
 }
 \references{
-%%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
 data(test2)
