@@ -2,10 +2,10 @@
 \alias{test}
 \docType{data}
 \title{
-%%   ~~ data name/kind ... ~~
+Object exported from readdata() function
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of the dataset. ~~
+Object exported from the readdata function.  Contains clinical data and summarized data.
 }
 \usage{data(test)}
 \format{
@@ -22,13 +22,10 @@ List of 3
  $ medians  : chr [1:23, 1:5] "251768" "101761" "79673" "468810" ...
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
 }
 \references{
-%%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
 data(test)
