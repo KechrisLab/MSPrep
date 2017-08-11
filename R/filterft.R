@@ -1,3 +1,32 @@
+
+#' Filters and imputes dataset
+#' 
+#' Filters compounds to those found in specified percentage of subjects and
+#' performs data imputation.
+#' 
+#' @param metaf Summarized dataset output as sum_data1 from readdata() function
+#' @param filterpercent Percent to filter the data
+#' @return Placeholder
+#' @details minval Filtered dataset with missing values replaced by 1/2 minimum
+#' observed value for that compound.
+#' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
+#' from PCAMethods package.
+#' @details withzero Filtered dataset with no imputation.
+#' @details count List of all compounds and the percent present for each
+#' compound.
+#' @references 
+#'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
+#'   expression profile data. Bioinformatics, 19, 2088-2096
+#' 
+#'   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
+#'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
+#' @examples
+#'   # Load object generated from readdata() function
+#'   load("test.Rdata")
+#'   
+#'   test2 <- filterft(test$sum_data1, 0.80)
+#'
+#' @export 
 filterft <- function(metaf, filterpercent = 0.50) {
 
     count<-matrix(NA,nrow=ncol(metaf),ncol=1)

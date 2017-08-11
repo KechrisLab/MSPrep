@@ -1,3 +1,39 @@
+
+#' Generates diagnostic plots for normalization routine
+#' 
+#' Generates a PCA plot and three boxplots for each normalization method.
+#' 
+#' @param testobj Object output from normdata() function
+#' @param clindat Name of clinical dataset.
+#' @param link1 Column in clinical dataset that links subject ID to row names
+#' in quantification datasets.
+#' @param batch Column name for batch identifier
+#' @param pheno Column name for phenotype identifier
+#' @param directory Directory to output the diagnostic plots to.
+#' @param ylim1 Limits for median graphs.
+#' @param ylim2 Limits for raw, quant, RUV, and SVA graphs.
+#' @param ylim3 Limits for CRMN graph.
+#' @return Placeholder
+#' @examples
+#'   load("test.Rdata")
+#'   load("test3.Rdata")
+#'   
+#'   testobj   <- test3
+#'   clindat   <- test$clinical
+#'   link1     <- "SubjectID"
+#'   pheno     <- "Spike"
+#'   batch     <- "Operator"
+#'   directory <- "C:/Users/Hazy/Dropbox/Metabolomics/Programs/MSProcess/"
+#'   ylim2     <- c(10,28)
+#'   ### For median
+#'   ylim1     <- c(-15,15)
+#'   ### for crmn
+#'   ylim3     <- c(18,37)
+#' 
+#'   diagnosticgen(testobj, clindat, link1, batch, pheno, directory, ylim1,
+#'                 ylim2, ylim3)
+#'
+#' @export 
 diagnosticgen <- function(testobj, 
                           clindat, 
                           link1, 
