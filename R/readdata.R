@@ -1,3 +1,45 @@
+
+#' Function for importing raw data and summarizing replicates
+#' 
+#' Function reads in raw data files and summarizes technical replicates as the
+#' mean of observations for compounds found in 2 or 3 replicates and with
+#' coefficient of variation below specied level, or median for those found in 3
+#' replicates but excess CV.
+#' 
+#' @param Directory where the required three data files are located.
+#' @param clinicalfile Name of the clinical data file.
+#' @param quantificationfile Name of the data file containing the
+#' quantification data.
+#' @param linkfile Name of Subject link file.
+#' @param cvmax Acceptable level of coefficient of variation between replicates.
+#' @param missing Value of missing data in the quantification data file.
+#' @param linktxt Column name for Run ID field in Subject Link dataset
+#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
+#' compound
+#' @return clinical Clinical dataset
+#' @return medians List of compounds that had excess CV and utilized the median
+#' @note Must have unique compounds in raw data file.  Raw quantification data
+#' should have two columns titled mz and rt that are combined to make the
+#' column header. 
+#' @examples
+#'   ### Specify primary directory
+#'   directory <- c("/MSProcess/data/")
+#'   
+#'   ### Specify location of data files
+#'   clinicalfile       <- c("Clinical.csv")
+#'   quantificationfile <- c("Quantification.csv")
+#'   linkfile <- c("SubjectLinks.csv")
+#'   
+#'   ### Set variables for program
+#'   cvmax   <- 0.5
+#'   missing <- 1
+#'   linktxt <- "LCMS_Run_ID"
+#'   
+#'   test <- readdata(directory, clinicalfile, quantificationfile, linkfile,
+#'                    cvmax = 0.50, missing = 1, linktxt)
+#'   save(test, file = paste(directory, "test.Rdata", sep = ""))
+#'
+#' @export 
 readdata <- function(directory,
                      clinicalfile,
                      quantificationfile,

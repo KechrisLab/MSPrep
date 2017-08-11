@@ -1,0 +1,10 @@
+.git
+..Rcheck
+.vimrc
+.travis.yml
+.gitignore
+test/
+^.*\.Rproj$
+^\.Rproj\.user$
+README.Rmd
+old_NAMESPACE
