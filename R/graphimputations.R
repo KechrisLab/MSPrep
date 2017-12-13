@@ -1,4 +1,40 @@
-### Create pdf of histogram of distribution of values
+
+#' Generate histograms of three datasets returned from filterft function
+#' 
+#' Generates histograms of withzero, minval, and bpca datasets.
+#' 
+#' @param directory Location to save pdf of histograms.
+#' @param minval Name of minval dataset
+#' @param withzero Name of withzero dataset
+#' @param bpca Name of BPCA dataset
+#' @param meanval1 Minimum value to keep.
+#' @param meanval2 Maximum value to keep.
+#' @param xmax1 X limit for withzero graph
+#' @param ymax1 Y limit for withzero graph
+#' @param xmax2 X limit for minval graph
+#' @param ymax2 Y limit for minval graph
+#' @param xmax3 X limit for bpca graph
+#' @param ymax3 Y limit for bpca graph
+#' @param nbreaks Number of breaks in histogram
+#' @details The meanval1 and meanval2 allow removal of any individual extreme
+#' values or ability to generate a focused histogram of abundances of interest.
+#' nbreaks will need increased as the number of subjects*compounds increases.
+#' @return Placeholder
+#' @examples
+#'   load("test2.Rdata")
+#'   
+#'   directory <- "C:/Users/Hazy/Dropbox/Metabolomics/Programs/MSProcess/"
+#'   minval    <- test2$minval
+#'   withzero  <- test2$withzero
+#'   bpca      <- test2$bpca
+#'   
+#'   graphimputations(directory, minval, withzero, bpca,fname, meanval1 = 0,
+#'                    meanval2 = 200000, xmax1 = 400000, ymax1 = 800, 
+#'                    xmax2 = 20, ymax2 = 600, xmax3 = 20, ymax3 = 175, 
+#'                    nbreaks = 200)
+#' 
+#'
+#' @export 
 graphimputations <- function (directory, minval, withzero, bpca, meanval1 = 0, meanval2 = 1e+06, 
                               xmax1 = 5e+05, ymax1 = 25000, xmax2 = 20, ymax2 = 1000, xmax3 = 20, 
                               ymax3 = 1500, nbreaks = 500) 
