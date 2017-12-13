@@ -1,7 +1,47 @@
 
-### Function readdata reads in all the datafiles and summarizes the replicates
-readdata_sj <- function (directory,
-                         clinicalfile,
+#' Function for importing raw data and summarizing replicates
+#'
+#' Function reads in raw data files and summarizes technical replicates as the
+#' mean of observations for compounds found in 2 or 3 replicates and with
+#' coefficient of variation below specied level, or median for those found in 3
+#' replicates but excess CV.
+#'
+#' @param Directory where the required three data files are located.
+#' @param clinicalfile Name of the clinical data file.
+#' @param quantificationfile Name of the data file containing the
+#' quantification data.
+#' @param linkfile Name of Subject link file.
+#' @param cvmax Acceptable level of coefficient of variation between replicates.
+#' @param missing Value of missing data in the quantification data file.
+#' @param linktxt Column name for Run ID field in Subject Link dataset
+#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
+#' compound
+#' @return clinical Clinical dataset
+#' @return medians List of compounds that had excess CV and utilized the median
+#' @note Must have unique compounds in raw data file.  Raw quantification data
+#' should have two columns titled mz and rt that are combined to make the
+#' column header. 
+#' @examples
+#'   ### Specify primary directory
+#'   directory <- c("/MSProcess/data/")
+#'
+#'   ### Specify location of data files
+#'   clinicalfile       <- c("Clinical.csv")
+#'   quantificationfile <- c("Quantification.csv")
+#'   linkfile <- c("SubjectLinks.csv")
+#'
+#'   ### Set variables for program
+#'   cvmax   <- 0.5
+#'   missing <- 1
+#'   linktxt <- "LCMS_Run_ID"
+#'
+#'   test <- readdata(directory, clinicalfile, quantificationfile, linkfile,
+#'                    cvmax = 0.50, missing = 1, linktxt)
+#'   save(test, file = paste(directory, "test.Rdata", sep = ""))
+#'
+#' @export
+
+readdata_sj <- function (clinicalfile,
                          quantificationfile,
                          linkfile,
                          cvmax = 0.5,
@@ -172,22 +212,27 @@ readdata_sj <- function (directory,
   } else {
     med_comp <- 0
   }
+
   colnames(metaf) <- rownames(metab)
+
   link2 <- matrix(colnames(metab), ncol = 1)
   link2 <- matrix(sapply(link2, function(x){gsub("AB_A", "A_A", x)}))
   colnames(link2) <- "LCMS_Run_ID"
-  if(all(sapply(link2[,1], function(x){unlist(strsplit(x, split = ""))[1] == "X"})))
+
+  if (all(sapply(link2[,1], function(x){unlist(strsplit(x, split = ""))[1] == "X"})))
     link2[,1] <- sapply(link2[,1], function(x){paste0(unlist(strsplit(x, split = ""))[-1], collapse = "")})
   # added by me:
   if(nrow(link) > 0 & ncol(link) > 0){
     link3 <- unique(merge(link2, link, by.x = "LCMS_Run_ID", 
                           by.y = as.character(linktxt))[2])
-  }else link3 <- link2
+  } else link3 <- link2
 
   #link3 <- unique(merge(, link, by.x = "LCMS_Run_ID", 
   # by.y = as.character(linktxt))[2])
   rownames(metaf) <- link3[, 1]
-  list(sum_data1 = metaf, clinical = clinical, medians = med_comp)
+  list(sum_data1 = metaf,
+       clinical  = clinical,
+       medians   = med_comp)
 }
 
 
