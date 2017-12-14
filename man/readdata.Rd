@@ -4,24 +4,24 @@
 \alias{readdata}
 \title{Function for importing raw data and summarizing replicates}
 \usage{
-readdata(directory, clinicalfile, quantificationfile, linkfile, cvmax = 0.5,
-  missing = 1, linktxt)
+readdata(clinical_data, quantification_data, link_data, cvmax = 0.5,
+  missing = 1, linktxt, sean_extra_test_col = FALSE,
+  sean_extra_test_row = FALSE, sean_exclude = NULL, name_list = NULL,
+  id_list = NULL, id_replace_string = NULL)
 }
 \arguments{
-\item{clinicalfile}{Name of the clinical data file.}
-
-\item{quantificationfile}{Name of the data file containing the
-quantification data.}
-
-\item{linkfile}{Name of Subject link file.}
-
 \item{cvmax}{Acceptable level of coefficient of variation between replicates.}
 
 \item{missing}{Value of missing data in the quantification data file.}
 
 \item{linktxt}{Column name for Run ID field in Subject Link dataset}
 
-\item{Directory}{where the required three data files are located.}
+\item{clinicalfile}{Name of the clinical data file.}
+
+\item{quantificationfile}{Name of the data file containing the
+quantification data.}
+
+\item{linkfile}{Name of Subject link file.}
 }
 \value{
 sum_data1 Matrix of summarized replicates, one obs per subject per
@@ -43,21 +43,24 @@ should have two columns titled mz and rt that are combined to make the
 column header.
 }
 \examples{
-  ### Specify primary directory
-  directory <- c("/MSProcess/data/")
-  
-  ### Specify location of data files
-  clinicalfile       <- c("Clinical.csv")
-  quantificationfile <- c("Quantification.csv")
-  linkfile <- c("SubjectLinks.csv")
-  
+
+  ### Read in data files
+  quant    <- read.csv("./data-raw/Clinical.csv")
+  link     <- read.csv("./data-raw/Quantification.csv")
+  clinical <- read.csv("./data-raw/SubjectLinks.csv")
+
   ### Set variables for program
   cvmax   <- 0.5
   missing <- 1
   linktxt <- "LCMS_Run_ID"
-  
-  test <- readdata(directory, clinicalfile, quantificationfile, linkfile,
-                   cvmax = 0.50, missing = 1, linktxt)
-  save(test, file = paste(directory, "test.Rdata", sep = ""))
+
+  test <- readdata(clinical_data       = clinical,
+                   quantification_data = quant,
+                   link_data           = link,
+                   cvmax               = 0.50,
+                   missing             = 1,
+                   linktxt             = linktxt)
+
+  save(test, file = paste0("./data/test.Rdata"))
 
 }

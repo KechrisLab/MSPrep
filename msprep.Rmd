@@ -20,7 +20,7 @@ biocLite("sva")
 
 devtools::document()
 devtools::check()
-devtools::install("../pulsatile", build_vignettes = TRUE)
+devtools::install("../MSPrep", build_vignettes = TRUE)
 
 ```
 
