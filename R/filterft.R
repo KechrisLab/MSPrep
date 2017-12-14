@@ -30,8 +30,7 @@
 
 ### Filterft to only include compounds that are found in specified percentage of subjects and perform imputation of missing data
 
-
-filterft_sj <- function (metaf, filterpercent = 0.5) 
+filterft <- function (metaf, filterpercent = 0.5) 
 {
   count <- matrix(NA, nrow = ncol(metaf), ncol = 1)
   rownames(count) <- colnames(metaf)
