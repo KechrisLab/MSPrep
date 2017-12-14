@@ -8,3 +8,6 @@ test/
 ^\.Rproj\.user$
 README.Rmd
 old_NAMESPACE
+msprep.Rmd
+msprep.md
+^data-raw$
