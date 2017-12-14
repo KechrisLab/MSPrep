@@ -66,10 +66,10 @@
 #'                     controls, ncomp)
 #'
 #' @export 
-# Katerina's function, unedited
 
-normdata.new_kk <- function (metafin, clindat, link1, pheno, batch, ncont = 10, 
-                             controls = c(), ncomp = 2) 
+# Katerina's function, unedited (formerly normdata.new_kk)
+normdata <- function (metafin, clindat, link1, pheno, batch, ncont = 10, 
+                      controls = c(), ncomp = 2) 
 {
   compounds <- ncol(metafin)
   subjects <- nrow(metafin)
