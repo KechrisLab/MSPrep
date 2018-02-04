@@ -6,15 +6,13 @@
 #' coefficient of variation below specied level, or median for those found in 3
 #' replicates but excess CV.
 #'
-#' @param clinicalfile Name of the clinical data file.
-#' @param quantificationfile Name of the data file containing the
-#' quantification data.
-#' @param linkfile Name of Subject link file.
+#' @param clinical_data Name of the clinical data file.
+#' @param quantification_data Name of the data file containing the quantification data.
+#' @param link_data Name of Subject link file.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
 #' @param missing Value of missing data in the quantification data file.
 #' @param linktxt Column name for Run ID field in Subject Link dataset
-#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
-#' compound
+#' @return sum_data1 Matrix of summarized replicates, one obs per subject per compound
 #' @return clinical Clinical dataset
 #' @return medians List of compounds that had excess CV and utilized the median
 #' @note Must have unique compounds in raw data file.  Raw quantification data
@@ -50,19 +48,19 @@
 # 1x_01, 1x_02, etc. = subject _ compound ?
 
 
-# sean_extra_test takes care of a situation in which there are duplicates in the
-# "quant" file, but not replicates.
-# sean_exclude is the name of a metabolite to exclude.
-# obviously, sean_extra_test and sean_exclude functionality were added by Sean
-# Jacobson
-# name_list is where we have a list of replicates - each element in the list is
-# a vector of replicates. If it is NULL, the program tries to figure out what
-# the list is manually.
-# id_list is a list of ids that the program finds in the column labels and
-# creates the name_list using ids (which are presumably found in the column
-# names)
-# id_replace_string is two elements, the string that should be replaced in the
-# IDs, and what it should be replaced by.
+# - sean_extra_test takes care of a situation in which there are duplicates in
+#   the "quant" file, but not replicates.
+# - sean_exclude is the name of a metabolite to exclude.
+# - obviously, sean_extra_test and sean_exclude functionality were added by Sean
+#   Jacobson
+# - name_list is where we have a list of replicates - each element in the list
+#   is a vector of replicates. If it is NULL, the program tries to figure out
+#   what the list is manually.
+# - id_list is a list of ids that the program finds in the column labels and
+#   creates the name_list using ids (which are presumably found in the column
+#   names)
+# - id_replace_string is two elements, the string that should be replaced in the
+#   IDs, and what it should be replaced by.
 #   For example, in the Lipids, the ID is listed as 21732E and should be 21731E,
 #   so you would have id_replace_string = c("21732E", "21731E")
 #   it can also be a list of sets of 2 if more than one string needs to be fixed
@@ -146,7 +144,7 @@ readdata <- function(clinical_data,
 
 
 
-  # Just get rid of sean_exclude... user should just exclude shite they don't
+  # Just get rid of sean_exclude... user should just exclude stuff they don't
   # want included, all on their own.
   if (length(sean_exclude) > 0) {
     excl_clin <-
@@ -292,8 +290,11 @@ readdata <- function(clinical_data,
 }
 
 
+
+
 ############################################################
-# 
+# sean_extra_test_row() 
+#   unknown...
 ############################################################
 sean_extra_test_row <- function(quant) {
 
@@ -322,8 +323,11 @@ sean_extra_test_row <- function(quant) {
 }
 
 
+
+
 ############################################################
-# 
+# sean_extra_test_col()
+#   same...
 ############################################################
 sean_extra_test_col <- function(quant) {
 
@@ -353,3 +357,6 @@ sean_extra_test_col <- function(quant) {
   return(quant)
 
 }
+
+
+

@@ -29,6 +29,9 @@ devtools::install("../MSPrep", build_vignettes = TRUE)
 library(tidyverse)
 clinical     <- read_csv("data-raw/Clinical.csv")
 quantif      <- read_csv("data-raw/Quantification.csv")
+# mz: Mass/Charge ratio
+# rt: Retention time
+
 subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
 
 load("data/test.rda")
@@ -36,6 +39,15 @@ load("data/test2.rda")
 load("data/test3.rda")
 
 test %>% str
+cnt_data1 <-
+  test$sum_data1 %>%
+  t %>% as.data.frame %>%
+  rownames_to_column %>%
+  as_data_frame %>%
+  gather(key = run_replicate, value = count, -rowname) %>%
+  rename(
+
+
 test2 %>% str
 test3 %>% str
 
