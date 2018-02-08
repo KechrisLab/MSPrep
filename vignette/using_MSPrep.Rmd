@@ -1,0 +1,97 @@
+---
+title: "Using MSPrep"
+author: 
+    - name: Sean Jacobson
+      email: fill@me.in
+      affiliation: National Jewish Hospital
+    - name: Matt Mulvahill
+      email: matthew.mulvahill@ucdenver.edu
+      affiliation: CU Anschutz
+    - name: Katerina Kechris
+      affiliation: CU Anschutz
+package: MSPrep
+output: 
+  BiocStyle::html_document:
+    highlight: "tango"
+    code_folding: show
+    toc: true
+    toc_float: 
+      collapsed: false
+vignette: |
+  %\VignetteIndexEntry{Using MSPrep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+
+```{r, include=FALSE, echo=FALSE}
+# date: "`r doc_date()`"
+# "`r pkg_ver('BiocStyle')`"
+# <style>
+#     pre {
+#     white-space: pre !important;
+#     overflow-y: scroll !important;
+#     height: 50vh !important;
+#     }
+# </style>
+```
+
+# Introduction
+
+# Getting to know MSPrep
+
+
+# My initial notes and development code
+
+
+- vignette
+- fit into 'bioconductor' workflow
+
+
+```{r build-pkg}
+
+setwd("~/Projects/KechrisLab/MSPrep")
+library(devtools)
+
+library(BiocInstaller)
+biocLite("pcaMethods")
+biocLite("crmn")
+biocLite("preprocessCore")
+biocLite("sva")
+
+
+devtools::document()
+devtools::check()
+devtools::install("../MSPrep", build_vignettes = TRUE)
+
+```
+
+
+```{r fix-included-data}
+library(tidyverse)
+clinical     <- read_csv("data-raw/Clinical.csv")
+quantif      <- read_csv("data-raw/Quantification.csv")
+# mz: Mass/Charge ratio
+# rt: Retention time
+
+subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
+
+load("data/test.rda")
+load("data/test2.rda")
+load("data/test3.rda")
+
+test %>% str
+cnt_data1 <-
+  test$sum_data1 %>%
+  t %>% as.data.frame %>%
+  rownames_to_column %>%
+  as_data_frame %>%
+  gather(key = run_replicate, value = count, -rowname) %>%
+  rename(
+
+
+test2 %>% str
+test3 %>% str
+
+```
+
+

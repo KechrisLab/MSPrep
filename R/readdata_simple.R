@@ -32,7 +32,8 @@
 #'   quant    <- read.csv("./data-raw/Quantification.csv")
 #'   link     <- read.csv("./data-raw/SubjectLinks.csv")
 #'
-#'   tidyquant <- tidy_quant(quant, my_mz = "mz", my_rt = "rt")
+#'   tidyquant  <- tidy_quant(quant, mz = "mz", rt = "rt")
+#'   msprep_obj <- msprep(quant, 
 #' 
 #'   ### Set variables for program
 #'   cvmax   <- 0.5
@@ -57,93 +58,67 @@
 #' save.image("readdata_workspace.RData")
 #'
 #'
+#' ########################
+#' # Start temporary code #
 #'
-#' 
-#' 
-#' 
-#' 
-#' 
+#' # source 3 fns at bottom of script,
+#' clinical      <- read.csv("./data-raw/Clinical.csv")
+#' quant         <- read.csv("./data-raw/Quantification.csv")
+#' link          <- read.csv("./data-raw/SubjectLinks.csv")
+#' .data         <- tidy_quant(quant, mz = "mz", rt = "rt")
+#' clinical_data <- clinical
+#' link_data     <- link
+#' cvmax         <- 0.50
+#' missing       <- 1
+#' linktxt       <- "LCMS_Run_ID"
+#' # End temporary code #
+#' ########################
+#'
+#'
+#'
+#'
+#'
+#'
 #' @importFrom dplyr select
 #' @importFrom magrittr %>%
 #' @export
-
-
-tidy_quant <- function(quantification_data, mz, rt) {
-
-  quantification_data %>%
-    tibble::as_data_frame(.) %>%
-    tidyr::gather(key = LCMS_Run_ID, value = abundance, -mz, -rt) %>%
-    dplyr::mutate(LCMS_Run_ID = stringr::str_replace_all(LCMS_Run_ID, "Neutral_Operator_Dif_Pos_", "")) %>%
-    tidyr::separate(LCMS_Run_ID, sep = "_", into = c("spike", "subject_id", "replicate"))
-
-}
-
-replace_missing <- function(abundance, missing_val) {
-  ifelse(abundance == missing, 0, abundance)
-}
-
-mean_or_median <- function(cv_abundance, cv_max, presence_count) {
-  if_else(cv_abundance > cvmax & presence_count > 2, "median", "mean") %>%
-    if_else(is.na(.) | is.nan(.), 0, .)
-}
-
-quant_tidy <- tidy_quant(quant, my_mz = "mz", my_rt = "rt")
-
-#msprep <- function(clinical_data,
-#                   quantification_data,
-#                   link_data,
-#                   subject_id,
-#                   replicate,
-#                   mz,
-#                   rt,
-#                   cvmax   = 0.50,
-#                   missing = 1,
-#                   linktxt) {
-
-# Start temporary code #
-clinical_data       <- clinical
-quantification_data <- quant
-link_data           <- link
-cvmax               <- 0.50
-missing             <- 1
-linktxt             <- linktxt
-# End temporary code #
-
-  ### Read in data
-  clinical <- clinical_data
-  quant    <- quantification_data
-  link     <- link_data
+msprep <- function(.data,
+                   clinical_data,
+                   link_data,
+                   subject_id,
+                   replicate,
+                   mz,
+                   rt,
+                   cvmax   = 0.50,
+                   missing = 1,
+                   linktxt) {
 
   # Replace and remove NAs
-  quant_tidy <- 
-    quant_tidy %>% 
-      mutate(abundance = replace_missing(abundance, missing_val))
+  .data <- .data %>% mutate(abundance = replace_missing(abundance, missing_val))
 
-  replicate_count <- length(unique(quant_tidy$replicate))
+  replicate_count <- length(unique(.data$replicate))
 
   # Calculate initial summary measures
   quant_summary <-
-    quant_tidy %>%
+    .data %>%
       group_by(subject_id, spike, mz, rt) %>%
       arrange(mz, rt, subject_id, spike, replicate) %>%
       summarise(presence_count   = n(),
                 mean_abundance   = mean(abundance),
                 sd_abundance     = sd(abundance),
-                median_abundance = median(abundance)) 
+                median_abundance = median(abundance))
 
   # Identify and select summary measure
-  quant_summary <- 
+  quant_summary <-
     quant_summary %>%
-    mutate(cv_abundance      = sd_abundance / mean_abundance) %>%
-    mutate(summary_measure   =
-             mean_or_median(cv_abundance, cv_max, presence_count)) %>%
-    mutate(abundance_summary =
-             if_else(summary_measure == "median", median_abundance,
-                     mean_abundance)) %>%
-    ungroup
+    mutate(cv_abundance      = sd_abundance / mean_abundance,
+           summary_measure   = mean_or_median(cv_abundance, cvmax, presence_count),
+           abundance_summary = ifelse(summary_measure == "median", median_abundance, mean_abundance)) %>%
+    ungroup %>%
+    mutate(abundance_summary = abundance_summary %>% ifelse(is.na(.) | is.nan(.), 0, .))
 
   compounds <- quant_summary %>% select(mz, rt) %>% distinct %>% nrow
-  # actually count of subject,spike pairs
+  # actually count of subject,spike pairs (not subjects only)
   subjects  <- quant_summary %>% select(subject_id, spike) %>% distinct %>% nrow
 
   test$sum_data1[, 1:10]
@@ -168,7 +143,7 @@ linktxt             <- linktxt
   # NOTE: difference is missings were set to 0 at some point?
   anti_join(old_sum_data, sum_data)
 
-    
+
 
 
 
@@ -254,3 +229,94 @@ linktxt             <- linktxt
 #  return(rtn)
 #
 #}
+
+
+
+
+
+#' Function for converting wide mass spec quantification data into a tidy data
+#' frame
+#'
+#' Function reads in wide dataset of mass spec quantification data and converts
+#' it to a tidy dataset.  This function assumes that the dataset is in a wide
+#' format, with a column representing the retention time (rt), another
+#' representing the mass-to-charge ratio (mz), and the remaining columns
+#' containing MS quantification data.  
+#' 
+#' It also assumes that the remaining column names start with some consistent,
+#' informational but unnecessary text (id_extra_txt), and contain the spike,
+#' subject ID, and replicate ID in a consistent position, all separated by a
+#' consistent separator.
+#'
+#' See \code{data(quantification)} for an example.  If your data doesn't fit
+#' this format, view the function code for hints on tidying your data.  The core
+#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
+#' and \code{tidyr::separate()}.
+#'
+#' @param quantification_data Data frame containing the quantification data.
+#' @param mz Name of the column containing mass-to-charge ratios.
+#' @param rt Name of the column containing retention time.
+#' @param id_extra_txt Text to remove when converting quant variable names to
+#'   variables.
+#' @param separator Character/string separating spike, subject and replicate
+#'   ids.
+#' @param id_spike_pos Order in which the spike number occurs in the quant
+#'   variable names (after \code{id_extra_txt} is removed).
+#' @param id_subject_id_pos Order in which the subject id occurs in the quant
+#'   variable names.
+#' @param id_replicate_id_pos Order in which the replicate id occurs in the quant
+#'   variable names.
+#'
+#' @return A tidy data frame of quant data, with columns mz, rt, spike,
+#' subject_id, replicate, and abundance.
+#'
+#' @examples
+#'
+#'   quant     <- read.csv("./data-raw/Quantification.csv")
+#'   tidyquant <- tidy_quant(quant, mz = "mz", rt = "rt")
+#'
+#' @importFrom tibble as_data_frame
+#' @importFrom tidyr gather
+#' @importFrom dplyr mutate
+#' @importFrom tidyr separate
+#' @importFrom stringr str_replace_all
+#' @importFrom magrittr %>%
+#' @export
+tidy_quant <- function(quantification_data, mz, rt,
+                       id_extra_txt = "Neutral_Operator_Dif_Pos_",
+                       separator    = "_",
+                       id_spike_pos        = 1,
+                       id_subject_pos   = 2,
+                       id_replicate_pos = 3) {
+
+  into <-
+    data_frame(name = c("spike", "subject_id", "replicate"),
+               order = c(id_spike_pos, id_subject_pos, id_replicate_pos)) %>%
+    arrange(order) %>% .[["name"]]
+
+  rtn <- 
+    quantification_data %>%
+      tibble::as_data_frame(.) %>%
+      tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
+      dplyr::mutate(id_col = stringr::str_replace_all(id_col, 
+                                                      id_extra_txt, "")) %>%
+      tidyr::separate(id_col, sep = separator, into = into)
+
+  return(rtn)
+
+}
+
+
+replace_missing <- function(abundance, missing_val) {
+  ifelse(abundance == missing, 0, abundance)
+}
+
+mean_or_median <- function(cv_abundance, cv_max, presence_count) {
+  ifelse(cv_abundance > cvmax & presence_count > 2, "median", "mean")
+}
+
+# Not sure where this code was meant to go (was in mean_or_median()):
+# %>% ifelse(is.na(.) | is.nan(.), 0, .)
+
+
+
