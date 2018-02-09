@@ -47,18 +47,25 @@ vignette: |
 - fit into 'bioconductor' workflow
 
 
-```{r build-pkg}
+```{r load-dependencies}
 
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
 
+source("https://bioconductor.org/biocLite.R")
+biocLite()
 library(BiocInstaller)
 biocLite("pcaMethods")
 biocLite("crmn")
 biocLite("preprocessCore")
 biocLite("sva")
 
+# for dev
+library(tidyverse)
 
+``` 
+
+```{r build-pkg}
 devtools::document()
 devtools::check()
 devtools::install("../MSPrep", build_vignettes = TRUE)

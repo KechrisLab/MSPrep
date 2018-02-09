@@ -1,5 +1,7 @@
-
-#' Function for importing raw data and summarizing replicates
+#' 
+#' Prepare a mass spec quantification data frame for filtering, imputation,
+#' and normalization. Also provides summaries of data structure (replicates,
+#' subjects, spike, etc.) 
 #'
 #' Function reads in raw data files and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
@@ -91,29 +93,47 @@ msprep <- function(.data,
                    rt,
                    cvmax   = 0.50,
                    missing = 1,
-                   linktxt) {
+                   linktxt,
+                   
+                   min_proportion_present = 1/3
+                   ) {
 
-  # Replace and remove NAs
+  # Check args
+  stopifnot(is.data.frame(.data))
+
+  # Replace miss val with NAs 
   .data <- .data %>% mutate(abundance = replace_missing(abundance, missing_val))
 
-  replicate_count <- length(unique(.data$replicate))
+  # Get replicate count for each mz/rt/spike/subject combo
+  # NOTE: verify that replicate is a scalar for a given dataset
+  replicate_count <- length(unique(.data[[replicate]]))
+  #replicate_count <-
+  #  .data %>%
+  #  select(mz, rt, spike, subject_id, replicate) %>%
+  #  group_by(mz, rt, spike, subject_id) %>%
+  #  distinct %>%
+  #  summarise(replicate_count = n())
 
   # Calculate initial summary measures
   quant_summary <-
     .data %>%
       group_by(subject_id, spike, mz, rt) %>%
       arrange(mz, rt, subject_id, spike, replicate) %>%
-      summarise(presence_count   = n(),
-                mean_abundance   = mean(abundance),
-                sd_abundance     = sd(abundance),
-                median_abundance = median(abundance))
+      summarise(n_present        = sum(!is.na(abundance)),
+                prop_present     = n_present / replicate_count,
+                mean_abundance   = mean(abundance, na.rm = T),
+                sd_abundance     = sd(abundance, na.rm = T),
+                median_abundance = median(abundance, na.rm = T)) #%>%
+      #full_join(replicate_count)
 
   # Identify and select summary measure
   quant_summary <-
     quant_summary %>%
     mutate(cv_abundance      = sd_abundance / mean_abundance,
-           summary_measure   = mean_or_median(cv_abundance, cvmax, presence_count),
-           abundance_summary = ifelse(summary_measure == "median", median_abundance, mean_abundance)) %>%
+           summary_measure   = select_summary_measure(min_proportion_present,
+                                                      cv_abundance, cvmax,
+                                                      replicate_count, n_present), 
+           abundance_summary = ifelse(summary_measure == "median", median_abundance, mean_abundance)) %>% # else if NA, NA
     ungroup %>%
     mutate(abundance_summary = abundance_summary %>% ifelse(is.na(.) | is.nan(.), 0, .))
 
@@ -121,9 +141,68 @@ msprep <- function(.data,
   # actually count of subject,spike pairs (not subjects only)
   subjects  <- quant_summary %>% select(subject_id, spike) %>% distinct %>% nrow
 
+############################################################
+# Rules from manuscript
+############################################################
+
+  cv = sd/mean
+  prop_present <- n_present / n_replicates
+
+  #  - **Only abundances that are found in at least two of three replicates are kept. **
+  # TODO: check with Katerina on when to set this to 0 -- should it be only if 1
+  # rep is present or some proportion of total replicates
+  if (prop_present <= min_proportion_present) summary_measure <- NA # or <- 0 # default min_proportion_present = 1/3 
+
+  #  - If CV is below the user-specified level, the average of the replicates is used. 
+  # base summary stat, if not needed
+  # if (cv <= cv_max) mean()
+
+  #  - If the CV is above the specified level and found in exactly two of three
+  #    replicates, the summarization is not used and the observation is left
+  #    blank. 
+  # TODO: check with Katerina -- should this be 2/3rds for any replicate number
+  # or just when 3 replicates and 2 only present (and cv > cvmax obvi)?
+  if (cv > cv_max & (n_replicates == 3 & n_present == 2)) summary_measure <- NA # or <- 0
+
+  #  - If the compound was found in all three replicates but with unacceptable CV,
+  #    the median is used as the summarization measure. 
+  # TODO: check with Katerina -- should this be median if at least 3 present of 3+ replicates and cv >
+  # cvmax, or strictly all present?
+  if (cv > cv_max & n_present == n_replicates) summary_measure <- median()
+
+
+# NOTE: text from manuscript
+#  The first processing step is summarization of technical replicates, three
+#  replicates required per subject/sample. MSPrep provides options to remove
+#  erroneous data and to reduce the effect of extreme observations. 
+#
+#  - The user specifies a cutoff for the coefficient of variation (CV),
+#    calculated by dividing the standard deviation of the replicates by the
+#    average, yielding a measure for magnitude of the variation between
+#    replicates.
+#
+#  The summarization routine summarizes each compound by subject (or sample) and
+#  returns a single observation per compound per subject. 
+#
+#  - **Only abundances that are found in at least two of three replicates are kept. **
+#  - If CV is below the user-specified level, the average of the replicates is used. 
+#  - If the CV is above the specified level and found in exactly two of three
+#    replicates, the summarization is not used and the observation is left
+#    blank. 
+#  - If the compound was found in all three replicates but with unacceptable CV,
+#    the median is used as the summarization measure. 
+# 
+#  This approach removes potential erroneous data. We have found that
+#  most compounds with high CV have two consistent and one extreme observation.
+#  Using the median reduces the effect of the extreme observation.
+
+############################################################
+
+# COMPARE to old version
   test$sum_data1[, 1:10]
+
   sum_data <-
-    quant_summary %>% select(subject_id, spike, mz, rt, abundance_summary) %>%
+    quant_summary %>% select(subject_id, spike, mz, rt, abundance_summary, summary_measure) %>%
     unite(id, spike, subject_id, sep = "_") %>% 
     unite(metabolite, mz, rt, sep = "_")
 
@@ -137,11 +216,23 @@ msprep <- function(.data,
       select(id, metabolite, abundance_summary) %>%
       separate(metabolite, into = c("mz", "rt"), sep = "_") %>%
       mutate(mz = as.numeric(mz)) %>%
+      #mutate(rt = as.numeric(rt)) %>%
       arrange(mz) %>%
       unite(metabolite, mz, rt, sep = "_")
 
-  # NOTE: difference is missings were set to 0 at some point?
+  # 
+  new <- sum_data %>% separate(metabolite, into = c("mz", "rt"), sep = "_") %>% arrange(id, mz, rt)
+  old <- old_sum_data %>% separate(metabolite, into = c("mz", "rt"), sep = "_") %>% arrange(id, mz, rt)
+  diffrows <- !(select(new, -summary_measure) == old)[, 4]
+  newdiffs <- new[diffrows, ] %>% rename(new_summary = abundance_summary)
+  olddiffs <- old[diffrows, ] %>% rename(old_summary = abundance_summary)
+
   anti_join(old_sum_data, sum_data)
+  comparing <- 
+    .data %>% mutate(mz = as.character(mz), rt = as.character(rt)) %>% unite(id, spike, subject_id) %>% 
+    right_join(., newdiffs) %>%
+    left_join(., olddiffs)
+
 
 
 
@@ -229,94 +320,5 @@ msprep <- function(.data,
 #  return(rtn)
 #
 #}
-
-
-
-
-
-#' Function for converting wide mass spec quantification data into a tidy data
-#' frame
-#'
-#' Function reads in wide dataset of mass spec quantification data and converts
-#' it to a tidy dataset.  This function assumes that the dataset is in a wide
-#' format, with a column representing the retention time (rt), another
-#' representing the mass-to-charge ratio (mz), and the remaining columns
-#' containing MS quantification data.  
-#' 
-#' It also assumes that the remaining column names start with some consistent,
-#' informational but unnecessary text (id_extra_txt), and contain the spike,
-#' subject ID, and replicate ID in a consistent position, all separated by a
-#' consistent separator.
-#'
-#' See \code{data(quantification)} for an example.  If your data doesn't fit
-#' this format, view the function code for hints on tidying your data.  The core
-#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
-#' and \code{tidyr::separate()}.
-#'
-#' @param quantification_data Data frame containing the quantification data.
-#' @param mz Name of the column containing mass-to-charge ratios.
-#' @param rt Name of the column containing retention time.
-#' @param id_extra_txt Text to remove when converting quant variable names to
-#'   variables.
-#' @param separator Character/string separating spike, subject and replicate
-#'   ids.
-#' @param id_spike_pos Order in which the spike number occurs in the quant
-#'   variable names (after \code{id_extra_txt} is removed).
-#' @param id_subject_id_pos Order in which the subject id occurs in the quant
-#'   variable names.
-#' @param id_replicate_id_pos Order in which the replicate id occurs in the quant
-#'   variable names.
-#'
-#' @return A tidy data frame of quant data, with columns mz, rt, spike,
-#' subject_id, replicate, and abundance.
-#'
-#' @examples
-#'
-#'   quant     <- read.csv("./data-raw/Quantification.csv")
-#'   tidyquant <- tidy_quant(quant, mz = "mz", rt = "rt")
-#'
-#' @importFrom tibble as_data_frame
-#' @importFrom tidyr gather
-#' @importFrom dplyr mutate
-#' @importFrom tidyr separate
-#' @importFrom stringr str_replace_all
-#' @importFrom magrittr %>%
-#' @export
-tidy_quant <- function(quantification_data, mz, rt,
-                       id_extra_txt = "Neutral_Operator_Dif_Pos_",
-                       separator    = "_",
-                       id_spike_pos        = 1,
-                       id_subject_pos   = 2,
-                       id_replicate_pos = 3) {
-
-  into <-
-    data_frame(name = c("spike", "subject_id", "replicate"),
-               order = c(id_spike_pos, id_subject_pos, id_replicate_pos)) %>%
-    arrange(order) %>% .[["name"]]
-
-  rtn <- 
-    quantification_data %>%
-      tibble::as_data_frame(.) %>%
-      tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-      dplyr::mutate(id_col = stringr::str_replace_all(id_col, 
-                                                      id_extra_txt, "")) %>%
-      tidyr::separate(id_col, sep = separator, into = into)
-
-  return(rtn)
-
-}
-
-
-replace_missing <- function(abundance, missing_val) {
-  ifelse(abundance == missing, 0, abundance)
-}
-
-mean_or_median <- function(cv_abundance, cv_max, presence_count) {
-  ifelse(cv_abundance > cvmax & presence_count > 2, "median", "mean")
-}
-
-# Not sure where this code was meant to go (was in mean_or_median()):
-# %>% ifelse(is.na(.) | is.nan(.), 0, .)
-
 
 

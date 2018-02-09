@@ -7,36 +7,102 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +20 msprep.Rmd
-badd +0 ~/Projects/KechrisLab/MSPrep_development/Example.R
-badd +70 R/readdata.R
-badd +1 R/readdata_simple.R
-badd +0 term://.//3598:R\ --no-save\ --quiet
-badd +0 ~/Projects/Archive/CHC/p013_dominguez_kawasaki/build.R
-badd +179 ~/Projects/Archive/CHC/p013_dominguez_kawasaki/p013_dominguez_kawasaki.Rmd
-badd +93 ~/Projects/Archive/CHC/p013_dominguez_kawasaki/Rmd/rq4_coronary_artery_lesions.Rmd
-badd +0 R_doc
+badd +0 R/readdata_simple.R
+badd +265 R/readdata.R
+badd +0 R/prepare.R
+badd +0 term://.//88001:R\ --no-save\ --quiet
+badd +0 vignette/using_MSPrep.Rmd
+badd +0 R/original_read_sj.R
+badd +0 R/original_read.R
 argglobal
 silent! argdel *
-$argadd msprep.Rmd
+$argadd R/readdata_simple.R
 set stal=2
 edit R/readdata_simple.R
 set splitbelow splitright
 wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd w
+wincmd _ | wincmd |
 split
 1wincmd k
+wincmd w
+wincmd t
+set winminheight=1 winminwidth=1 winheight=1 winwidth=1
+exe 'vert 1resize ' . ((&columns * 146 + 214) / 428)
+exe '2resize ' . ((&lines * 35 + 49) / 98)
+exe 'vert 2resize ' . ((&columns * 281 + 214) / 428)
+exe '3resize ' . ((&lines * 59 + 49) / 98)
+exe 'vert 3resize ' . ((&columns * 281 + 214) / 428)
+argglobal
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=2
+setlocal fml=1
+setlocal fdn=1
+setlocal fen
+let s:l = 134 - ((64 * winheight(0) + 47) / 95)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+134
+normal! 018|
+wincmd w
+argglobal
+if bufexists('R/prepare.R') | buffer R/prepare.R | else | edit R/prepare.R | endif
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=2
+setlocal fml=1
+setlocal fdn=1
+setlocal fen
+let s:l = 164 - ((28 * winheight(0) + 17) / 35)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+164
+normal! 022|
+wincmd w
+argglobal
+if bufexists('term://.//88001:R\ --no-save\ --quiet') | buffer term://.//88001:R\ --no-save\ --quiet | else | edit term://.//88001:R\ --no-save\ --quiet | endif
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=2
+setlocal fml=1
+setlocal fdn=1
+setlocal fen
+let s:l = 10059 - ((58 * winheight(0) + 29) / 59)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+10059
+normal! 0
+wincmd w
+3wincmd w
+exe 'vert 1resize ' . ((&columns * 146 + 214) / 428)
+exe '2resize ' . ((&lines * 35 + 49) / 98)
+exe 'vert 2resize ' . ((&columns * 281 + 214) / 428)
+exe '3resize ' . ((&lines * 59 + 49) / 98)
+exe 'vert 3resize ' . ((&columns * 281 + 214) / 428)
+tabedit R/original_read_sj.R
+set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
 1wincmd h
 wincmd w
-wincmd w
 wincmd t
 set winminheight=1 winminwidth=1 winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 41 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 157 + 119) / 238)
-exe '2resize ' . ((&lines * 41 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 80 + 119) / 238)
-exe '3resize ' . ((&lines * 15 + 30) / 60)
+exe '1resize ' . ((&lines * 93 + 49) / 98)
+exe 'vert 1resize ' . ((&columns * 213 + 214) / 428)
+exe '2resize ' . ((&lines * 93 + 49) / 98)
+exe 'vert 2resize ' . ((&columns * 214 + 214) / 428)
 argglobal
 setlocal fdm=syntax
 setlocal fde=0
@@ -46,48 +112,35 @@ setlocal fdl=2
 setlocal fml=1
 setlocal fdn=1
 setlocal fen
-let s:l = 161 - ((31 * winheight(0) + 20) / 41)
+let s:l = 238 - ((92 * winheight(0) + 46) / 93)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-161
-normal! 07|
-wincmd w
-argglobal
-enew
-file R_doc
-setlocal fdm=syntax
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=2
-setlocal fml=1
-setlocal fdn=1
-setlocal fen
-wincmd w
-argglobal
-if bufexists('term://.//3598:R\ --no-save\ --quiet') | buffer term://.//3598:R\ --no-save\ --quiet | else | edit term://.//3598:R\ --no-save\ --quiet | endif
-setlocal fdm=syntax
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=2
-setlocal fml=1
-setlocal fdn=1
-setlocal fen
-let s:l = 10015 - ((14 * winheight(0) + 7) / 15)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-10015
+238
 normal! 0
 wincmd w
-exe '1resize ' . ((&lines * 41 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 157 + 119) / 238)
-exe '2resize ' . ((&lines * 41 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 80 + 119) / 238)
-exe '3resize ' . ((&lines * 15 + 30) / 60)
-tabedit ~/Projects/Archive/CHC/p013_dominguez_kawasaki/build.R
+argglobal
+if bufexists('R/original_read.R') | buffer R/original_read.R | else | edit R/original_read.R | endif
+setlocal fdm=syntax
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=2
+setlocal fml=1
+setlocal fdn=1
+setlocal fen
+let s:l = 42 - ((41 * winheight(0) + 46) / 93)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+42
+normal! 031|
+wincmd w
+exe '1resize ' . ((&lines * 93 + 49) / 98)
+exe 'vert 1resize ' . ((&columns * 213 + 214) / 428)
+exe '2resize ' . ((&lines * 93 + 49) / 98)
+exe 'vert 2resize ' . ((&columns * 214 + 214) / 428)
+tabedit vignette/using_MSPrep.Rmd
 set splitbelow splitright
 wincmd t
 set winminheight=1 winminwidth=1 winheight=1 winwidth=1
@@ -100,49 +153,11 @@ setlocal fdl=2
 setlocal fml=1
 setlocal fdn=1
 setlocal fen
-let s:l = 2 - ((1 * winheight(0) + 28) / 57)
+let s:l = 2 - ((1 * winheight(0) + 46) / 93)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 2
-normal! 0
-tabedit R/readdata.R
-set splitbelow splitright
-wincmd t
-set winminheight=1 winminwidth=1 winheight=1 winwidth=1
-argglobal
-setlocal fdm=syntax
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=2
-setlocal fml=1
-setlocal fdn=1
-setlocal fen
-let s:l = 2 - ((1 * winheight(0) + 28) / 57)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-2
-normal! 0
-tabedit ~/Projects/KechrisLab/MSPrep_development/Example.R
-set splitbelow splitright
-wincmd t
-set winminheight=1 winminwidth=1 winheight=1 winwidth=1
-argglobal
-setlocal fdm=syntax
-setlocal fde=0
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=2
-setlocal fml=1
-setlocal fdn=1
-setlocal fen
-let s:l = 7 - ((6 * winheight(0) + 28) / 57)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-7
 normal! 0
 tabnext 1
 set stal=1
