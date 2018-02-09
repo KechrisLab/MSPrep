@@ -102,3 +102,63 @@ test3 %>% str
 ```
 
 
+```{r read-rules-from-manuscript}
+############################################################
+# Rules from manuscript
+############################################################
+
+  cv = sd/mean
+  prop_present <- n_present / n_replicates
+
+  #  - **Only abundances that are found in at least two of three replicates are kept. **
+  # TODO: check with Katerina on when to set this to 0 -- should it be only if 1
+  # rep is present or some proportion of total replicates
+  if (prop_present <= min_proportion_present) summary_measure <- NA # or <- 0 # default min_proportion_present = 1/3 
+
+  #  - If CV is below the user-specified level, the average of the replicates is used. 
+  # base summary stat, if not needed
+  # if (cv <= cv_max) mean()
+
+  #  - If the CV is above the specified level and found in exactly two of three
+  #    replicates, the summarization is not used and the observation is left
+  #    blank. 
+  # TODO: check with Katerina -- should this be 2/3rds for any replicate number
+  # or just when 3 replicates and 2 only present (and cv > cvmax obvi)?
+  if (cv > cv_max & (n_replicates == 3 & n_present == 2)) summary_measure <- NA # or <- 0
+
+  #  - If the compound was found in all three replicates but with unacceptable CV,
+  #    the median is used as the summarization measure. 
+  # TODO: check with Katerina -- should this be median if at least 3 present of 3+ replicates and cv >
+  # cvmax, or strictly all present?
+  if (cv > cv_max & n_present == n_replicates) summary_measure <- median()
+
+
+# NOTE: text from manuscript
+#  The first processing step is summarization of technical replicates, three
+#  replicates required per subject/sample. MSPrep provides options to remove
+#  erroneous data and to reduce the effect of extreme observations. 
+#
+#  - The user specifies a cutoff for the coefficient of variation (CV),
+#    calculated by dividing the standard deviation of the replicates by the
+#    average, yielding a measure for magnitude of the variation between
+#    replicates.
+#
+#  The summarization routine summarizes each compound by subject (or sample) and
+#  returns a single observation per compound per subject. 
+#
+#  - **Only abundances that are found in at least two of three replicates are kept. **
+#  - If CV is below the user-specified level, the average of the replicates is used. 
+#  - If the CV is above the specified level and found in exactly two of three
+#    replicates, the summarization is not used and the observation is left
+#    blank. 
+#  - If the compound was found in all three replicates but with unacceptable CV,
+#    the median is used as the summarization measure. 
+# 
+#  This approach removes potential erroneous data. We have found that
+#  most compounds with high CV have two consistent and one extreme observation.
+#  Using the median reduces the effect of the extreme observation.
+
+############################################################
+
+```
+

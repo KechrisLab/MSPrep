@@ -141,29 +141,23 @@ tidy_quant <- function(quantification_data, mz, rt,
 
 #' @rdname prepare
 replace_missing <- function(abundance, missing_val) {
-  ifelse(abundance == missing, NA, abundance)
+  ifelse(abundance == missing_val, NA, abundance)
 }
 
 #' @rdname prepare
-mean_or_median <- function(cv_abundance, cv_max, presence_count, replicate_count) {
-  ifelse(cv_abundance > cvmax & presence_count > ceiling(replicate_count/2), "median", "mean")
-}
-
-
-select_summary_measure <- function(min_proportion_present,
+select_summary_measure <- function(n_present,
                                    cv_abundance,
-                                   cv_max,
                                    n_replicates,
-                                   n_present) {
+                                   min_proportion_present,
+                                   cv_max) {
 
-  if ((n_present / n_replicates) <= min_proportion_present) {
-    return( NA )
-  } else if (cv_abundance > cv_max & (n_replicates == 3 & n_present == 2)) {
-    return( NA )
-  } else if (cv_abundance > cv_max & (n_present == n_replicates)) {
-    return( "median" )
-  } else {
-    return( "mean" )
-  }
+  case_when(
+            (n_present / n_replicates) <= min_proportion_present ~ NA_character_,
+            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) ~ NA_character_,
+            cv_abundance > cv_max & (n_present == n_replicates) ~ "median",
+            TRUE ~ "mean"
+            )
 
 }
+
+
