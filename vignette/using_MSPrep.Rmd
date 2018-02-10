@@ -102,6 +102,11 @@ test3 %>% str
 ```
 
 
+Identifiers in the datasets
+- LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
+- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
+
+
 ```{r read-rules-from-manuscript}
 ############################################################
 # Rules from manuscript

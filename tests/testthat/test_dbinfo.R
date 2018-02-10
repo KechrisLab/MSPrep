@@ -32,29 +32,38 @@ test_that("replace_missing replaces missing val w/ NA ", {
 
 test_that("Check default select_summary_measure works", {
 
-  n_replicates <- 3
-  cv_max <- 0.50
+  n_replicates           <- 3
+  cv_max                 <- 0.50
   min_proportion_present <- 1/3
-
-  dat <- 
-
+  dat <- expand.grid(n_present    = c(0, 1, 2, 3),
+                     cv_abundance = c(0.1, 0.5, 1.0))
+  results <- select_summary_measure(dat$n_present,
+                                    dat$cv_abundance,
+                                    n_replicates,
+                                    min_proportion_present,
+                                    cv_max)
+  expect_equal(results, c(NA, NA, "mean", "mean", NA, NA, "mean", "mean", NA,
+                          NA, NA, "median"))
 
 })
 
 
+test_that("New version of summarized dataset matches old version", {
 
-# COMPARE to old version
-  test$sum_data1[, 1:10]
+  # Add old readdata() function that creates old_readdata_result in data-raw/
+  # folder
 
   sum_data <-
-    quant_summary %>% select(subject_id, spike, mz, rt, abundance_summary, summary_measure) %>%
+    quant_summary %>% 
+    select(subject_id, spike, mz, rt, abundance_summary, summary_measure) %>%
     unite(id, spike, subject_id, sep = "_") %>% 
     unite(metabolite, mz, rt, sep = "_")
 
   new_sum_data <- sum_data %>% spread(key = id, value = abundance_summary)
 
   old_sum_data <- 
-    test$sum_data1 %>% as.data.frame %>% 
+    old_readdata_result$sum_data1 %>% 
+      as.data.frame %>% 
       rownames_to_column(var = "id") %>%
       gather(key = metabolite, value = abundance_summary, -id) %>%
       as_data_frame  %>%
@@ -72,12 +81,14 @@ test_that("Check default select_summary_measure works", {
   newdiffs <- new[diffrows, ] %>% rename(new_summary = abundance_summary)
   olddiffs <- old[diffrows, ] %>% rename(old_summary = abundance_summary)
 
-  anti_join(old_sum_data, sum_data)
-  comparing <- 
-    .data %>% mutate(mz = as.character(mz), rt = as.character(rt)) %>% unite(id, spike, subject_id) %>% 
-    right_join(., newdiffs) %>%
-    left_join(., olddiffs)
+  nrow(anti_join(old_sum_data, sum_data)) == 0
 
+  comparing <-
+    .data %>% mutate(mz = as.character(mz), rt = as.character(rt)) %>% 
+      unite(id, spike, subject_id) %>% 
+      right_join(., newdiffs) %>%
+      left_join(., olddiffs)
 
+}
 
 
