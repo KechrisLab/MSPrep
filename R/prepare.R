@@ -8,36 +8,25 @@
 #' coefficient of variation below specified level, or median for those found in
 #' 3 replicates but excess CV.
 #'
-#' @param clinical_data Name of the clinical data file.
-#' @param quantification_data Name of the data file containing the
-#' quantification data.
-#' @param link_data Name of Subject link file.
-#' @param rt Retention time.
-#' @param mz Mass-to-charge ratio.
+#' @param .data A tidy dataframe of quantification data.
+#' @param rt Retention time variable name.
+#' @param mz Mass-to-charge ratio variable name.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
 #' @param missing Value of missing data in the quantification data file.
 #' @param linktxt Column name for Run ID field in Subject Link dataset
-#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
-#' compound
-#' @return clinical Clinical dataset
-#' @return medians List of compounds that had excess CV and utilized the median
-#' @note Must have unique compounds in raw data file.  Raw quantification data
-#' should have two columns titled mz and rt that are combined to make the
-#' column header. 
+#' @return An \code{msprepped} object containing summarised quantification data,
+#' a dataset of compounds summarised by medians, and other related summaries.
 #' @examples
 #'
 #' # Read in data file
-#' quant    <- read.csv("./data-raw/Quantification.csv")
+#' quant <- read.csv("./data-raw/Quantification.csv")
 #'
 #' # Convert dataset to tidy format
 #' tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
 #' prepped_data <- prepare_ms(tidy_data)
 #' 
 #' # Or, using tidyverse/magrittr pipes 
-#' prepped_data <-
-#'   read.csv("./data-raw/Quantification.csv") %>%
-#'   tidy_ms %>%
-#'   prepare_ms
+#' prepped_data <- quant %>% tidy_ms %>% prepare_ms
 #'
 #' str(prepped_data)
 #' str(prepped_data$summary_data)
@@ -128,71 +117,8 @@ prepare_ms <- function(.data,
                  min_proportion_present = min_proportion_present),
             class = "msprepped")
 
-
 }
 
-
-
-
-#' 
-#' Prepare a mass spec quantification data frame for filtering, imputation,
-#' and normalization. 
-#'
-#' Also provides summaries of data structure (replicates,
-#' subjects, spike, etc.). 
-#'
-#' Function reads in raw data files and summarizes technical replicates as the
-#' mean of observations for compounds found in 2 or 3 replicates and with
-#' coefficient of variation below specified level, or median for those found in
-#' 3 replicates but excess CV.
-#'
-#' @param clinical_data Name of the clinical data file.
-#' @param quantification_data Name of the data file containing the
-#' quantification data.
-#' @param link_data Name of Subject link file.
-#' @param rt Retention time.
-#' @param mz Mass-to-charge ratio.
-#' @param cvmax Acceptable level of coefficient of variation between replicates.
-#' @param missing Value of missing data in the quantification data file.
-#' @param linktxt Column name for Run ID field in Subject Link dataset
-#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
-#' compound
-#' @return clinical Clinical dataset
-#' @return medians List of compounds that had excess CV and utilized the median
-#' @note Must have unique compounds in raw data file.  Raw quantification data
-#' should have two columns titled mz and rt that are combined to make the
-#' column header. 
-#' @examples
-#'
-#'   # LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
-#'   # SubjectID   = subject (01-03), concentration  (1x,2x,4x)
-#'
-#'   ### Read in data files
-#'   clinical <- read.csv("./data-raw/Clinical.csv")
-#'   quant    <- read.csv("./data-raw/Quantification.csv")
-#'   link     <- read.csv("./data-raw/SubjectLinks.csv")
-#'
-#'   tidyquant  <- tidy_quant(quant, mz = "mz", rt = "rt")
-#'   msprep_obj <- msprep(quant, 
-#' 
-#'   ### Set variables for program
-#'   cvmax   <- 0.5
-#'   missing <- 1
-#'   linktxt <- "LCMS_Run_ID"
-#'
-#'   # Convert dataset to tidy-ish format
-#'   #  need replicate, subject_id, mz, and rt as variables
-#'
-#'   test <- msprep(clinical_data       = clinical,
-#'                  quantification_data = quant,
-#'                  link_data           = link,
-#'                  cvmax               = 0.50,
-#'                  missing             = 1,
-#'                  linktxt             = linktxt)
-#'   #save(test, file = paste0("./data/test.Rdata"))
-#' @importFrom dplyr select
-#' @importFrom magrittr %>%
-#' @export
 
 
 
@@ -271,24 +197,28 @@ tidy_ms <- function(quantification_data,
 }
 
 
-#' @rdname prepare
+
+
+#' @rdname prepare_ms
 replace_missing <- function(abundance, missing_val) {
   ifelse(abundance == missing_val, NA, abundance)
 }
 
-#' @rdname prepare
+#' @rdname prepare_ms
+#' @importFrom dplyr case_when
 select_summary_measure <- function(n_present,
                                    cv_abundance,
                                    n_replicates,
                                    min_proportion_present,
                                    cv_max) {
 
-  case_when(
-            (n_present / n_replicates) <= min_proportion_present ~ "none: proportion present <= min_proportion_present",
-            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) ~ "none: cv > cvmax & 2 present",
-            cv_abundance > cv_max & (n_present == n_replicates) ~ "median",
-            TRUE ~ "mean"
-            )
+  case_when((n_present / n_replicates) <= min_proportion_present
+              ~ "none: proportion present <= min_proportion_present",
+            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) 
+              ~ "none: cv > cvmax & 2 present",
+            cv_abundance > cv_max & (n_present == n_replicates) 
+              ~ "median",
+            TRUE ~ "mean")
 
 }
 
