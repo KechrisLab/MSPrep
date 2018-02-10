@@ -1,5 +1,141 @@
 #' 
 #' Prepare a mass spec quantification data frame for filtering, imputation,
+#' and normalization. Also provides summaries of data structure (replicates,
+#' subjects, spike, etc.) 
+#'
+#' Function reads in raw data files and summarizes technical replicates as the
+#' mean of observations for compounds found in 2 or 3 replicates and with
+#' coefficient of variation below specified level, or median for those found in
+#' 3 replicates but excess CV.
+#'
+#' @param clinical_data Name of the clinical data file.
+#' @param quantification_data Name of the data file containing the
+#' quantification data.
+#' @param link_data Name of Subject link file.
+#' @param rt Retention time.
+#' @param mz Mass-to-charge ratio.
+#' @param cvmax Acceptable level of coefficient of variation between replicates.
+#' @param missing Value of missing data in the quantification data file.
+#' @param linktxt Column name for Run ID field in Subject Link dataset
+#' @return sum_data1 Matrix of summarized replicates, one obs per subject per
+#' compound
+#' @return clinical Clinical dataset
+#' @return medians List of compounds that had excess CV and utilized the median
+#' @note Must have unique compounds in raw data file.  Raw quantification data
+#' should have two columns titled mz and rt that are combined to make the
+#' column header. 
+#' @examples
+#'
+#' # Read in data file
+#' quant    <- read.csv("./data-raw/Quantification.csv")
+#'
+#' # Convert dataset to tidy format
+#' tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
+#' prepped_data <- prepare_ms(tidy_data)
+#' 
+#' # Or, using tidyverse/magrittr pipes 
+#' prepped_data <-
+#'   read.csv("./data-raw/Quantification.csv") %>%
+#'   tidy_ms %>%
+#'   prepare_ms
+#'
+#' str(prepped_data)
+#' str(prepped_data$summary_data)
+#'
+#' @importFrom dplyr select
+#' @importFrom magrittr %>%
+#' @export
+prepare_ms <- function(.data,
+                       subject_id  = "subject_id",
+                       replicate   = "replicate",
+                       mz          = "mz",
+                       rt          = "rt",
+                       cvmax       = 0.50,
+                       missing_val = 1,
+                       min_proportion_present = 1/3) {
+
+  # Check args
+  stopifnot(is.data.frame(.data))
+
+  # Replace miss val with NAs 
+  .data <- .data %>% mutate(abundance = replace_missing(abundance, missing_val))
+
+  # Get replicate count for each mz/rt/spike/subject combo
+  replicate_count <- length(unique(.data[[replicate]]))
+
+  # Roughly check if all compounds are present in each replicate
+  stopifnot(nrow(.data) %% replicate_count == 0)
+
+  # Calculate initial summary measures 
+  #   Note;(matrix algebra would be faster --
+  #     consider later)
+  quant_summary <-
+    .data %>%
+    group_by(subject_id, spike, mz, rt) %>%
+    arrange(mz, rt, subject_id, spike, replicate) %>%
+    summarise(n_present        = sum(!is.na(abundance)),
+              prop_present     = n_present / replicate_count,
+              mean_abundance   = mean(abundance, na.rm = T),
+              sd_abundance     = sd(abundance, na.rm = T),
+              median_abundance = median(abundance, na.rm = T)) %>%
+    mutate(cv_abundance = sd_abundance / mean_abundance) %>%
+    ungroup
+
+  # Identify and select summary measure
+  quant_summary <-
+    quant_summary %>%
+    mutate(summary_measure = 
+             select_summary_measure(n_present, cv_abundance, replicate_count,
+                                    min_proportion_present, cvmax),
+           abundance_summary = 
+             case_when(summary_measure == "median" ~ median_abundance,
+                       summary_measure == "mean"   ~ mean_abundance,
+                       TRUE                        ~ 0)) %>%
+    mutate_at(c("subject_id", "summary_measure", "spike"), factor)
+
+  # Extract summarized dataset
+  summary_data   <-
+    quant_summary %>% select(subject_id, spike, mz, rt, abundance_summary)
+
+  # Additional info extracted in summarizing replicates
+  replicate_info <-
+    quant_summary %>% select(subject_id, spike, mz, rt, n_present, cv_abundance, summary_measure)
+
+  # Summaries that used medians
+  medians        <-
+    quant_summary %>% filter(summary_measure == "median") %>%
+    select(subject_id, spike, mz, rt, abundance_summary)
+
+  # Total number of compounds identified
+  n_compounds    <-
+    quant_summary %>% select(mz, rt) %>% distinct %>% nrow
+
+  # Count of subject,spike pairs
+  n_subject_spike_pairs  <-
+    quant_summary %>% select(subject_id, spike) %>% distinct %>% nrow
+
+  # Subject and spike id combos
+  subjects_summary <- 
+    quant_summary %>% select(subject_id, spike) %>% distinct
+
+  # Create return object & return
+  structure(list(summary_data    = summary_data,
+                 replicate_info  = replicate_info,
+                 clinical        = subjects_summary,
+                 medians         = medians,
+                 replicate_count = replicate_count,
+                 cvmax           = cvmax,
+                 min_proportion_present = min_proportion_present),
+            class = "msprepped")
+
+
+}
+
+
+
+
+#' 
+#' Prepare a mass spec quantification data frame for filtering, imputation,
 #' and normalization. 
 #'
 #' Also provides summaries of data structure (replicates,
@@ -60,12 +196,6 @@
 
 
 
-
-
-
-
-
-
 #' Function for converting wide mass spec quantification data into a tidy data
 #' frame
 #'
@@ -104,8 +234,8 @@
 #'
 #' @examples
 #'
-#'   quant     <- read.csv("./data-raw/Quantification.csv")
-#'   tidyquant <- tidy_quant(quant, mz = "mz", rt = "rt")
+#'   quant <- read.csv("./data-raw/Quantification.csv")
+#'   quant <- tidy_ms(quant, mz = "mz", rt = "rt")
 #'
 #' @importFrom tibble as_data_frame
 #' @importFrom tidyr gather
@@ -114,12 +244,14 @@
 #' @importFrom stringr str_replace_all
 #' @importFrom magrittr %>%
 #' @export
-tidy_quant <- function(quantification_data, mz, rt,
-                       id_extra_txt = "Neutral_Operator_Dif_Pos_",
-                       separator    = "_",
-                       id_spike_pos        = 1,
-                       id_subject_pos   = 2,
-                       id_replicate_pos = 3) {
+tidy_ms <- function(quantification_data,
+                    mz = "mz", 
+                    rt = "rt",
+                    id_extra_txt     = "Neutral_Operator_Dif_Pos_",
+                    separator        = "_",
+                    id_spike_pos     = 1,
+                    id_subject_pos   = 2,
+                    id_replicate_pos = 3) {
 
   into <-
     data_frame(name = c("spike", "subject_id", "replicate"),
@@ -152,8 +284,8 @@ select_summary_measure <- function(n_present,
                                    cv_max) {
 
   case_when(
-            (n_present / n_replicates) <= min_proportion_present ~ NA_character_,
-            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) ~ NA_character_,
+            (n_present / n_replicates) <= min_proportion_present ~ "none: proportion present <= min_proportion_present",
+            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) ~ "none: cv > cvmax & 2 present",
             cv_abundance > cv_max & (n_present == n_replicates) ~ "median",
             TRUE ~ "mean"
             )
