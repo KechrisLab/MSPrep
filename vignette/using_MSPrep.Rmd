@@ -66,11 +66,27 @@ library(tidyverse)
 ``` 
 
 ```{r build-pkg}
+
 devtools::document()
 devtools::check()
 devtools::install("../MSPrep", build_vignettes = TRUE)
 
 ```
+
+
+```{r load-data}
+
+# Load package
+library(MSPrep)
+
+# Load quantification dataset
+data(quant)
+
+# Tidy and create summarized dataset
+dat <- quant %>% tidy_ms %>% prepare_ms
+
+```
+
 
 
 ```{r fix-included-data}
