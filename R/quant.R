@@ -1,0 +1,26 @@
+#' Example quantification dataset
+#'
+#' Mass spec data example
+#'
+#' mz = Mass/Charge ratio
+#' rt = Retention time
+#'
+#' @docType data
+#' @format 
+#' \code{
+#' 'data.frame':   2654 obs. of  29 variables:
+#'  $ mz                              : num  577 539 724 525 483 ...
+#'  $ rt                              : Factor w/ 2510 levels "0.481","0.58933336",..: 3 2 6 15 10 8 22 18 17 13 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O1_A: num  1 1 36270 105305 1 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O1_B: num  1 1 35271 92489 1 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O1_C: num  1 1 39355 105189 1 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O2_A: num  24182 20686 57021 141999 67760 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O2_B: num  25857 24500 60641 151657 73151 ...
+#'  $ Neutral_Operator_Dif_Pos_1x_O2_C: num  24616 22820 61023 144739 71789 ...
+#' }
+#' @keywords datasets
+#' @examples
+#'   data(quant)
+#'   str(quant)
+"quant"
+

@@ -1,11 +1,47 @@
-Package: MSProcess
-Type: Package
-Title: Package for summarizing, filtering, imputing, and normalizing metabolomics data.
-Depends: pcaMethods (>= 1.24.0), crmn, preprocessCore, sva
-Version: 1.0
-Date: 2013-08-17
-Author: Grant Hughes
-Maintainer: Grant Hughes <dydxhughes@gmail.com>
-Description: Package performs summarization of replicates, filtering by frequency, three different options for missing data, and five options for normalizing dataset.  Also generates diagnostic plots of imputations and normalizations.
+Package: MSPrep
+Title: 
+  Package for summarizing, filtering, imputing, and normalizing metabolomics data.
+Version: 0.0.1
+Authors@R: 
+  c(person("Grant", "Hughes", 
+           email = "ruyuanbin@gmail.com", 
+           role = c("aut")),
+    person("Matt", "Mulvahill", 
+           email = "matthew.mulvahill@ucdenver.edu", 
+           role = c("aut", "cre")),
+    person("Sean", "Jacobson", 
+           email = "jacobsonseanr@gmail.com", 
+           role = c("aut")),
+    person("Harrison", "Pielke-lombardo", 
+           email = "harrison.pielke-lombardo@ucdenver.edu", 
+           role = c("aut")),
+    person("Katerina", "Kechris", 
+           email = "Katerina.Kechris@ucdenver.edu", 
+           role = c("aut", "cph", "ths")))
+Description: 
+  Package performs summarization of replicates, filtering by
+  frequency, three different options for missing data, and five options for
+  normalizing dataset.  Also generates diagnostic plots of imputations and
+  normalizations.
+URL: https://github.com/KechrisLab/MSPrep
+BugReports: https://github.com/KechrisLab/MSPrep/issues
+Depends:
+  R
+Imports: 
+  pcaMethods (>= 1.24.0), 
+  crmn, 
+  preprocessCore, 
+  sva
+Suggests: 
+  BiocStyle, 
+  knitr, 
+  rmarkdown, 
+  testthat (>= 1.0.2), 
+  tibble (>= 1.2)
+VignetteBuilder: knitr
+LazyData: true
+NeedsCompilation: no
 License: GPL-3
-Packaged: 2013-08-19 04:34:21 UTC; grant
+biocViews: TBD
+Encoding: UTF-8
+RoxygenNote: 6.0.1

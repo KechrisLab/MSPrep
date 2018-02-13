@@ -1,0 +1,14 @@
+# System temp files
+.DS_Store
+
+# R system/temp files 
+.Rhistory
+.Rapp_history
+..Rcheck
+
+# Vim temp files
+*.swo
+*.swp
+
+.Rproj.user
+tags

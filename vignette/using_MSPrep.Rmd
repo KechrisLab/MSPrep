@@ -1,0 +1,185 @@
+---
+title: "Using MSPrep"
+author: 
+    - name: Sean Jacobson
+      email: fill@me.in
+      affiliation: National Jewish Hospital
+    - name: Matt Mulvahill
+      email: matthew.mulvahill@ucdenver.edu
+      affiliation: CU Anschutz
+    - name: Katerina Kechris
+      affiliation: CU Anschutz
+package: MSPrep
+output: 
+  BiocStyle::html_document:
+    highlight: "tango"
+    code_folding: show
+    toc: true
+    toc_float: 
+      collapsed: false
+vignette: |
+  %\VignetteIndexEntry{Using MSPrep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+
+```{r, include=FALSE, echo=FALSE}
+# date: "`r doc_date()`"
+# "`r pkg_ver('BiocStyle')`"
+# <style>
+#     pre {
+#     white-space: pre !important;
+#     overflow-y: scroll !important;
+#     height: 50vh !important;
+#     }
+# </style>
+```
+
+# Introduction
+
+# Getting to know MSPrep
+
+
+# My initial notes and development code
+
+
+- vignette
+- fit into 'bioconductor' workflow
+
+
+```{r load-dependencies}
+
+setwd("~/Projects/KechrisLab/MSPrep")
+library(devtools)
+
+source("https://bioconductor.org/biocLite.R")
+biocLite()
+library(BiocInstaller)
+biocLite("pcaMethods")
+biocLite("crmn")
+biocLite("preprocessCore")
+biocLite("sva")
+
+# for dev
+library(tidyverse)
+
+``` 
+
+```{r build-pkg}
+
+devtools::document()
+devtools::check()
+devtools::install("../MSPrep", build_vignettes = TRUE)
+
+```
+
+
+```{r load-data}
+
+# Load package
+library(MSPrep)
+
+# Load quantification dataset
+data(quant)
+
+# Tidy and create summarized dataset
+dat <- quant %>% tidy_ms %>% prepare_ms
+
+```
+
+
+
+```{r fix-included-data}
+library(tidyverse)
+clinical     <- read_csv("data-raw/Clinical.csv")
+quantif      <- read_csv("data-raw/Quantification.csv")
+# mz: Mass/Charge ratio
+# rt: Retention time
+
+subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
+
+load("data/test.rda")
+load("data/test2.rda")
+load("data/test3.rda")
+
+test %>% str
+cnt_data1 <-
+  test$sum_data1 %>%
+  t %>% as.data.frame %>%
+  rownames_to_column %>%
+  as_data_frame %>%
+  gather(key = run_replicate, value = count, -rowname) %>%
+  rename(
+
+
+test2 %>% str
+test3 %>% str
+
+```
+
+
+Identifiers in the datasets
+- LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
+- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
+
+
+```{r read-rules-from-manuscript}
+############################################################
+# Rules from manuscript
+############################################################
+
+  cv = sd/mean
+  prop_present <- n_present / n_replicates
+
+  #  - **Only abundances that are found in at least two of three replicates are kept. **
+  # TODO: check with Katerina on when to set this to 0 -- should it be only if 1
+  # rep is present or some proportion of total replicates
+  if (prop_present <= min_proportion_present) summary_measure <- NA # or <- 0 # default min_proportion_present = 1/3 
+
+  #  - If CV is below the user-specified level, the average of the replicates is used. 
+  # base summary stat, if not needed
+  # if (cv <= cv_max) mean()
+
+  #  - If the CV is above the specified level and found in exactly two of three
+  #    replicates, the summarization is not used and the observation is left
+  #    blank. 
+  # TODO: check with Katerina -- should this be 2/3rds for any replicate number
+  # or just when 3 replicates and 2 only present (and cv > cvmax obvi)?
+  if (cv > cv_max & (n_replicates == 3 & n_present == 2)) summary_measure <- NA # or <- 0
+
+  #  - If the compound was found in all three replicates but with unacceptable CV,
+  #    the median is used as the summarization measure. 
+  # TODO: check with Katerina -- should this be median if at least 3 present of 3+ replicates and cv >
+  # cvmax, or strictly all present?
+  if (cv > cv_max & n_present == n_replicates) summary_measure <- median()
+
+
+# NOTE: text from manuscript
+#  The first processing step is summarization of technical replicates, three
+#  replicates required per subject/sample. MSPrep provides options to remove
+#  erroneous data and to reduce the effect of extreme observations. 
+#
+#  - The user specifies a cutoff for the coefficient of variation (CV),
+#    calculated by dividing the standard deviation of the replicates by the
+#    average, yielding a measure for magnitude of the variation between
+#    replicates.
+#
+#  The summarization routine summarizes each compound by subject (or sample) and
+#  returns a single observation per compound per subject. 
+#
+#  - **Only abundances that are found in at least two of three replicates are kept. **
+#  - If CV is below the user-specified level, the average of the replicates is used. 
+#  - If the CV is above the specified level and found in exactly two of three
+#    replicates, the summarization is not used and the observation is left
+#    blank. 
+#  - If the compound was found in all three replicates but with unacceptable CV,
+#    the median is used as the summarization measure. 
+# 
+#  This approach removes potential erroneous data. We have found that
+#  most compounds with high CV have two consistent and one extreme observation.
+#  Using the median reduces the effect of the extreme observation.
+
+############################################################
+
+```
+
