@@ -8,7 +8,7 @@
 #' coefficient of variation below specified level, or median for those found in
 #' 3 replicates but excess CV.
 #'
-#' @param .data A tidy dataframe of quantification data.
+#' @param data A tidy dataframe of quantification data.
 #' @param rt Retention time variable name.
 #' @param mz Mass-to-charge ratio variable name.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
@@ -20,7 +20,7 @@
 #'
 #' # Read in data file
 #' quant <- read.csv("./data-raw/Quantification.csv")
-#'
+#' 
 #' # Convert dataset to tidy format
 #' tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
 #' prepped_data <- prepare_ms(tidy_data)
@@ -32,11 +32,22 @@
 #' str(prepped_data$summary_data)
 #'
 #' @importFrom dplyr select
+#' @importFrom dplyr mutate 
+#' @importFrom dplyr mutate_at
+#' @importFrom dplyr group_by 
+#' @importFrom dplyr arrange 
+#' @importFrom dplyr summarise 
+#' @importFrom dplyr ungroup 
+#' @importFrom dplyr case_when
+#' @importFrom dplyr distinct
 #' @importFrom magrittr %>%
+#' @importFrom rlang .data
 #' @export
-prepare_ms <- function(.data,
+prepare_ms <- function(data,
                        subject_id  = "subject_id",
-                       replicate   = "replicate",
+                       replicate   = NULL,
+                       abundance   = "abundance",
+                       spike       = "spike",
                        mz          = "mz",
                        rt          = "rt",
                        cvmax       = 0.50,
@@ -44,22 +55,27 @@ prepare_ms <- function(.data,
                        min_proportion_present = 1/3) {
 
   # Check args
-  stopifnot(is.data.frame(.data))
+  stopifnot(is.data.frame(data))
+  my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
+
+  # Replace provided variable names with standardized ones
+  data <- standardize_dataset(data, subject_id, replicate, abundance, spike, mz, rt)
 
   # Replace miss val with NAs 
-  .data <- .data %>% mutate(abundance = replace_missing(abundance, missing_val))
+  data <- data %>% mutate_at(vars(abundance), replace_missing, missing_val)
 
   # Get replicate count for each mz/rt/spike/subject combo
-  replicate_count <- length(unique(.data[[replicate]]))
+  replicate_count <- length(unique(data[["replicate"]]))
 
   # Roughly check if all compounds are present in each replicate
-  stopifnot(nrow(.data) %% replicate_count == 0)
+  stopifnot(nrow(data) %% replicate_count == 0)
 
   # Calculate initial summary measures 
   #   Note;(matrix algebra would be faster --
   #     consider later)
+
   quant_summary <-
-    .data %>%
+    data %>% 
     group_by(subject_id, spike, mz, rt) %>%
     arrange(mz, rt, subject_id, spike, replicate) %>%
     summarise(n_present        = sum(!is.na(abundance)),
@@ -119,6 +135,21 @@ prepare_ms <- function(.data,
 
 }
 
+#' @rdname prepare_ms
+print.msprepped <- function(x) {
+  cat("msprepped object\n")
+  cat("    Replicate count: ", x$replicate_count, "\n")
+  cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
+  cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
+  cat("    Count patient-spike combinations: ", nrow(x$clinical), "\n")
+  cat("    Count of patient-spike compounds summarized by median: ", nrow(x$medians), "\n")
+  cat("    User-defined parameters \n")
+  cat("        cvmax = ", x$cvmax, "\n")
+  cat("        min_proportion_present = ", round(x$min_proportion_present, digits=3), "\n")
+  cat("    Summarized dataset:\n")
+  print(x$summary_data, n = 6)
+}
+
 
 
 
@@ -164,8 +195,10 @@ prepare_ms <- function(.data,
 #'   quant <- tidy_ms(quant, mz = "mz", rt = "rt")
 #'
 #' @importFrom tibble as_data_frame
+#' @importFrom tibble data_frame
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate
+#' @importFrom dplyr arrange
 #' @importFrom tidyr separate
 #' @importFrom stringr str_replace_all
 #' @importFrom magrittr %>%
@@ -221,5 +254,46 @@ select_summary_measure <- function(n_present,
             TRUE ~ "mean")
 
 }
+
+#' @rdname prepare_ms
+#' @importFrom dplyr rename
+#' @importFrom rlang sym
+#' @importFrom rlang UQ
+standardize_dataset <- function(data, subject_id, replicate, abundance, spike,
+                                mz, rt) {
+
+  # Rename required variables
+  subject_id = sym(subject_id)
+  abundance  = sym(abundance)
+  mz         = sym(mz)
+  rt         = sym(rt)
+
+  data <- data %>% 
+    rename("subject_id" = UQ(subject_id),
+           "abundance"  = UQ(abundance),
+           "mz"         = UQ(mz),
+           "rt"         = UQ(rt))
+
+  # Rename optional variables if present
+  if (!is.null(replicate)) {
+    replicate  = sym(replicate)
+    data <- data %>%
+      rename("replicate" = UQ(replicate))
+  } else {
+    data$replicate <- "None"
+  }
+
+  if (!is.null(spike)) {
+    spike  = sym(spike)
+    data <- data %>%
+      rename("spike" = UQ(spike))
+  } else {
+    data$spike <- "Not provided"
+  }
+
+  return(data)
+
+}
+
 
 
