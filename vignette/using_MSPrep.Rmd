@@ -52,16 +52,21 @@ vignette: |
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
 
-source("https://bioconductor.org/biocLite.R")
-biocLite()
-library(BiocInstaller)
-biocLite("pcaMethods")
-biocLite("crmn")
-biocLite("preprocessCore")
-biocLite("sva")
+#source("https://bioconductor.org/biocLite.R")
+#biocLite()
+#library(BiocInstaller)
+#biocLite("pcaMethods")
+#biocLite("crmn")
+#biocLite("preprocessCore")
+#biocLite("sva")
 
 # for dev
 library(tidyverse)
+library(pcaMethods)
+library(crmn)
+library(preprocessCore)
+library(sva)
+
 
 ``` 
 
