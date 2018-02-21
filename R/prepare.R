@@ -23,7 +23,7 @@
 #' 
 #' # Convert dataset to tidy format
 #' tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
-#' prepped_data <- prepare_ms(tidy_data)
+#' prepped_data <- prepare_ms(tidy_data, replicate = "replicate")
 #' 
 #' # Or, using tidyverse/magrittr pipes 
 #' prepped_data <- quant %>% tidy_ms %>% prepare_ms
@@ -137,7 +137,7 @@ prepare_ms <- function(data,
 
 #' @rdname prepare_ms
 print.msprepped <- function(x) {
-  cat("msprepped object\n")
+  cat("prepped msprep object\n")
   cat("    Replicate count: ", x$replicate_count, "\n")
   cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
   cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
@@ -150,6 +150,22 @@ print.msprepped <- function(x) {
   print(x$summary_data, n = 6)
 }
 
+#' @rdname filter_ms
+print.msfiltered <- function(x) {
+  cat("filtered msprep object\n")
+  cat("    Count of compounds present in >= ", round(x$filter_percent*100, digits = 3), "% of patients = ", sum(x$filter_status$keep), "\n")
+  cat("    Replicate count: ", x$replicate_count, "\n")
+  cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
+  cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
+  cat("    Count patient-spike combinations: ", nrow(x$clinical), "\n")
+  cat("    Count of patient-spike compounds summarized by median: ", nrow(x$medians), "\n")
+  cat("    User-defined parameters \n")
+  cat("        cvmax = ", x$cvmax, "\n")
+  cat("        min_proportion_present = ", round(x$min_proportion_present, digits=3), "\n")
+  cat("        filter percent = ", x$filter_percent, "\n")
+  cat("    Dataset:\n")
+  print(x$summary_data, n = 6)
+}
 
 
 
