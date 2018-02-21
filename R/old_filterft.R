@@ -22,7 +22,7 @@
 #'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 #' @examples
 #'   # Load object generated from readdata() function
-#'   load("test.Rdata")
+#'   load("./data/test.rda")
 #'
 #'   test2 <- filterft(test$sum_data1, 0.80)
 #'
@@ -37,6 +37,16 @@
 # to only compounds found in a user-specified percentage of subjects.
 
 filterft <- function (metaf, filterpercent = 0.5) {
+
+
+  # count is a vector of the percent present for each compound
+  # toss is indicator vector for keep (= 1) /remove (= 0)
+
+  # metaf   <- original matrix
+  # metafin <- filtered matrix with only the compunds present >= filterpercent
+  # metaimp <- metafin w/ NAs instead of 0s
+  # present <- indicator matrix (dim= metaf) for present or not
+
 
   count <- matrix(NA, nrow = ncol(metaf), ncol = 1)
   rownames(count) <- colnames(metaf)
@@ -60,6 +70,7 @@ filterft <- function (metaf, filterpercent = 0.5) {
   tests <- cbind(toss, t(metaf))
   metafin <- t(subset(tests, toss != 0)[, -1])
   metaimp <- matrix(NA, nrow = nrow(metafin), ncol = ncol(metafin))
+  # Create matrix where 0's are replace with NA's
   for (i in 1:nrow(metafin)) {
     for (j in 1:ncol(metafin)) {
       # sean jacobson added this so that missing data would be ignored
@@ -92,7 +103,7 @@ filterft <- function (metaf, filterpercent = 0.5) {
       # sean jacobson added this for missing data
       # if(is.na(metafin[i, j])){minval[i,j] <- NA; next}
       if (metafin[i, j] == 0) {
-        minval[i, j] <- summary(metaimp[, j])[1]/2
+        minval[i, j] <- min(metaimp[, j], na.rm = TRUE) / 2
       }
       else {
         minval[i, j] <- metafin[i, j]
