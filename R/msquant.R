@@ -20,7 +20,7 @@
 #' }
 #' @keywords datasets
 #' @examples
-#'   data(quant)
-#'   str(quant)
-"quant"
+#'   data(msquant)
+#'   str(msquant)
+"msquant"
 
