@@ -31,17 +31,22 @@ Imports:
   pcaMethods (>= 1.24.0), 
   crmn, 
   preprocessCore, 
-  sva
-Suggests: 
-  BiocStyle, 
-  knitr, 
-  rmarkdown, 
-  testthat (>= 1.0.2), 
-  tibble (>= 1.2)
+  sva,
+  dplyr (>= 0.7),
+  tidyr,
+  tibble (>= 1.2),
+  magrittr,
+  rlang,
+  stringr,
+Suggests:
+  BiocStyle,
+  knitr,
+  rmarkdown,
+  testthat (>= 1.0.2),
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: no
 License: GPL-3
 biocViews: TBD
 Encoding: UTF-8
-RoxygenNote: 6.0.1.9000
+RoxygenNote: 6.0.1
