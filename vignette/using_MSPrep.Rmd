@@ -73,9 +73,10 @@ source("R/prepare.R")
 
 quant <- read.csv("./data-raw/Quantification.csv")
 # Convert dataset to tidy format
-tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
-prepped_data <- prepare_ms(tidy_data, replicate = "replicate")
-filtered_data <- filter_ms(prepped_data, filter_percent = 0.5)
+tidy_data     <- ms_tidy(quant, mz = "mz", rt = "rt")
+prepped_data  <- ms_prepare(tidy_data, replicate = "replicate")
+filtered_data <- ms_filter(prepped_data, filter_percent = 0.5)
+# imputed
 
 
 
