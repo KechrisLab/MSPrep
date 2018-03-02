@@ -19,14 +19,14 @@
 #' @examples
 #'
 #' # Read in data file
-#' quant <- read.csv("./data-raw/Quantification.csv")
+#' data(msquant)
 #' 
 #' # Convert dataset to tidy format
-#' tidy_data    <- tidy_ms(quant, mz = "mz", rt = "rt")
-#' prepped_data <- prepare_ms(tidy_data, replicate = "replicate")
+#' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
+#' prepped_data <- ms_prepare(tidy_data, replicate = "replicate")
 #' 
 #' # Or, using tidyverse/magrittr pipes 
-#' prepped_data <- quant %>% tidy_ms %>% prepare_ms
+#' prepped_data <- msquant %>% ms_tidy %>% ms_prepare
 #'
 #' str(prepped_data)
 #' str(prepped_data$summary_data)
@@ -40,10 +40,10 @@
 #' @importFrom dplyr ungroup 
 #' @importFrom dplyr case_when
 #' @importFrom dplyr distinct
-#' @importFrom magrittr %>%
+#' @importFrom dplyr filter
 #' @importFrom rlang .data
 #' @export
-prepare_ms <- function(data,
+ms_prepare <- function(data,
                        subject_id  = "subject_id",
                        replicate   = NULL,
                        abundance   = "abundance",
@@ -62,7 +62,7 @@ prepare_ms <- function(data,
   data <- standardize_dataset(data, subject_id, replicate, abundance, spike, mz, rt)
 
   # Replace miss val with NAs 
-  data <- data %>% mutate_at(vars(abundance), replace_missing, missing_val)
+  data <- mutate_at(data, vars(abundance), replace_missing, missing_val)
 
   # Get replicate count for each mz/rt/spike/subject combo
   replicate_count <- length(unique(data[["replicate"]]))
@@ -73,55 +73,52 @@ prepare_ms <- function(data,
   # Calculate initial summary measures 
   #   Note;(matrix algebra would be faster --
   #     consider later)
-
-  quant_summary <-
-    data %>% 
-    group_by(subject_id, spike, mz, rt) %>%
-    arrange(mz, rt, subject_id, spike, replicate) %>%
-    summarise(n_present        = sum(!is.na(abundance)),
-              prop_present     = n_present / replicate_count,
-              mean_abundance   = mean(abundance, na.rm = T),
-              sd_abundance     = sd(abundance, na.rm = T),
-              median_abundance = median(abundance, na.rm = T)) %>%
-    mutate(cv_abundance = sd_abundance / mean_abundance) %>%
-    ungroup
+  quant_summary <- group_by(data, subject_id, spike, mz, rt)
+  quant_summary <- arrange(quant_summary, mz, rt, subject_id, spike, replicate)
+  quant_summary <- summarise(quant_summary,
+                             n_present        = sum(!is.na(abundance)),
+                             prop_present     = n_present / replicate_count,
+                             mean_abundance   = mean(abundance, na.rm = T),
+                             sd_abundance     = sd(abundance, na.rm = T),
+                             median_abundance = median(abundance, na.rm = T))
+  quant_summary <- mutate(quant_summary, cv_abundance = sd_abundance / mean_abundance)
+  quant_summary <- ungroup(quant_summary)
 
   # Identify and select summary measure
   quant_summary <-
-    quant_summary %>%
-    mutate(summary_measure = 
+    mutate(quant_summary,
+           summary_measure = 
              select_summary_measure(n_present, cv_abundance, replicate_count,
                                     min_proportion_present, cvmax),
            abundance_summary = 
              case_when(summary_measure == "median" ~ median_abundance,
                        summary_measure == "mean"   ~ mean_abundance,
-                       TRUE                        ~ 0)) %>%
-    mutate_at(c("subject_id", "summary_measure", "spike"), factor)
+                       TRUE                        ~ 0)) 
+  quant_summary <- mutate_at(quant_summary, 
+                             c("subject_id", "summary_measure", "spike"),
+                             factor)
 
   # Extract summarized dataset
-  summary_data   <-
-    quant_summary %>% select(subject_id, spike, mz, rt, abundance_summary)
+  summary_data  <- select(quant_summary, subject_id, spike, mz, rt,
+                          abundance_summary)
 
   # Additional info extracted in summarizing replicates
-  replicate_info <-
-    quant_summary %>% select(subject_id, spike, mz, rt, n_present, cv_abundance, summary_measure)
+  replicate_info <- select(quant_summary, subject_id, spike, mz, rt, n_present,
+                           cv_abundance, summary_measure)
 
   # Summaries that used medians
-  medians        <-
-    quant_summary %>% filter(summary_measure == "median") %>%
-    select(subject_id, spike, mz, rt, abundance_summary)
+  medians        <- filter(quant_summary, summary_measure == "median")
+  medians        <- select(quant_summary, subject_id, spike, mz, rt,
+                           abundance_summary)
 
   # Total number of compounds identified
-  n_compounds    <-
-    quant_summary %>% select(mz, rt) %>% distinct %>% nrow
+  n_compounds    <- nrow(distinct(select(quant_summary, mz, rt)))
 
   # Count of subject,spike pairs
-  n_subject_spike_pairs  <-
-    quant_summary %>% select(subject_id, spike) %>% distinct %>% nrow
+  n_subject_spike_pairs  <- nrow(distinct(select(quant_summary, subject_id, spike)))
 
   # Subject and spike id combos
-  subjects_summary <- 
-    quant_summary %>% select(subject_id, spike) %>% distinct
+  subjects_summary <- distinct(select(quant_summary, subject_id, spike))
 
   # Create return object & return
   structure(list(summary_data    = summary_data,
@@ -135,7 +132,7 @@ prepare_ms <- function(data,
 
 }
 
-#' @rdname prepare_ms
+#' @rdname ms_prepare
 print.msprepped <- function(x) {
   cat("prepped msprep object\n")
   cat("    Replicate count: ", x$replicate_count, "\n")
@@ -150,22 +147,6 @@ print.msprepped <- function(x) {
   print(x$summary_data, n = 6)
 }
 
-#' @rdname filter_ms
-print.msfiltered <- function(x) {
-  cat("filtered msprep object\n")
-  cat("    Count of compounds present in >= ", round(x$filter_percent*100, digits = 3), "% of patients = ", sum(x$filter_status$keep), "\n")
-  cat("    Replicate count: ", x$replicate_count, "\n")
-  cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
-  cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
-  cat("    Count patient-spike combinations: ", nrow(x$clinical), "\n")
-  cat("    Count of patient-spike compounds summarized by median: ", nrow(x$medians), "\n")
-  cat("    User-defined parameters \n")
-  cat("        cvmax = ", x$cvmax, "\n")
-  cat("        min_proportion_present = ", round(x$min_proportion_present, digits=3), "\n")
-  cat("        filter percent = ", x$filter_percent, "\n")
-  cat("    Dataset:\n")
-  print(x$summary_data, n = 6)
-}
 
 
 
@@ -207,8 +188,12 @@ print.msfiltered <- function(x) {
 #'
 #' @examples
 #'
-#'   quant <- read.csv("./data-raw/Quantification.csv")
-#'   quant <- tidy_ms(quant, mz = "mz", rt = "rt")
+#'   # load raw abundance/quantification dataset
+#'   data(msquant)
+#'   # print original dataset (using tibble's nice printing)
+#'   tibble::as_data_frame(msquant) 
+#'   # tidy the dataset and print it
+#'   ms_tidy(msquant, mz = "mz", rt = "rt")
 #'
 #' @importFrom tibble as_data_frame
 #' @importFrom tibble data_frame
@@ -219,7 +204,7 @@ print.msfiltered <- function(x) {
 #' @importFrom stringr str_replace_all
 #' @importFrom magrittr %>%
 #' @export
-tidy_ms <- function(quantification_data,
+ms_tidy <- function(quantification_data,
                     mz = "mz", 
                     rt = "rt",
                     id_extra_txt     = "Neutral_Operator_Dif_Pos_",
@@ -228,18 +213,20 @@ tidy_ms <- function(quantification_data,
                     id_subject_pos   = 2,
                     id_replicate_pos = 3) {
 
+  # create vector of order of id parts
   into <-
     data_frame(name = c("spike", "subject_id", "replicate"),
                order = c(id_spike_pos, id_subject_pos, id_replicate_pos)) %>%
     arrange(order) %>% .[["name"]]
 
-  rtn <- 
-    quantification_data %>%
-      tibble::as_data_frame(.) %>%
-      tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-      dplyr::mutate(id_col = stringr::str_replace_all(id_col, 
-                                                      id_extra_txt, "")) %>%
-      tidyr::separate(id_col, sep = separator, into = into)
+  # gather data to long format (adds id/varnames as column), remove id_extra_txt
+  # from id column, and convert id column to separate spike,subject,replicate
+  # variables
+  rtn <-
+    tibble::as_data_frame(quantification_data) %>%
+    tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
+    dplyr::mutate(id_col = stringr::str_replace_all(id_col, id_extra_txt, "")) %>%
+    tidyr::separate(id_col, sep = separator, into = into)
 
   return(rtn)
 
@@ -248,12 +235,12 @@ tidy_ms <- function(quantification_data,
 
 
 
-#' @rdname prepare_ms
+#' @rdname ms_prepare
 replace_missing <- function(abundance, missing_val) {
   ifelse(abundance == missing_val, NA, abundance)
 }
 
-#' @rdname prepare_ms
+#' @rdname ms_prepare
 #' @importFrom dplyr case_when
 select_summary_measure <- function(n_present,
                                    cv_abundance,
@@ -271,7 +258,7 @@ select_summary_measure <- function(n_present,
 
 }
 
-#' @rdname prepare_ms
+#' @rdname ms_prepare
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
