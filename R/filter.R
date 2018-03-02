@@ -4,8 +4,8 @@
 #' Filters compounds to those found in specified percentage of subjects and
 #' performs data imputation.
 #'
-#' @param metaf Summarized dataset output as sum_data1 from readdata() function
-#' @param filterpercent Percent to filter the data
+#' @param msprepped Summarized dataset output as sum_data1 from readdata() function
+#' @param filter_percent Percent to filter the data
 #' @return Placeholder
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
@@ -24,19 +24,10 @@
 #'   # Load object generated from readdata() function
 #'   load("./data/test.rda")
 #'
-#'   test2 <- filterft(test$sum_data1, 0.80)
+#'   test2 <- ms_filter(test$sum_data1, 0.80)
 #'
 #' @export
-
-# Filterft to only include compounds that are found in specified percentage of
-# subjects and perform imputation of missing data
-
-# Manuscript description: 
-# Filtering: The resulting summarized dataset contains all compounds with one
-# observation per subject (or sample). The next processing step filters the data
-# to only compounds found in a user-specified percentage of subjects.
-
-filter_ms <- function (msprepped, filter_percent = 0.5) {
+ms_filter <- function (msprepped, filter_percent = 0.5) {
 
   stopifnot("msprepped" %in% class(msprepped))
   filter_status <- 
@@ -64,8 +55,62 @@ filter_ms <- function (msprepped, filter_percent = 0.5) {
 
 }
 
+#' @rdname ms_filter
+print.msfiltered <- function(x) {
+  cat("filtered msprep object\n")
+  cat("    Count of compounds present in >= ", round(x$filter_percent*100, digits = 3), "% of patients = ", sum(x$filter_status$keep), "\n")
+  cat("    Replicate count: ", x$replicate_count, "\n")
+  cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
+  cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
+  cat("    Count patient-spike combinations: ", nrow(x$clinical), "\n")
+  cat("    Count of patient-spike compounds summarized by median: ", nrow(x$medians), "\n")
+  cat("    User-defined parameters \n")
+  cat("        cvmax = ", x$cvmax, "\n")
+  cat("        min_proportion_present = ", round(x$min_proportion_present, digits=3), "\n")
+  cat("        filter percent = ", x$filter_percent, "\n")
+  cat("    Dataset:\n")
+  print(x$summary_data, n = 6)
+}
 
-impute_ms <- function(msprepped, impute_function = ~ minval(.x)) {
+# Filterft to only include compounds that are found in specified percentage of
+# subjects and perform imputation of missing data
+
+# Manuscript description: 
+# Filtering: The resulting summarized dataset contains all compounds with one
+# observation per subject (or sample). The next processing step filters the data
+# to only compounds found in a user-specified percentage of subjects.
+
+
+
+#' Imputes dataset
+#'
+#' and
+#' performs data imputation.
+#'
+#' @param msprepped Placeholder
+#' @param impute_function Placeholder
+#' @return Placeholder
+#' @details minval Filtered dataset with missing values replaced by 1/2 minimum
+#' observed value for that compound.
+#' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
+#' from PCAMethods package.
+#' @details withzero Filtered dataset with no imputation.
+#' @details count List of all compounds and the percent present for each
+#' compound.
+#' @references 
+#'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
+#'   expression profile data. Bioinformatics, 19, 2088-2096
+#'
+#'   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
+#'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
+#' @examples
+#'   # Load object generated from readdata() function
+#'   load("./data/test.rda")
+#'
+#'   test2 <- ms_filter(test$sum_data1, 0.80)
+#'
+#' @export
+ms_impute <- function(msprepped, impute_function = ~ minval(.x)) {
 
   stopifnot("msprepped" %in% class(msprepped))
 
