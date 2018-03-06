@@ -1,10 +1,10 @@
 Package: MSPrep
 Title: 
-  Package for summarizing, filtering, imputing, and normalizing metabolomics data.
+  Package for summarizing, filtering, imputing, and normalizing metabolomics data
 Version: 0.0.1
 Authors@R: 
   c(person("Grant", "Hughes", 
-           email = "ruyuanbin@gmail.com", 
+           email = "", 
            role = c("aut")),
     person("Matt", "Mulvahill", 
            email = "matthew.mulvahill@ucdenver.edu", 
@@ -26,7 +26,7 @@ Description:
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
-  R
+  R (>= 3.4)
 Imports: 
   pcaMethods (>= 1.24.0), 
   crmn, 

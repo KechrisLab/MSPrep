@@ -9,11 +9,17 @@
 #' 3 replicates but excess CV.
 #'
 #' @param data A tidy dataframe of quantification data.
-#' @param rt Retention time variable name.
+#' @param subject_id Name (string) of the subject ID column.
+#' @param replicate Name (string) of the replicate column. Set to NULL if no
+#' replicates. TODO: test NULL.
+#' @param abundance Name (string) of the abundance column.
+#' @param spike Name (string) of the spike column.
 #' @param mz Mass-to-charge ratio variable name.
+#' @param rt Retention time variable name.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
-#' @param missing Value of missing data in the quantification data file.
-#' @param linktxt Column name for Run ID field in Subject Link dataset
+#' @param missing_val Value of missing data in the quantification data file.
+#' @param min_proportion_present  Minimum proportion present to summarize with
+#' median or mean. Below this the compound will be set to 0.
 #' @return An \code{msprepped} object containing summarised quantification data,
 #' a dataset of compounds summarised by medians, and other related summaries.
 #' @examples
@@ -26,6 +32,7 @@
 #' prepped_data <- ms_prepare(tidy_data, replicate = "replicate")
 #' 
 #' # Or, using tidyverse/magrittr pipes 
+#' library(magrittr)
 #' prepped_data <- msquant %>% ms_tidy %>% ms_prepare
 #'
 #' str(prepped_data)
@@ -41,11 +48,14 @@
 #' @importFrom dplyr case_when
 #' @importFrom dplyr distinct
 #' @importFrom dplyr filter
+#' @importFrom dplyr vars
 #' @importFrom rlang .data
+#' @importFrom stats median
+#' @importFrom stats sd
 #' @export
 ms_prepare <- function(data,
                        subject_id  = "subject_id",
-                       replicate   = NULL,
+                       replicate   = "replicate",
                        abundance   = "abundance",
                        spike       = "spike",
                        mz          = "mz",
@@ -93,8 +103,8 @@ ms_prepare <- function(data,
            abundance_summary = 
              case_when(summary_measure == "median" ~ median_abundance,
                        summary_measure == "mean"   ~ mean_abundance,
-                       TRUE                        ~ 0)) 
-  quant_summary <- mutate_at(quant_summary, 
+                       TRUE                        ~ 0))
+  quant_summary <- mutate_at(quant_summary,
                              c("subject_id", "summary_measure", "spike"),
                              factor)
 
@@ -108,7 +118,7 @@ ms_prepare <- function(data,
 
   # Summaries that used medians
   medians        <- filter(quant_summary, summary_measure == "median")
-  medians        <- select(quant_summary, subject_id, spike, mz, rt,
+  medians        <- select(medians, subject_id, spike, mz, rt,
                            abundance_summary)
 
   # Total number of compounds identified
@@ -132,7 +142,8 @@ ms_prepare <- function(data,
 
 }
 
-#' @rdname ms_prepare
+
+
 print.msprepped <- function(x) {
   cat("prepped msprep object\n")
   cat("    Replicate count: ", x$replicate_count, "\n")
@@ -150,97 +161,12 @@ print.msprepped <- function(x) {
 
 
 
-#' Function for converting wide mass spec quantification data into a tidy data
-#' frame
-#'
-#' Function reads in wide dataset of mass spec quantification data and converts
-#' it to a tidy dataset.  This function assumes that the dataset is in a wide
-#' format, with a column representing the retention time (rt), another
-#' representing the mass-to-charge ratio (mz), and the remaining columns
-#' containing MS quantification data.  
-#' 
-#' It also assumes that the column names of quantification data start with some
-#' consistent, informational but unnecessary text (id_extra_txt), and contain
-#' the spike, subject ID, and replicate ID in a consistent position, all
-#' separated by a consistent separator.
-#'
-#' See \code{data(quantification)} for an example.  If your data doesn't fit
-#' this format, view the function code for hints on tidying your data.  The core
-#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
-#' and \code{tidyr::separate()}.
-#'
-#' @param quantification_data Data frame containing the quantification data.
-#' @param mz Name of the column containing mass-to-charge ratios.
-#' @param rt Name of the column containing retention time.
-#' @param id_extra_txt Text to remove when converting quant variable names to
-#'   variables.
-#' @param separator Character/string separating spike, subject and replicate
-#'   ids.
-#' @param id_spike_pos Order in which the spike number occurs in the quant
-#'   variable names (after \code{id_extra_txt} is removed).
-#' @param id_subject_id_pos Order in which the subject id occurs in the quant
-#'   variable names.
-#' @param id_replicate_id_pos Order in which the replicate id occurs in the quant
-#'   variable names.
-#'
-#' @return A tidy data frame of quant data, with columns mz, rt, spike,
-#' subject_id, replicate, and abundance.
-#'
-#' @examples
-#'
-#'   # load raw abundance/quantification dataset
-#'   data(msquant)
-#'   # print original dataset (using tibble's nice printing)
-#'   tibble::as_data_frame(msquant) 
-#'   # tidy the dataset and print it
-#'   ms_tidy(msquant, mz = "mz", rt = "rt")
-#'
-#' @importFrom tibble as_data_frame
-#' @importFrom tibble data_frame
-#' @importFrom tidyr gather
-#' @importFrom dplyr mutate
-#' @importFrom dplyr arrange
-#' @importFrom tidyr separate
-#' @importFrom stringr str_replace_all
-#' @importFrom magrittr %>%
-#' @export
-ms_tidy <- function(quantification_data,
-                    mz = "mz", 
-                    rt = "rt",
-                    id_extra_txt     = "Neutral_Operator_Dif_Pos_",
-                    separator        = "_",
-                    id_spike_pos     = 1,
-                    id_subject_pos   = 2,
-                    id_replicate_pos = 3) {
-
-  # create vector of order of id parts
-  into <-
-    data_frame(name = c("spike", "subject_id", "replicate"),
-               order = c(id_spike_pos, id_subject_pos, id_replicate_pos)) %>%
-    arrange(order) %>% .[["name"]]
-
-  # gather data to long format (adds id/varnames as column), remove id_extra_txt
-  # from id column, and convert id column to separate spike,subject,replicate
-  # variables
-  rtn <-
-    tibble::as_data_frame(quantification_data) %>%
-    tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-    dplyr::mutate(id_col = stringr::str_replace_all(id_col, id_extra_txt, "")) %>%
-    tidyr::separate(id_col, sep = separator, into = into)
-
-  return(rtn)
-
-}
-
-
-
-
-#' @rdname ms_prepare
 replace_missing <- function(abundance, missing_val) {
   ifelse(abundance == missing_val, NA, abundance)
 }
 
-#' @rdname ms_prepare
+
+
 #' @importFrom dplyr case_when
 select_summary_measure <- function(n_present,
                                    cv_abundance,
@@ -258,7 +184,9 @@ select_summary_measure <- function(n_present,
 
 }
 
-#' @rdname ms_prepare
+
+
+
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
