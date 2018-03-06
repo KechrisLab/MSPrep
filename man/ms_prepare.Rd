@@ -2,29 +2,25 @@
 % Please edit documentation in R/prepare.R
 \name{ms_prepare}
 \alias{ms_prepare}
-\alias{print.msprepped}
-\alias{replace_missing}
-\alias{select_summary_measure}
-\alias{standardize_dataset}
 \title{Prepare a mass spec quantification data frame for filtering, imputation,
 and normalization. Also provides summaries of data structure (replicates,
 subjects, spike, etc.)}
 \usage{
-ms_prepare(data, subject_id = "subject_id", replicate = NULL,
+ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
   abundance = "abundance", spike = "spike", mz = "mz", rt = "rt",
   cvmax = 0.5, missing_val = 1, min_proportion_present = 1/3)
-
-\method{print}{msprepped}(x)
-
-replace_missing(abundance, missing_val)
-
-select_summary_measure(n_present, cv_abundance, n_replicates,
-  min_proportion_present, cv_max)
-
-standardize_dataset(data, subject_id, replicate, abundance, spike, mz, rt)
 }
 \arguments{
 \item{data}{A tidy dataframe of quantification data.}
+
+\item{subject_id}{Name (string) of the subject ID column.}
+
+\item{replicate}{Name (string) of the replicate column. Set to NULL if no
+replicates. TODO: test NULL.}
+
+\item{abundance}{Name (string) of the abundance column.}
+
+\item{spike}{Name (string) of the spike column.}
 
 \item{mz}{Mass-to-charge ratio variable name.}
 
@@ -32,9 +28,10 @@ standardize_dataset(data, subject_id, replicate, abundance, spike, mz, rt)
 
 \item{cvmax}{Acceptable level of coefficient of variation between replicates.}
 
-\item{missing}{Value of missing data in the quantification data file.}
+\item{missing_val}{Value of missing data in the quantification data file.}
 
-\item{linktxt}{Column name for Run ID field in Subject Link dataset}
+\item{min_proportion_present}{Minimum proportion present to summarize with
+median or mean. Below this the compound will be set to 0.}
 }
 \value{
 An \code{msprepped} object containing summarised quantification data,
@@ -56,6 +53,7 @@ tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
 prepped_data <- ms_prepare(tidy_data, replicate = "replicate")
 
 # Or, using tidyverse/magrittr pipes 
+library(magrittr)
 prepped_data <- msquant \%>\% ms_tidy \%>\% ms_prepare
 
 str(prepped_data)

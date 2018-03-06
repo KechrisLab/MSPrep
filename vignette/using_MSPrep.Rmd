@@ -1,12 +1,15 @@
 ---
 title: "Using MSPrep"
 author: 
-    - name: Sean Jacobson
-      email: fill@me.in
-      affiliation: National Jewish Hospital
     - name: Matt Mulvahill
       email: matthew.mulvahill@ucdenver.edu
       affiliation: CU Anschutz
+    - name: Grant Hughes
+      email: fill@me.in
+      affiliation: National Jewish Hospital
+    - name: Sean Jacobson
+      email: fill@me.in
+      affiliation: National Jewish Hospital
     - name: Katerina Kechris
       affiliation: CU Anschutz
 package: MSPrep
@@ -47,7 +50,7 @@ vignette: |
 - fit into 'bioconductor' workflow
 
 
-```{r load-dependencies}
+```{r load-dependencies, eval=FALSE}
 
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
@@ -69,6 +72,7 @@ library(preprocessCore)
 library(sva)
 
 
+source("R/tidy.R")
 source("R/prepare.R")
 
 quant <- read.csv("./data-raw/Quantification.csv")
@@ -82,7 +86,7 @@ filtered_data <- ms_filter(prepped_data, filter_percent = 0.5)
 
 ``` 
 
-```{r build-pkg}
+```{r build-pkg, eval=FALSE}
 
 devtools::document()
 devtools::check()
@@ -91,7 +95,7 @@ devtools::install("../MSPrep", build_vignettes = TRUE)
 ```
 
 
-```{r load-data}
+```{r load-data, eval=FALSE}
 
 # Load package
 library(MSPrep)
@@ -106,7 +110,7 @@ dat <- quant %>% tidy_ms %>% prepare_ms
 
 
 
-```{r fix-included-data}
+```{r fix-included-data, eval=FALSE}
 library(tidyverse)
 clinical     <- read_csv("data-raw/Clinical.csv")
 quantif      <- read_csv("data-raw/Quantification.csv")
@@ -140,7 +144,7 @@ Identifiers in the datasets
 - SubjectID   = subject (01-03), concentration  (1x,2x,4x)
 
 
-```{r read-rules-from-manuscript}
+```{r read-rules-from-manuscript, eval=FALSE}
 ############################################################
 # Rules from manuscript
 ############################################################

@@ -2,12 +2,9 @@
 % Please edit documentation in R/filter.R
 \name{ms_filter}
 \alias{ms_filter}
-\alias{print.msfiltered}
 \title{Filters and imputes dataset}
 \usage{
 ms_filter(msprepped, filter_percent = 0.5)
-
-\method{print}{msfiltered}(x)
 }
 \arguments{
 \item{msprepped}{Summarized dataset output as sum_data1 from readdata() function}
@@ -34,10 +31,14 @@ count List of all compounds and the percent present for each
 compound.
 }
 \examples{
-  # Load object generated from readdata() function
-  load("./data/test.rda")
 
-  test2 <- ms_filter(test$sum_data1, 0.80)
+library(magrittr)
+
+# Load example dataset, tidy it, prepare it, then filter it
+data(msquant)
+
+prepped_data <- msquant \%>\% ms_tidy \%>\% ms_prepare
+filtered_data <- ms_filter(prepped_data, 0.80)
 
 }
 \references{
