@@ -118,6 +118,7 @@ dat <-
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
+dat <- ms_impute(method = "kNN")
 
 ```
 
