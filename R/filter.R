@@ -85,12 +85,4 @@ print.msfiltered <- function(x) {
   print(x$summary_data, n = 6)
 }
 
-# Filterft to only include compounds that are found in specified percentage of
-# subjects and perform imputation of missing data
-
-# Manuscript description: 
-# Filtering: The resulting summarized dataset contains all compounds with one
-# observation per subject (or sample). The next processing step filters the data
-# to only compounds found in a user-specified percentage of subjects.
-
 
