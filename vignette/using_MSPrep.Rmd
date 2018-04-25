@@ -64,25 +64,25 @@ library(devtools)
 #biocLite("sva")
 
 # for dev
-library(tidyverse)
-library(rlang)
-library(pcaMethods)
-library(crmn)
-library(preprocessCore)
-library(sva)
-
-
-source("R/tidy.R")
-source("R/prepare.R")
-
-quant <- read.csv("./data-raw/Quantification.csv")
-# Convert dataset to tidy format
-tidy_data     <- ms_tidy(quant, mz = "mz", rt = "rt")
-prepped_data  <- ms_prepare(tidy_data, replicate = "replicate")
-filtered_data <- ms_filter(prepped_data, filter_percent = 0.5)
-# imputed
-
-
+# library(tidyverse)
+# library(rlang)
+# library(pcaMethods)
+# library(crmn)
+# library(preprocessCore)
+# library(sva)
+# 
+# 
+# source("R/tidy.R")
+# source("R/prepare.R")
+# 
+# quant <- read.csv("./data-raw/Quantification.csv")
+# # Convert dataset to tidy format
+# tidy_data     <- ms_tidy(quant, mz = "mz", rt = "rt")
+# prepped_data  <- ms_prepare(tidy_data, replicate = "replicate")
+# filtered_data <- ms_filter(prepped_data, filter_percent = 0.5)
+# # imputed
+# 
+# 
 
 ``` 
 
@@ -97,16 +97,65 @@ devtools::install("../MSPrep", build_vignettes = TRUE)
 
 ```{r load-data, eval=FALSE}
 
+# Will need a columns for annotation, databse id, etc.
+# Don't require mz_rt, but one of these IDs 
+# add imputation references for bpca and knn to vignette
+# keep in mind that normalization methods --  0 should be treated as missing 
+
 # Load package
 library(MSPrep)
+library(tidyverse)
 
 # Load quantification dataset
-data(quant)
+data(msquant)
+as_data_frame(msquant)
+names(msquant)
 
 # Tidy and create summarized dataset
-dat <- quant %>% tidy_ms %>% prepare_ms
+dat <- 
+  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
+
+dat <- ms_tidy(msquant)
+dat <- ms_prepare(dat)
+dat <- ms_filter(dat)
+dat <- ms_impute(method = "kNN")
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
