@@ -55,6 +55,9 @@ vignette: |
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
 
+```{r developercode, eval=FALSE}
+# Code for development only
+#
 #source("https://bioconductor.org/biocLite.R")
 #biocLite()
 #library(BiocInstaller)
@@ -83,8 +86,8 @@ library(devtools)
 # # imputed
 # 
 # 
-
 ``` 
+
 
 ```{r build-pkg, eval=FALSE}
 
@@ -101,6 +104,7 @@ devtools::install("../MSPrep", build_vignettes = TRUE)
 # Don't require mz_rt, but one of these IDs 
 # add imputation references for bpca and knn to vignette
 # keep in mind that normalization methods --  0 should be treated as missing 
+if (!require("devtools")) install.packages("devtools")
 
 # Load package
 library(MSPrep)
@@ -119,6 +123,29 @@ dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
 dat <- ms_impute(method = "kNN")
+
+# Install package
+if (!require("devtools")) install.packages("devtools")
+devtools::install_github("KechrisLab/MSPrep")
+
+# Load package
+library(MSPrep)
+library(tidyverse)
+
+# Load example quantification dataset and view 
+data(msquant)
+as_data_frame(msquant)
+names(msquant)
+
+# Use pipe to tidy and create summarized dataset
+dat <- 
+  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
+
+# Use MSPrep functions one at a time
+dat <- ms_tidy(msquant)
+dat <- ms_prepare(dat)
+dat <- ms_filter(dat)
+# dat <- ms_impute(method = "kNN") # not yet working
 
 ```
 
