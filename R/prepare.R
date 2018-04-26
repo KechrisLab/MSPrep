@@ -142,8 +142,6 @@ ms_prepare <- function(data,
 
 }
 
-
-
 print.msprepped <- function(x) {
   cat("prepped msprep object\n")
   cat("    Replicate count: ", x$replicate_count, "\n")
@@ -161,11 +159,9 @@ print.msprepped <- function(x) {
 
 
 
-replace_missing <- function(abundance, missing_val) {
-  ifelse(abundance == missing_val, NA, abundance)
-}
-
-
+#
+# Internal ms_prepare functions
+#
 
 #' @importFrom dplyr case_when
 select_summary_measure <- function(n_present,
@@ -183,9 +179,6 @@ select_summary_measure <- function(n_present,
             TRUE ~ "mean")
 
 }
-
-
-
 
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
