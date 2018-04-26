@@ -93,7 +93,7 @@ library(devtools)
 
 devtools::document()
 devtools::check()
-devtools::install("../MSPrep", build_vignettes = TRUE)
+devtools::install("../MSPrep", build_vignettes = FALSE)
 
 ```
 
