@@ -4,7 +4,7 @@
 #' Performs data imputation.
 #'
 #' @param msprepped Placeholder
-#' @param impute_function Placeholder
+#' @param method Placeholder
 #' @return Placeholder
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
@@ -26,7 +26,7 @@
 #' data(msquant)
 #'
 #' filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
-#' imputed_data <- ms_impute(filtered_data, 0.80)
+#' imputed_data <- ms_impute(filtered_data, "halfmin")
 #'
 #' @importFrom dplyr case_when
 #' @export
@@ -44,11 +44,12 @@ ms_impute <- function(msprepped,
 
   # Impute data
   data <-
-    case_when(method == "halfmin"        ~ impute_halfmin(data),
-              method == "bpca"           ~ impute_bpca_zero(data),
-              method == "bpca + halfmin" ~ impute_bpca_halfmin(data),
-              method == "knn"            ~ impute_knn(data),
-              TRUE ~ stop("Invalid impute method - you should never see this warning."))
+    switch(method,
+           "halfmin"        = impute_halfmin(data),
+           "bpca"           = impute_bpca_zero(data),
+           "bpca + halfmin" = impute_bpca_halfmin(data),
+           "knn"            = impute_knn(data),
+           stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
   msprepped$summary_data  <- data

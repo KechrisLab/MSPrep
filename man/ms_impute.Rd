@@ -9,7 +9,7 @@ ms_impute(msprepped, method = c("halfmin", "bpca", "bpca + halfmin", "knn"))
 \arguments{
 \item{msprepped}{Placeholder}
 
-\item{impute_function}{Placeholder}
+\item{method}{Placeholder}
 }
 \value{
 Placeholder
@@ -36,7 +36,7 @@ library(magrittr)
 data(msquant)
 
 filtered_data <- msquant \%>\% ms_tidy \%>\% ms_prepare \%>\% ms_filter(0.80)
-imputed_data <- ms_impute(filtered_data, 0.80)
+imputed_data <- ms_impute(filtered_data, "halfmin")
 
 }
 \references{
