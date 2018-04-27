@@ -145,7 +145,7 @@ dat <-
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
-# dat <- ms_impute(method = "kNN") # not yet working
+dat <- ms_impute(method = "knn") # not yet working
 
 ```
 

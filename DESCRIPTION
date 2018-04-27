@@ -29,6 +29,7 @@ Depends:
   R (>= 3.4)
 Imports: 
   pcaMethods (>= 1.24.0), 
+  VIM,
   crmn, 
   preprocessCore, 
   sva,

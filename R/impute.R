@@ -45,9 +45,9 @@ ms_impute <- function(msprepped,
   # Impute data
   data <-
     case_when(method == "halfmin"        ~ impute_halfmin(data),
-              method == "bpca"           ~ impute_bpca(data),
+              method == "bpca"           ~ impute_bpca_zero(data),
               method == "bpca + halfmin" ~ impute_bpca_halfmin(data),
-              method == "knn"               ~ impute_knn(data),
+              method == "knn"            ~ impute_knn(data),
               TRUE ~ stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
@@ -88,40 +88,66 @@ impute_halfmin <- function(data) {
 
 
 
-##' @importFrom pcaMethods pca
-##' @importFrom pcaMethods completeObs
-#impute_bpca <- function(data) {
-#
-#  # 1. Bayesian pca imputation
-#  data <- data_to_wide_matrix(data) 
-#  data <- pcaMethods::pca(., nPcs = 3, method = "bpca")
-#
-#  bpca <- completeObs(metabpca) # just extracts imputed dataset I think
-#  colnames(bpca) <- colnames(metafin) # add names back
-#  rownames(bpca) <- rownames(metafin)
-#  # if bpca < 0, then set to minval ??? WHAT -- combined bpca & minval imputation
-#  # check if this is right
-#
-#}
-#
-#
-#impute_bpca_halfmin <- function(data) {
-#}
-#
-#impute_knn <- function(data) {
-#  # 2. k-nearest-neighbors imputation
-#  knnimpute <- data_to_wide_matrix(data) %>% as.data.frame %>% VIM::kNN(., k=5)
-#}
-#
-#
-## OTHER METHODS
-## 4. zero imputation -- 0 becomes 0.0001 (why?)
-## 5. median imputation
-## 6. mean imputation
-#
-#
-#
-#
-#
-#
-#
+#' @importFrom pcaMethods pca
+#' @importFrom pcaMethods completeObs
+impute_bpca <- function(data) {
+
+  # 1. Bayesian pca imputation
+  data <- data_to_wide_matrix(data) 
+  data <- pca(data, nPcs = 3, method = "bpca")
+  data <- completeObs(data) # extract imputed dataset
+  data <- wide_matrix_to_data(data)
+
+  return(data)
+
+}
+
+
+impute_bpca_halfmin <- function(data) {
+
+  data <- impute_bpca(data)
+  data <- impute_halfmin(data)
+
+  return(data)
+
+}
+
+
+impute_bpca_zero <- function(data) {
+
+  data <- impute_bpca(data)
+  data$abundance_summary <- truncate_negative_vals(data$abundance_summary)
+
+  return(data)
+
+}
+
+
+#' @importFrom VIM kNN
+impute_knn <- function(data, k = 5) {
+
+  data <- data_to_wide_matrix(data) 
+  rwnm <- rownames(data)
+  data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
+  rownames(data) <- rwnm
+
+  data <- wide_matrix_to_data(data)
+  data$abundance_summary <- truncate_negative_vals(data$abundance_summary)
+
+  return(data)
+
+}
+
+truncate_negative_vals <- function(var) ifelse(var < 0, 0, var)
+
+# OTHER METHODS
+# 4. zero imputation -- 0 becomes 0.0001 (why?)
+# 5. median imputation
+# 6. mean imputation
+
+
+
+
+
+
+

@@ -20,3 +20,23 @@ data_to_wide_matrix <- function(data) {
     as.matrix
 
 }
+
+# Internal function -- undo spread
+wide_matrix_to_data <- function(wide) {
+
+  wide %>%
+    as.data.frame %>%
+    rownames_to_column(var = "id_col") %>%
+    tibble::as_data_frame(.) %>%
+    tidyr::gather(key = mz_rt, value = abundance_summary, -id_col) %>%
+    tidyr::separate(id_col, sep = "_", into = c("subject_id", "spike")) %>%
+    tidyr::separate(mz_rt, sep = "_", into = c("mz", "rt")) %>%
+    arrange(subject_id, spike, mz, rt) %>%
+    mutate_at(vars("subject_id", "spike", "rt"), as.factor) %>%
+    mutate_at(vars("mz"), as.double) %>%
+    arrange(subject_id, spike, mz, rt) 
+
+}
+
+
+
