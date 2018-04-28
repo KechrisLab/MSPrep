@@ -93,7 +93,7 @@ library(devtools)
 
 devtools::document()
 devtools::check()
-devtools::install("../MSPrep", build_vignettes = FALSE)
+devtools::install(".", build_vignettes = FALSE)
 
 ```
 
@@ -117,16 +117,16 @@ names(msquant)
 
 # Tidy and create summarized dataset
 dat <- 
-  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
+  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "bpca")
 
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
-dat <- ms_impute(method = "kNN")
+dat <- ms_impute(method = "bpca")
 
 # Install package
-if (!require("devtools")) install.packages("devtools")
-devtools::install_github("KechrisLab/MSPrep")
+# if (!require("devtools")) install.packages("devtools")
+# devtools::install_github("KechrisLab/MSPrep")
 
 # Load package
 library(MSPrep)
