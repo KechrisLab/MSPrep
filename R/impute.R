@@ -94,6 +94,7 @@ impute_halfmin <- function(data) {
 impute_bpca <- function(data) {
 
   # 1. Bayesian pca imputation
+  browser()
   data <- data_to_wide_matrix(data) 
   data <- pca(data, nPcs = 3, method = "bpca")
   data <- completeObs(data) # extract imputed dataset

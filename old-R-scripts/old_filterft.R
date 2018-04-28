@@ -114,7 +114,7 @@ filterft <- function (metaf, filterpercent = 0.5) {
     }
   }
 
-  browser() # DEBUG LINE
+#   browser() # DEBUG LINE
 
   metabpca <- pcaMethods::pca(metaimp, nPcs = 3, method = "bpca")
   bpca <- pcaMethods::completeObs(metabpca)
