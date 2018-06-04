@@ -6,8 +6,9 @@
 frame}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
-  id_extra_txt = "Neutral_Operator_Dif_Pos_", separator = "_",
-  id_spike_pos = 1, id_subject_pos = 2, id_replicate_pos = 3)
+  id_extra_txt = "Neutral_Operator_Dif_Pos_", id_names = c("spike",
+  "subject_id", "replicate"), separator = "_", ids_to_combine = c("spike",
+  "subject_id"), combined_id_name = "subject_id")
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
@@ -19,21 +20,21 @@ ms_tidy(quantification_data, mz = "mz", rt = "rt",
 \item{id_extra_txt}{Text to remove when converting quant variable names to
 variables.}
 
-\item{separator}{Character/string separating spike, subject and replicate
+\item{id_names}{Vector of the ordered ID names to extract from the variable
+names}
+
+\item{separator}{Character/string separating subject and replicate
 ids.}
 
-\item{id_spike_pos}{Order in which the spike number occurs in the quant
-variable names (after \code{id_extra_txt} is removed).}
+\item{ids_to_combine}{In the case where there are more than just subject 
+and replicate IDs, this is a single vector of the names from `id_names` that
+should be combined into the new variable `combined_id_name`.}
 
-\item{id_subject_pos}{Order in which the subject id occurs in the quant
-variable names.}
-
-\item{id_replicate_pos}{Order in which the replicate id occurs in the quant
-variable names.}
+\item{combined_id_name}{Typically either 'subject_id' or 'replicate'.}
 }
 \value{
-A tidy data frame of quant data, with columns mz, rt, spike,
-subject_id, replicate, and abundance.
+A tidy data frame of quant data, with columns mz, rt, subject_id,
+replicate, and abundance.
 }
 \description{
 Function reads in wide dataset of mass spec quantification data and converts
@@ -45,7 +46,7 @@ containing MS quantification data.
 \details{
 It also assumes that the column names of quantification data start with some
 consistent, informational but unnecessary text (id_extra_txt), and contain
-the spike, subject ID, and replicate ID in a consistent position, all
+the subject ID and replicate ID in a consistent position, all
 separated by a consistent separator.
 
 See \code{data(quantification)} for an example.  If your data doesn't fit

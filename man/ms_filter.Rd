@@ -4,10 +4,10 @@
 \alias{ms_filter}
 \title{Filters and imputes dataset}
 \usage{
-ms_filter(msprepped, filter_percent = 0.5)
+ms_filter(msprep_obj, filter_percent = 0.5)
 }
 \arguments{
-\item{msprepped}{Summarized dataset output as sum_data1 from readdata() function}
+\item{msprep_obj}{Summarized dataset output as sum_data1 from readdata() function}
 
 \item{filter_percent}{Percent to filter the data}
 }
