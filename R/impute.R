@@ -46,7 +46,6 @@ ms_impute <- function(msprepped,
   data <-
     switch(method,
            "halfmin"        = impute_halfmin(data),
-           "bpca"           = impute_bpca_zero(data),
            "bpca + halfmin" = impute_bpca_halfmin(data),
            "knn"            = impute_knn(data),
            stop("Invalid impute method - you should never see this warning."))
@@ -76,8 +75,8 @@ ms_impute <- function(msprepped,
 # all
 impute_halfmin <- function(data) {
 
-  data <- group_by(data, spike, mz, rt)
-  data <- mutate(data, 
+  data <- group_by(data, mz, rt)
+  data <- mutate(data,
                  abundance_summary = ifelse(is.na(abundance_summary),
                                             min(abundance_summary, na.rm = TRUE)/2,
                                             abundance_summary))
@@ -108,16 +107,6 @@ impute_bpca_halfmin <- function(data) {
 
   data <- impute_bpca(data)
   data <- impute_halfmin(data)
-
-  return(data)
-
-}
-
-
-impute_bpca_zero <- function(data) {
-
-  data <- impute_bpca(data)
-  data$abundance_summary <- truncate_negative_vals(data$abundance_summary)
 
   return(data)
 
