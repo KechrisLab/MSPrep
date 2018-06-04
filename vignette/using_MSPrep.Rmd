@@ -54,6 +54,7 @@ vignette: |
 
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
+```
 
 ```{r developercode, eval=FALSE}
 # Code for development only
