@@ -3,7 +3,7 @@
 #'
 #' Performs data imputation.
 #'
-#' @param msprepped Placeholder
+#' @param msprep_obj Placeholder
 #' @param method Placeholder
 #' @return Placeholder
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
@@ -30,34 +30,33 @@
 #'
 #' @importFrom dplyr case_when
 #' @export
-ms_impute <- function(msprepped,
-                      method = c("halfmin", "bpca", "bpca + halfmin", "knn")) {
+ms_impute <- function(msprep_obj,
+                      method = c("halfmin", "bpca", "knn")) {
 
   # Validate inputs
-  stopifnot("msprepped" %in% class(msprepped))
+  stopifnot(class(msprep_obj) == "msprep")
+  stopifnot(stage(msprep_obj) %in% c("filtered", "normalized"))
   match.arg(method) # requires 1 argument from vec in function arg
-  #check_ms_flow() # for checking valid path through pipeline
 
   # Prep data - replace 0's with NA's -- for minval and bpca() (all methods?)
-  data <- mutate_at(msprepped$summary_data, vars(abundance_summary), 
+  data <- mutate_at(msprep_obj$data, vars("abundance_summary"), 
                     replace_missing, 0)
 
   # Impute data
   data <-
     switch(method,
-           "halfmin"        = impute_halfmin(data),
-           "bpca + halfmin" = impute_bpca_halfmin(data),
-           "knn"            = impute_knn(data),
+           "halfmin" = impute_halfmin(data),
+           "bpca"    = impute_bpca(data),
+           "knn"     = impute_knn(data),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
-  msprepped$summary_data  <- data
-  msprepped$impute_method <- method
-  class(msprepped) <- c("msimputed", class(msprepped))
-  #msprepped <- mark_completed(msprepped, "imputation") # mark pipeline step as complete
+  msprep_obj$data  <- data
+  attr(msprep_obj, "impute_method") <- method
+  stage(msprep_obj) <- "imputed"
 
   # ...and:
-  return(msprepped)
+  return(msprep_obj)
 
 }
 
@@ -70,16 +69,23 @@ ms_impute <- function(msprepped,
 #' @importFrom dplyr group_by
 #' @importFrom dplyr mutate
 #' @importFrom dplyr ungroup
-# Imputation using half of the minimum value 
-# should this be within subject or across all datapoints?  currently across
-# all
+#' @importFrom dplyr vars
+#' @importFrom dplyr funs
+#' @importFrom rlang sym
+#' @importFrom rlang UQ
+# Imputation using half of the minimum value
 impute_halfmin <- function(data) {
 
-  data <- group_by(data, mz, rt)
-  data <- mutate(data,
-                 abundance_summary = ifelse(is.na(abundance_summary),
-                                            min(abundance_summary, na.rm = TRUE)/2,
-                                            abundance_summary))
+  sym_mz <- sym("mz")
+  sym_rt <- sym("rt")
+
+  data <- group_by(data, UQ(sym_mz), UQ(sym_rt))
+
+  halfmin <- function(x) {
+    ifelse(is.na(x), min(x, na.rm = TRUE)/2, x)
+  }
+
+  data <- mutate(data, vars("sym_abundance"), funs(halfmin))
   data <- ungroup(data)
 
   return(data)
@@ -97,20 +103,12 @@ impute_bpca <- function(data) {
   data <- pca(data, nPcs = 3, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
   data <- wide_matrix_to_data(data)
+  data <- halfmin_if_any_negative(data)
 
   return(data)
 
 }
 
-
-impute_bpca_halfmin <- function(data) {
-
-  data <- impute_bpca(data)
-  data <- impute_halfmin(data)
-
-  return(data)
-
-}
 
 
 #' @importFrom VIM kNN
@@ -120,18 +118,34 @@ impute_knn <- function(data, k = 5) {
   rwnm <- rownames(data)
   data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
   rownames(data) <- rwnm
-
   data <- wide_matrix_to_data(data)
-  data$abundance_summary <- truncate_negative_vals(data$abundance_summary)
+  data <- halfmin_if_any_negative(data)
 
   return(data)
 
 }
 
-truncate_negative_vals <- function(var) ifelse(var < 0, 0, var)
+
+
+halfmin_if_any_negative <-  function(data) {
+
+  num_neg <- sum(data$abundance_summary < 0)
+  if (any(num_neg)) {
+    message("Found ", num_neg, " negative imputed values using KNN, reverting to half-min imputation for these values")
+    data$abundance_summary <- setmissing_negative_vals(data$abundance_summary)
+    data <- impute_halfmin(data)
+  }
+
+  return(data)
+
+}
+
+
+truncate_negative_vals   <- function(var) ifelse(var < 0, 0, var)
+setmissing_negative_vals <- function(var) ifelse(var < 0, NA, var)
 
 # OTHER METHODS
-# 4. zero imputation -- 0 becomes 0.0001 (why?)
+# 4. zero imputation -- 0 becomes 0.0001 (for normalization methods)
 # 5. median imputation
 # 6. mean imputation
 

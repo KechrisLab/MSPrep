@@ -4,11 +4,11 @@
 \alias{ms_prepare}
 \title{Prepare a mass spec quantification data frame for filtering, imputation,
 and normalization. Also provides summaries of data structure (replicates,
-subjects, spike, etc.)}
+subjects, etc.)}
 \usage{
 ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
-  abundance = "abundance", spike = "spike", mz = "mz", rt = "rt",
-  cvmax = 0.5, missing_val = 1, min_proportion_present = 1/3)
+  abundance = "abundance", mz = "mz", rt = "rt", cvmax = 0.5,
+  missing_val = 1, min_proportion_present = 1/3)
 }
 \arguments{
 \item{data}{A tidy dataframe of quantification data.}
@@ -19,8 +19,6 @@ ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
 replicates. TODO: test NULL.}
 
 \item{abundance}{Name (string) of the abundance column.}
-
-\item{spike}{Name (string) of the spike column.}
 
 \item{mz}{Mass-to-charge ratio variable name.}
 
@@ -34,8 +32,9 @@ replicates. TODO: test NULL.}
 median or mean. Below this the compound will be set to 0.}
 }
 \value{
-An \code{msprepped} object containing summarised quantification data,
-a dataset of compounds summarised by medians, and other related summaries.
+An `msprep` object with `stage(rtn) == "prepared"` containing
+summarised quantification data, a dataset of compounds summarised by medians,
+and other related summaries.
 }
 \description{
 Function reads in raw data files and summarizes technical replicates as the

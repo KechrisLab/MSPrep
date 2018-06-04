@@ -4,10 +4,10 @@
 \alias{ms_impute}
 \title{Imputes dataset}
 \usage{
-ms_impute(msprepped, method = c("halfmin", "bpca", "bpca + halfmin", "knn"))
+ms_impute(msprep_obj, method = c("halfmin", "bpca", "knn"))
 }
 \arguments{
-\item{msprepped}{Placeholder}
+\item{msprep_obj}{Placeholder}
 
 \item{method}{Placeholder}
 }

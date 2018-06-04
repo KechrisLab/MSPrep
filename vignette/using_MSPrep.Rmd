@@ -59,13 +59,14 @@ library(devtools)
 ```{r developercode, eval=FALSE}
 # Code for development only
 #
-#source("https://bioconductor.org/biocLite.R")
-#biocLite()
-#library(BiocInstaller)
-#biocLite("pcaMethods")
-#biocLite("crmn")
-#biocLite("preprocessCore")
-#biocLite("sva")
+# source("https://bioconductor.org/biocLite.R")
+# biocLite()
+# library(BiocInstaller)
+# biocLite("pcaMethods")
+# biocLite("crmn")
+# biocLite("preprocessCore")
+# biocLite("sva")
+# biocLite("BiocStyle")
 
 # for dev
 # library(tidyverse)
@@ -117,8 +118,8 @@ as_data_frame(msquant)
 names(msquant)
 
 # Tidy and create summarized dataset
-dat <- 
-  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "bpca")
+dat <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "bpca")
+dat_knn <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "knn")
 
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
