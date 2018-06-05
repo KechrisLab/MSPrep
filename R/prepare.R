@@ -39,6 +39,7 @@
 #' str(prepped_data$summary_data)
 #'
 #' @importFrom dplyr select
+#' @importFrom dplyr select_at
 #' @importFrom dplyr mutate 
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr group_by 
@@ -107,12 +108,12 @@ ms_prepare <- function(data,
              case_when(summary_measure == "median" ~ median_abundance,
                        summary_measure == "mean"   ~ mean_abundance,
                        TRUE                        ~ 0))
-  quant_summary <- mutate_at(quant_summary,
-                             c("subject_id", "summary_measure"),
+  quant_summary <- mutate_at(quant_summary, c("subject_id", "summary_measure"),
                              factor)
 
   # Extract summarized dataset
-  summary_data  <- select(quant_summary, subject_id, mz, rt, abundance_summary)
+  summary_data  <- select_at(quant_summary, 
+                             vars("subject_id", "mz", "rt", "abundance_summary")
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
