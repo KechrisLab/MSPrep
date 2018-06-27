@@ -113,7 +113,7 @@ ms_prepare <- function(data,
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars("subject_id", "mz", "rt", "abundance_summary")
+                             vars("subject_id", "mz", "rt", "abundance_summary"))
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
