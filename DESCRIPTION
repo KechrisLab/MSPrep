@@ -1,6 +1,6 @@
 Package: MSPrep
 Title: 
-  Package for summarizing, filtering, imputing, and normalizing metabolomics data
+  Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics Data
 Version: 0.0.1
 Authors@R: 
   c(person("Grant", "Hughes", 
@@ -50,4 +50,4 @@ NeedsCompilation: no
 License: GPL-3
 biocViews: TBD
 Encoding: UTF-8
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
