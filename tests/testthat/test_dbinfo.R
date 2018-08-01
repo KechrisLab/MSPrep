@@ -74,7 +74,7 @@ test_that("New version of summarized dataset matches old version", {
   # load("R/sysdata.rda")
 
   sum_data <-
-    prepped_data$summary_data %>%
+    prepped_data$data %>%
     dplyr::select(subject_id, spike, mz, rt, abundance_summary) %>%
     tidyr::unite(id, spike, subject_id, sep = "_") %>% 
     tidyr::unite(metabolite, mz, rt, sep = "_")

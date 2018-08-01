@@ -8,8 +8,8 @@
 #' containing MS quantification data.  
 #' 
 #' It also assumes that the column names of quantification data start with some
-#' consistent, informational but unnecessary text (id_extra_txt), and contain
-#' the subject ID and replicate ID in a consistent position, all
+#' consistent, informational but unnecessary text (col_extra_txt), and contain
+#' the spike, subject ID, and replicate ID in a consistent position, all
 #' separated by a consistent separator.
 #'
 #' See \code{data(quantification)} for an example.  If your data doesn't fit
@@ -20,16 +20,15 @@
 #' @param quantification_data Data frame containing the quantification data.
 #' @param mz Name of the column containing mass-to-charge ratios.
 #' @param rt Name of the column containing retention time.
-#' @param id_extra_txt Text to remove when converting quant variable names to
+#' @param col_extra_txt Text to remove when converting quant variable names to
 #'   variables.
-#' @param id_names Vector of the ordered ID names to extract from the variable
+#' @param col_names Vector of the ordered ID names to extract from the variable
 #' names
-#' @param separator Character/string separating subject and replicate
-#'   ids.
-#' @param ids_to_combine In the case where there are more than just subject 
-#' and replicate IDs, this is a single vector of the names from `id_names` that
-#' should be combined into the new variable `combined_id_name`.
-#' @param combined_id_name Typically either 'subject_id' or 'replicate'.
+#' @param separator Character/string separating spike, subject, and replicate
+#' ids.
+#' @param subject_id String to use for name of new subject id variable
+#' @param grouping_vars Names of new/created variables to group by in
+#' summarizing the dataset.
 #'
 #' @return A tidy data frame of quant data, with columns mz, rt, subject_id,
 #' replicate, and abundance.
@@ -59,24 +58,24 @@
 ms_tidy <- function(quantification_data,
                     mz = "mz", 
                     rt = "rt",
-                    id_extra_txt     = "Neutral_Operator_Dif_Pos_",
-                    id_names         = c("spike", "subject_id", "replicate"),
+                    col_extra_txt     = "Neutral_Operator_Dif_Pos_",
+                    col_names         = c("spike", "subject_id", "replicate"),
                     separator        = "_",
-                    ids_to_combine   = c("spike", "subject_id"),
-                    combined_id_name = "subject_id") {
+                    subject_id       = "subject_id",
+                    grouping_vars    = "spike") {
 
-  # gather data to long format (adds id/varnames as column), remove id_extra_txt
+  # gather data to long format (adds id/varnames as column), remove col_extra_txt
   # from id column, and convert id column to separate subject,replicate
   # variables
   rtn <-
     tibble::as_data_frame(quantification_data) %>%
     tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-    dplyr::mutate(id_col = stringr::str_replace_all(id_col, id_extra_txt, ""))
+    dplyr::mutate(id_col = stringr::str_replace_all(id_col, col_extra_txt, ""))
   # Split and recombine id names 
   rtn <-
     rtn %>%
-    tidyr::separate(id_col, sep = separator, into = id_names) %>%
-    tidyr::unite(UQ(combined_id_name), ids_to_combine, sep = separator)
+    tidyr::separate(id_col, sep = separator, into = col_names) #%>%
+#     tidyr::unite(UQ(combined_id_name), ids_to_combine, sep = separator)
 
   return(rtn)
 
