@@ -59,14 +59,14 @@ library(devtools)
 ```{r developercode, eval=FALSE}
 # Code for development only
 #
-# source("https://bioconductor.org/biocLite.R")
-# biocLite()
-# library(BiocInstaller)
-# biocLite("pcaMethods")
-# biocLite("crmn")
-# biocLite("preprocessCore")
-# biocLite("sva")
-# biocLite("BiocStyle")
+source("https://bioconductor.org/biocLite.R")
+biocLite()
+library(BiocInstaller)
+biocLite("pcaMethods")
+biocLite("crmn")
+biocLite("preprocessCore")
+biocLite("sva")
+biocLite("BiocStyle")
 
 # for dev
 # library(tidyverse)
