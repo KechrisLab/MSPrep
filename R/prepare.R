@@ -95,59 +95,68 @@ ms_prepare <- function(data,
   # Calculate initial summary measures 
   #   Note;(matrix algebra would be faster --
   #     consider later)
+  #   Get count of not-NA abundance values and merge w/ quant_summary
   quant_summary <- group_by(data, subject_id, UQ(group_by), mz, rt)
-  quant_summary <- arrange(quant_summary, mz, rt, subject_id, UQ(group_by), replicate)
-#   quant_summary <- summarise(quant_summary,
-#                              "n_present"        = sum(!is.na(abundance)),
-#                              "prop_present"     = n_present / replicate_count,
-#                              "mean_abundance"   = mean(abundance, na.rm = T),
-#                              "sd_abundance"     = sd(abundance, na.rm = T),
-#                              "median_abundance" = median(abundance, na.rm = T))
-#   quant_summary <- mutate(quant_summary, cv_abundance = sd_abundance / mean_abundance)
-#   quant_summary <- ungroup(quant_summary)
-# 
-#   # Identify and select summary measure -- TODO: decompose this to get rid of 'no
-#   #                                              visible binding error'
-#   quant_summary <-
-#     mutate(quant_summary,
-#            summary_measure = 
-#              select_summary_measure(.data$n_present, .data$cv_abundance, replicate_count,
-#                                     min_proportion_present, cvmax),
-#            abundance_summary = 
-#              case_when(summary_measure == "median" ~ .data$median_abundance,
-#                        summary_measure == "mean"   ~ .data$mean_abundance,
-#                        TRUE                        ~ 0))
-#   quant_summary <- mutate_at(quant_summary,
-#                              vars(subject_id, "summary_measure", UQ(group_by)),
-#                              factor)
-# 
-#   # Extract summarized dataset
-#   summary_data  <- select_at(quant_summary, 
-#                              vars(subject_id, UQ(group_by), "mz", "rt", "abundance_summary"))
-# 
-#   # Additional info extracted in summarizing replicates
-#   replicate_info <- select_at(quant_summary, 
-#                               vars(subject_id, UQ(group_by), "mz", "rt", "n_present",
-#                                    "cv_abundance", "summary_measure"))
-# 
-#   # Summaries that used medians
-#   medians        <- filter(quant_summary, summary_measure == "median")
-#   medians        <- select_at(medians, vars(subject_id, UQ(group_by), "mz", "rt",
-#                                             "abundance_summary"))
-# 
-#   # Total number of compounds identified
-#   n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
-# 
-#   # Create return object & return
-#   structure(list("data" = summary_data,
-#                  replicate_info  = replicate_info,
-#                  medians         = medians),
-#             replicate_count = replicate_count,
-#             cvmax           = cvmax,
-#             min_proportion_present = min_proportion_present,
-#             group_by = as_string(group_by),
-#             class = "msprep",
-#             stage = "prepared")
+  quant_summary <- arrange(quant_summary, mz, rt, subject_id, UQ(group_by),
+                           replicate)
+#   n_present  <- summarise(quant_summary,
+#   n_present_vec <- n_present$count
+
+  # Calculate remaining summary measures
+#   quant_summary <- group_by(quant_summary, subject_id, UQ(group_by), mz, rt)
+  quant_summary <- summarise(quant_summary,
+                             n_present        = sum(!is.na(.data$abundance)),
+                             prop_present     = UQ(sym("n_present")) / replicate_count,
+                             mean_abundance   = mean(.data$abundance, na.rm = T),
+                             sd_abundance     = sd(.data$abundance, na.rm = T),
+                             median_abundance = median(.data$abundance, na.rm = T))
+  quant_summary <- mutate(quant_summary, cv_abundance = .data$sd_abundance / .data$mean_abundance)
+  quant_summary <- ungroup(quant_summary)
+
+  # Identify and select summary measure -- TODO: decompose this to get rid of 'no
+  #                                              visible binding error'
+  quant_summary <-
+    mutate(quant_summary,
+           summary_measure = 
+             select_summary_measure(.data$n_present, .data$cv_abundance, replicate_count,
+                                    min_proportion_present, cvmax))
+  quant_summary <-
+    mutate(quant_summary,
+           abundance_summary = 
+             case_when(.data$summary_measure == "median" ~ .data$median_abundance,
+                       .data$summary_measure == "mean"   ~ .data$mean_abundance,
+                       TRUE                              ~ 0))
+  quant_summary <- mutate_at(quant_summary,
+                             vars(subject_id, "summary_measure", UQ(group_by)),
+                             factor)
+
+  # Extract summarized dataset
+  summary_data  <- select_at(quant_summary, 
+                             vars(subject_id, UQ(group_by), "mz", "rt", "abundance_summary"))
+
+  # Additional info extracted in summarizing replicates
+  replicate_info <- select_at(quant_summary, 
+                              vars(subject_id, UQ(group_by), "mz", "rt", "n_present",
+                                   "cv_abundance", "summary_measure"))
+
+  # Summaries that used medians
+  medians        <- filter(quant_summary, .data$summary_measure == "median")
+  medians        <- select_at(medians, vars(subject_id, UQ(group_by), "mz", "rt",
+                                            "abundance_summary"))
+
+  # Total number of compounds identified
+  n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
+
+  # Create return object & return
+  structure(list("data" = summary_data,
+                 replicate_info  = replicate_info,
+                 medians         = medians),
+            replicate_count = replicate_count,
+            cvmax           = cvmax,
+            min_proportion_present = min_proportion_present,
+            group_by = as_string(group_by),
+            class = "msprep",
+            stage = "prepared")
 
 }
 

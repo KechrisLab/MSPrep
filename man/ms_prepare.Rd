@@ -7,8 +7,9 @@ and normalization. Also provides summaries of data structure (replicates,
 subjects, group_by, etc.)}
 \usage{
 ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
-  abundance = "abundance", group_by = "spike", mz = "mz", rt = "rt",
-  cvmax = 0.5, missing_val = 1, min_proportion_present = 1/3)
+  abundance = "abundance", group_by = "spike", mz = "mz",
+  rt = "rt", cvmax = 0.5, missing_val = 1,
+  min_proportion_present = 1/3)
 }
 \arguments{
 \item{data}{A tidy dataframe of quantification data.}
