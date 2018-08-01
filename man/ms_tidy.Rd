@@ -7,8 +7,8 @@ frame}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
   col_extra_txt = "Neutral_Operator_Dif_Pos_", col_names = c("spike",
-  "subject_id", "replicate"), separator = "_", subject_id = "subject_id",
-  grouping_vars = "spike")
+  "subject_id", "replicate"), separator = "_",
+  subject_id = "subject_id", grouping_vars = "spike")
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
