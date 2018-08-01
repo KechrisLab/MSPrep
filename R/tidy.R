@@ -68,14 +68,11 @@ ms_tidy <- function(quantification_data,
   # from id column, and convert id column to separate subject,replicate
   # variables
   rtn <-
-    tibble::as_data_frame(quantification_data) %>%
-    tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-    dplyr::mutate(id_col = stringr::str_replace_all(id_col, col_extra_txt, ""))
+    as_data_frame(quantification_data) %>%
+    gather(key = "id_col", value = "abundance", -mz, -rt) %>%
+    mutate(id_col = str_replace_all(.data$id_col, col_extra_txt, ""))
   # Split and recombine id names 
-  rtn <-
-    rtn %>%
-    tidyr::separate(id_col, sep = separator, into = col_names) #%>%
-#     tidyr::unite(UQ(combined_id_name), ids_to_combine, sep = separator)
+  rtn <- separate(rtn, .data$id_col, sep = separator, into = col_names)
 
   return(rtn)
 
