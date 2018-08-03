@@ -25,13 +25,14 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
-data_to_wide_matrix <- function(data) {
+data_to_wide_matrix <- function(data, grouping_vars) {
 
   data %>% 
     unite(col = "compound", "mz", "rt") %>% 
     spread(key = "compound", value = "abundance_summary")  %>%
     as.data.frame %>%
-    column_to_rownames(var = "subject_id") %>%
+    unite(col = "rwnm", "subject_id", grouping_vars) %>%
+    column_to_rownames(var = "rwnm") %>%
     as.matrix
 
 }
@@ -56,7 +57,8 @@ wide_matrix_to_data <- function(wide) {
 
   wide %>%
     as.data.frame %>%
-    rownames_to_column(var = "subject_id") %>%
+    rownames_to_column(var = "rwnm") %>%
+    separate("rwnm", sep = "_", into = c("subject_id", grouping_vars)) %>%
     as_tibble %>%
     gather(key = "mz_rt", value = "abundance_summary", -"subject_id") %>%
     separate("mz_rt", sep = "_", into = c("mz", "rt")) %>%

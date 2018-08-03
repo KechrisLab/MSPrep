@@ -36,7 +36,8 @@ library(magrittr)
 data(msquant)
 
 filtered_data <- msquant \%>\% ms_tidy \%>\% ms_prepare \%>\% ms_filter(0.80)
-imputed_data <- ms_impute(filtered_data, "halfmin")
+imputed_data <- 
+ms_impute(filtered_data, "knn")
 
 }
 \references{

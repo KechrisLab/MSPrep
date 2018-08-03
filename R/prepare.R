@@ -1,7 +1,7 @@
 #' 
 #' Prepare a mass spec quantification data frame for filtering, imputation,
 #' and normalization. Also provides summaries of data structure (replicates,
-#' subjects, group_by, etc.)
+#' subjects, grouping_vars, etc.)
 #'
 #' Function reads in raw data files and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
@@ -13,7 +13,7 @@
 #' @param replicate Name (string) of the replicate column. Set to NULL if no
 #' replicates. TODO: test NULL.
 #' @param abundance Name (string) of the abundance column.
-#' @param group_by Name (string) of the group_by column.
+#' @param grouping_vars Name (string) of the grouping_vars column.
 #' @param mz Mass-to-charge ratio variable name.
 #' @param rt Retention time variable name.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
@@ -60,14 +60,14 @@
 #' @importFrom stats sd
 #' @export
 ms_prepare <- function(data,
-                       subject_id  = "subject_id",
-                       replicate   = "replicate",
-                       abundance   = "abundance",
-                       group_by    = "spike", 
-                       mz          = "mz",
-                       rt          = "rt",
-                       cvmax       = 0.50,
-                       missing_val = 1,
+                       subject_id    = "subject_id",
+                       replicate     = "replicate",
+                       abundance     = "abundance",
+                       grouping_vars = "spike",
+                       mz            = "mz",
+                       rt            = "rt",
+                       cvmax         = 0.50,
+                       missing_val   = 1,
                        min_proportion_present = 1/3) {
 
   # Check args
@@ -75,18 +75,18 @@ ms_prepare <- function(data,
   my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
 
   # rlang magic 
-  group_by = sym(group_by)
+  grouping_vars = sym(grouping_vars)
 
   # Convert to tibble data frame
   data <- as_tibble(data)
 
   # Replace provided variable names with standardized ones
-  data <- standardize_dataset(data, subject_id, replicate, abundance, group_by, mz, rt)
+  data <- standardize_dataset(data, subject_id, replicate, abundance, grouping_vars, mz, rt)
 
   # Replace miss val with NAs 
   data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
 
-  # Get replicate count for each mz/rt/group_by/subject combo
+  # Get replicate count for each mz/rt/grouping_vars/subject combo
   replicate_count <- length(unique(data[["replicate"]]))
 
   # Roughly check if all compounds are present in each replicate
@@ -96,14 +96,14 @@ ms_prepare <- function(data,
   #   Note;(matrix algebra would be faster --
   #     consider later)
   #   Get count of not-NA abundance values and merge w/ quant_summary
-  quant_summary <- group_by(data, subject_id, UQ(group_by), mz, rt)
-  quant_summary <- arrange(quant_summary, mz, rt, subject_id, UQ(group_by),
+  quant_summary <- group_by(data, subject_id, UQ(grouping_vars), mz, rt)
+  quant_summary <- arrange(quant_summary, mz, rt, subject_id, UQ(grouping_vars),
                            replicate)
 #   n_present  <- summarise(quant_summary,
 #   n_present_vec <- n_present$count
 
   # Calculate remaining summary measures
-#   quant_summary <- group_by(quant_summary, subject_id, UQ(group_by), mz, rt)
+#   quant_summary <- group_by(quant_summary, subject_id, UQ(grouping_vars), mz, rt)
   quant_summary <- summarise(quant_summary,
                              n_present        = sum(!is.na(.data$abundance)),
                              prop_present     = UQ(sym("n_present")) / replicate_count,
@@ -127,21 +127,21 @@ ms_prepare <- function(data,
                        .data$summary_measure == "mean"   ~ .data$mean_abundance,
                        TRUE                              ~ 0))
   quant_summary <- mutate_at(quant_summary,
-                             vars(subject_id, "summary_measure", UQ(group_by)),
+                             vars(subject_id, "summary_measure", UQ(grouping_vars)),
                              factor)
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, UQ(group_by), "mz", "rt", "abundance_summary"))
+                             vars(subject_id, UQ(grouping_vars), "mz", "rt", "abundance_summary"))
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, UQ(group_by), "mz", "rt", "n_present",
+                              vars(subject_id, UQ(grouping_vars), "mz", "rt", "n_present",
                                    "cv_abundance", "summary_measure"))
 
   # Summaries that used medians
   medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, UQ(group_by), "mz", "rt",
+  medians        <- select_at(medians, vars(subject_id, UQ(grouping_vars), "mz", "rt",
                                             "abundance_summary"))
 
   # Total number of compounds identified
@@ -154,7 +154,7 @@ ms_prepare <- function(data,
             replicate_count = replicate_count,
             cvmax           = cvmax,
             min_proportion_present = min_proportion_present,
-            group_by = as_string(group_by),
+            grouping_vars = as_string(grouping_vars),
             class = "msprep",
             stage = "prepared")
 
@@ -214,7 +214,7 @@ select_summary_measure <- function(n_present,
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
-standardize_dataset <- function(data, subject_id, replicate, abundance, group_by,
+standardize_dataset <- function(data, subject_id, replicate, abundance, grouping_vars,
                                 mz, rt) {
 
   # Rename required variables
@@ -237,11 +237,11 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, group_by
     data$replicate <- "None"
   }
 
-  #if (!is.null(group_by)) {
-  #  group_by <- sym(group_by)
-  #  data     <- data %>% rename("group_by" = UQ(group_by)) 
+  #if (!is.null(grouping_vars)) {
+  #  grouping_vars <- sym(grouping_vars)
+  #  data     <- data %>% rename("grouping_vars" = UQ(grouping_vars)) 
   #} else { 
-  #  data$group_by <- "Not provided" 
+  #  data$grouping_vars <- "Not provided" 
   #}
 
   return(data)

@@ -4,10 +4,10 @@
 \alias{ms_prepare}
 \title{Prepare a mass spec quantification data frame for filtering, imputation,
 and normalization. Also provides summaries of data structure (replicates,
-subjects, group_by, etc.)}
+subjects, grouping_vars, etc.)}
 \usage{
 ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
-  abundance = "abundance", group_by = "spike", mz = "mz",
+  abundance = "abundance", grouping_vars = "spike", mz = "mz",
   rt = "rt", cvmax = 0.5, missing_val = 1,
   min_proportion_present = 1/3)
 }
@@ -21,7 +21,7 @@ replicates. TODO: test NULL.}
 
 \item{abundance}{Name (string) of the abundance column.}
 
-\item{group_by}{Name (string) of the group_by column.}
+\item{grouping_vars}{Name (string) of the grouping_vars column.}
 
 \item{mz}{Mass-to-charge ratio variable name.}
 
