@@ -4,11 +4,12 @@ context("prepare_msprep() related functions")
 
 
 ### Read in data files
-pathclinical <- system.file("extdata", "Clinical.csv", package = "MSPrep")
+# pathclinical <- system.file("data-raw", "Clinical.csv", package = "MSPrep")
 pathquant    <- system.file("extdata", "Quantification.csv", package = "MSPrep")
-pathlink     <- system.file("extdata", "SubjectLinks.csv", package = "MSPrep")
+# pathlink     <- system.file("data-raw", "SubjectLinks.csv", package = "MSPrep")
 path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-quant        <- read.csv(pathquant)
+data(msquant)
+quant        <- msquant 
 load(path_olddata)
 
 # Generate tidy dataset from wide quant data
