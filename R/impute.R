@@ -42,13 +42,14 @@ ms_impute <- function(msprep_obj,
   # Prep data - replace 0's with NA's -- for minval and bpca() (all methods?)
   data <- mutate_at(msprep_obj$data, vars("abundance_summary"), 
                     replace_missing, 0)
+  grp <- grouping_vars(msprep_obj)
 
   # Impute data
   data <-
     switch(method,
-           "halfmin" = impute_halfmin(data),
-           "bpca"    = impute_bpca(data, grouping_vars(msprep_obj)),
-           "knn"     = impute_knn(data, grouping_vars(msprep_obj), k),
+           "halfmin" = impute_halfmin(data, grp),
+           "bpca"    = impute_bpca(data, grp),
+           "knn"     = impute_knn(data, grp, k),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
@@ -73,20 +74,23 @@ ms_impute <- function(msprep_obj,
 #' @importFrom dplyr vars
 #' @importFrom dplyr funs
 #' @importFrom rlang sym
-#' @importFrom rlang UQ
+#' @importFrom rlang syms
+#' @importFrom rlang !!
+#' @importFrom rlang !!!
 # Imputation using half of the minimum value
-impute_halfmin <- function(data) {
+impute_halfmin <- function(data, grouping_vars) {
 
   sym_mz <- sym("mz")
   sym_rt <- sym("rt")
 
-  data <- group_by(data, UQ(sym_mz), UQ(sym_rt))
+  grp  <- syms(grouping_vars)
+  data <- group_by(data, `!!`(sym_mz), `!!`(sym_rt), `!!!`(grp))
 
   halfmin <- function(x) {
     ifelse(is.na(x), min(x, na.rm = TRUE)/2, x)
   }
 
-  data <- mutate(data, vars("sym_abundance"), funs(halfmin))
+  data <- mutate_at(data, vars("abundance_summary"), funs(halfmin))
   data <- ungroup(data)
 
   return(data)
@@ -104,7 +108,7 @@ impute_bpca <- function(data, grouping_vars) {
   data <- pca(data, nPcs = 3, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
   data <- wide_matrix_to_data(data, grouping_vars)
-  data <- halfmin_if_any_negative(data)
+  data <- halfmin_if_any_negative(data, grouping_vars)
 
   return(data)
 
@@ -128,13 +132,13 @@ impute_knn <- function(data, grouping_vars, k = 5) {
 
 
 
-halfmin_if_any_negative <-  function(data) {
+halfmin_if_any_negative <-  function(data, grouping_vars) {
 
   num_neg <- sum(data$abundance_summary < 0)
   if (any(num_neg)) {
     message("Found ", num_neg, " negative imputed values using KNN, reverting to half-min imputation for these values")
     data$abundance_summary <- setmissing_negative_vals(data$abundance_summary)
-    data <- impute_halfmin(data)
+    data <- impute_halfmin(data, grouping_vars)
   }
 
   return(data)
