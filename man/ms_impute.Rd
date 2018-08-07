@@ -4,15 +4,18 @@
 \alias{ms_impute}
 \title{Imputes dataset}
 \usage{
-ms_impute(msprep_obj, method = c("halfmin", "bpca", "knn"))
+ms_impute(msprep_obj, method = c("halfmin", "bpca", "knn"), k = 5)
 }
 \arguments{
-\item{msprep_obj}{Placeholder}
+\item{msprep_obj}{An MSPrep object that has been filtered and normalized}
 
-\item{method}{Placeholder}
+\item{method}{Imputation method.  One of half-min (half the minimum value),
+bpca (Bayesian PCA), knn (k-nearest neighbors).}
+
+\item{k}{Number of clusters for 'knn' method.}
 }
 \value{
-Placeholder
+A msprep object with missing data imputed.
 }
 \description{
 Performs data imputation.
@@ -23,11 +26,6 @@ observed value for that compound.
 
 bpca Filtered dataset with missing values imputed by a Bayesian PCA
 from PCAMethods package.
-
-withzero Filtered dataset with no imputation.
-
-count List of all compounds and the percent present for each
-compound.
 }
 \examples{
 library(magrittr)
@@ -36,7 +34,7 @@ library(magrittr)
 data(msquant)
 
 filtered_data <- msquant \%>\% ms_tidy \%>\% ms_prepare \%>\% ms_filter(0.80)
-imputed_data <- ms_impute(filtered_data, "halfmin")
+imputed_data  <- ms_impute(filtered_data, "bpca")
 
 }
 \references{

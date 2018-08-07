@@ -3,16 +3,15 @@
 #'
 #' Performs data imputation.
 #'
-#' @param msprep_obj Placeholder
-#' @param method Placeholder
-#' @return Placeholder
+#' @param msprep_obj An MSPrep object that has been filtered and normalized
+#' @param method Imputation method.  One of half-min (half the minimum value),
+#' bpca (Bayesian PCA), knn (k-nearest neighbors).
+#' @param k Number of clusters for 'knn' method.
+#' @return A msprep object with missing data imputed.
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
 #' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
 #' from PCAMethods package.
-#' @details withzero Filtered dataset with no imputation.
-#' @details count List of all compounds and the percent present for each
-#' compound.
 #' @references 
 #'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
 #'   expression profile data. Bioinformatics, 19, 2088-2096
@@ -26,28 +25,31 @@
 #' data(msquant)
 #'
 #' filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
-#' imputed_data <- ms_impute(filtered_data, "halfmin")
+#' imputed_data  <- ms_impute(filtered_data, "halfmin")
 #'
 #' @importFrom dplyr case_when
+#' @importFrom dplyr mutate_at
 #' @export
 ms_impute <- function(msprep_obj,
-                      method = c("halfmin", "bpca", "knn")) {
+                      method = c("halfmin", "bpca", "knn"),
+                      k = 5) {
 
   # Validate inputs
   stopifnot(class(msprep_obj) == "msprep")
   stopifnot(stage(msprep_obj) %in% c("filtered", "normalized"))
-  match.arg(method) # requires 1 argument from vec in function arg
+  method <- match.arg(method) # requires 1 argument from vec in function arg
 
   # Prep data - replace 0's with NA's -- for minval and bpca() (all methods?)
   data <- mutate_at(msprep_obj$data, vars("abundance_summary"), 
                     replace_missing, 0)
+  grp <- grouping_vars(msprep_obj)
 
   # Impute data
   data <-
     switch(method,
-           "halfmin" = impute_halfmin(data),
-           "bpca"    = impute_bpca(data),
-           "knn"     = impute_knn(data),
+           "halfmin" = impute_halfmin(data, grp),
+           "bpca"    = impute_bpca(data, grp),
+           "knn"     = impute_knn(data, grp, k),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
@@ -72,20 +74,23 @@ ms_impute <- function(msprep_obj,
 #' @importFrom dplyr vars
 #' @importFrom dplyr funs
 #' @importFrom rlang sym
-#' @importFrom rlang UQ
+#' @importFrom rlang syms
+#' @importFrom rlang !!
+#' @importFrom rlang !!!
 # Imputation using half of the minimum value
-impute_halfmin <- function(data) {
+impute_halfmin <- function(data, grouping_vars) {
 
   sym_mz <- sym("mz")
   sym_rt <- sym("rt")
 
-  data <- group_by(data, UQ(sym_mz), UQ(sym_rt))
+  grp  <- syms(grouping_vars)
+  data <- group_by(data, `!!`(sym_mz), `!!`(sym_rt), `!!!`(grp))
 
   halfmin <- function(x) {
     ifelse(is.na(x), min(x, na.rm = TRUE)/2, x)
   }
 
-  data <- mutate(data, vars("sym_abundance"), funs(halfmin))
+  data <- mutate_at(data, vars("abundance_summary"), funs(halfmin))
   data <- ungroup(data)
 
   return(data)
@@ -96,14 +101,14 @@ impute_halfmin <- function(data) {
 
 #' @importFrom pcaMethods pca
 #' @importFrom pcaMethods completeObs
-impute_bpca <- function(data) {
+impute_bpca <- function(data, grouping_vars) {
 
   # 1. Bayesian pca imputation
-  data <- data_to_wide_matrix(data) 
+  data <- data_to_wide_matrix(data, grouping_vars) 
   data <- pca(data, nPcs = 3, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
-  data <- wide_matrix_to_data(data)
-  data <- halfmin_if_any_negative(data)
+  data <- wide_matrix_to_data(data, grouping_vars)
+  data <- halfmin_if_any_negative(data, grouping_vars)
 
   return(data)
 
@@ -112,13 +117,13 @@ impute_bpca <- function(data) {
 
 
 #' @importFrom VIM kNN
-impute_knn <- function(data, k = 5) {
+impute_knn <- function(data, grouping_vars, k = 5) {
 
-  data <- data_to_wide_matrix(data) 
+  data <- data_to_wide_matrix(data, grouping_vars) 
   rwnm <- rownames(data)
   data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
   rownames(data) <- rwnm
-  data <- wide_matrix_to_data(data)
+  data <- wide_matrix_to_data(data, grouping_vars)
   data <- halfmin_if_any_negative(data)
 
   return(data)
@@ -127,13 +132,13 @@ impute_knn <- function(data, k = 5) {
 
 
 
-halfmin_if_any_negative <-  function(data) {
+halfmin_if_any_negative <-  function(data, grouping_vars) {
 
   num_neg <- sum(data$abundance_summary < 0)
   if (any(num_neg)) {
     message("Found ", num_neg, " negative imputed values using KNN, reverting to half-min imputation for these values")
     data$abundance_summary <- setmissing_negative_vals(data$abundance_summary)
-    data <- impute_halfmin(data)
+    data <- impute_halfmin(data, grouping_vars)
   }
 
   return(data)

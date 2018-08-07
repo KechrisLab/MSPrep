@@ -6,9 +6,9 @@
 frame}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
-  id_extra_txt = "Neutral_Operator_Dif_Pos_", id_names = c("spike",
-  "subject_id", "replicate"), separator = "_", ids_to_combine = c("spike",
-  "subject_id"), combined_id_name = "subject_id")
+  col_extra_txt = "Neutral_Operator_Dif_Pos_", col_names = c("spike",
+  "subject_id", "replicate"), separator = "_",
+  subject_id = "subject_id", grouping_vars = "spike")
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
@@ -17,20 +17,19 @@ ms_tidy(quantification_data, mz = "mz", rt = "rt",
 
 \item{rt}{Name of the column containing retention time.}
 
-\item{id_extra_txt}{Text to remove when converting quant variable names to
+\item{col_extra_txt}{Text to remove when converting quant variable names to
 variables.}
 
-\item{id_names}{Vector of the ordered ID names to extract from the variable
+\item{col_names}{Vector of the ordered ID names to extract from the variable
 names}
 
-\item{separator}{Character/string separating subject and replicate
+\item{separator}{Character/string separating spike, subject, and replicate
 ids.}
 
-\item{ids_to_combine}{In the case where there are more than just subject 
-and replicate IDs, this is a single vector of the names from `id_names` that
-should be combined into the new variable `combined_id_name`.}
+\item{subject_id}{String to use for name of new subject id variable}
 
-\item{combined_id_name}{Typically either 'subject_id' or 'replicate'.}
+\item{grouping_vars}{Names of new/created variables to group by in
+summarizing the dataset.}
 }
 \value{
 A tidy data frame of quant data, with columns mz, rt, subject_id,
@@ -45,8 +44,8 @@ containing MS quantification data.
 }
 \details{
 It also assumes that the column names of quantification data start with some
-consistent, informational but unnecessary text (id_extra_txt), and contain
-the subject ID and replicate ID in a consistent position, all
+consistent, informational but unnecessary text (col_extra_txt), and contain
+the spike, subject ID, and replicate ID in a consistent position, all
 separated by a consistent separator.
 
 See \code{data(quantification)} for an example.  If your data doesn't fit
