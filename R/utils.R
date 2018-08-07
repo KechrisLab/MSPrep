@@ -24,6 +24,8 @@ grouping_vars <- function(x) attr(x, "grouping_vars")
   x
 }
 
+# Arrange used in all fns
+ms_arrange <- function(data, ...) arrange(data, .data$subject_id, .data$mz, .data$rt, ...)
 
 # Internal function - replace missing val with NA
 replace_missing <- function(abundance, missing_val) {
@@ -71,10 +73,8 @@ wide_matrix_to_data <- function(wide, grouping_vars) {
   rtn <- rtn %>% as_tibble
   rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary", -"subject_id", -grouping_vars)
   rtn <- rtn %>% separate("mz_rt", sep = "_", into = c("mz", "rt"))
-  rtn <- rtn %>% arrange(UQ(sym_id), UQ(sym_mz), UQ(sym_rt))
-  rtn <- rtn %>% mutate_at(vars("subject_id", "rt"), as.factor)
-  rtn <- rtn %>% mutate_at(vars("mz"), as.double)
-  rtn <- rtn %>% arrange(UQ(sym_id), UQ(sym_mz), UQ(sym_rt))
+  rtn <- standardize_datatypes(rtn, grouping_vars)
+  rtn <- ms_arrange(rtn)
 
   return(rtn)
 

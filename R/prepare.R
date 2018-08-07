@@ -86,24 +86,19 @@ ms_prepare <- function(data,
   # Replace miss val with NAs 
   data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
 
+  # Check/error on datatypes
+  #stopifnot(is.numeric(data[rt], data[mz]))
+
   # Get replicate count for each mz/rt/grouping_vars/subject combo
   replicate_count <- length(unique(data[["replicate"]]))
 
   # Roughly check if all compounds are present in each replicate
   stopifnot(nrow(data) %% replicate_count == 0)
 
-  # Calculate initial summary measures 
-  #   Note;(matrix algebra would be faster --
-  #     consider later)
-  #   Get count of not-NA abundance values and merge w/ quant_summary
-  quant_summary <- group_by(data, subject_id, UQ(grouping_vars), mz, rt)
-  quant_summary <- arrange(quant_summary, mz, rt, subject_id, UQ(grouping_vars),
-                           replicate)
-#   n_present  <- summarise(quant_summary,
-#   n_present_vec <- n_present$count
+  quant_summary <- ms_arrange(data, UQ(grouping_vars), replicate)
+  quant_summary <- group_by(quant_summary, subject_id, mz, rt, UQ(grouping_vars))
 
   # Calculate remaining summary measures
-#   quant_summary <- group_by(quant_summary, subject_id, UQ(grouping_vars), mz, rt)
   quant_summary <- summarise(quant_summary,
                              n_present        = sum(!is.na(.data$abundance)),
                              prop_present     = UQ(sym("n_present")) / replicate_count,
@@ -229,6 +224,8 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
            "mz"         = UQ(mz),
            "rt"         = UQ(rt))
 
+  data <- standardize_datatypes(data, grouping_vars)
+
   # Rename optional variables if present
   if (!is.null(replicate)) {
     replicate <- sym(replicate)
@@ -237,16 +234,18 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
     data$replicate <- "None"
   }
 
-  #if (!is.null(grouping_vars)) {
-  #  grouping_vars <- sym(grouping_vars)
-  #  data     <- data %>% rename("grouping_vars" = UQ(grouping_vars)) 
-  #} else { 
-  #  data$grouping_vars <- "Not provided" 
-  #}
-
   return(data)
 
 }
 
+standardize_datatypes <- function(data, grouping_vars) {
+
+  count_var   <- c("abundance_summary", "abundance")
+  count_var   <- count_var[count_var %in% colnames(data)]
+  factor_vars <- c("subject_id", as.character(grouping_vars))
+  data <- mutate_at(data, factor_vars, as.factor)
+  data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
+
+}
 
 
