@@ -59,14 +59,14 @@ library(devtools)
 ```{r developercode, eval=FALSE}
 # Code for development only
 #
-# source("https://bioconductor.org/biocLite.R")
-# biocLite()
-# library(BiocInstaller)
-# biocLite("pcaMethods")
-# biocLite("crmn")
-# biocLite("preprocessCore")
-# biocLite("sva")
-# biocLite("BiocStyle")
+source("https://bioconductor.org/biocLite.R")
+biocLite()
+library(BiocInstaller)
+biocLite("pcaMethods")
+biocLite("crmn")
+biocLite("preprocessCore")
+biocLite("sva")
+biocLite("BiocStyle")
 
 # for dev
 # library(tidyverse)
@@ -161,6 +161,20 @@ dat <- ms_impute(method = "knn") # not yet working
 
 
 
+```{r debugging wide-mat-to-data}
+filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
+filtered_data %>% ms_impute(method = "halfmin")
+
+grp <- MSPrep:::grouping_vars(filtered_data)
+dat <- filtered_data$data
+
+
+MSPrep:::data_to_wide_matrix(dat, grp) %>% 
+  MSPrep:::wide_matrix_to_data(., grp) %>% 
+  .$rt %>% levels %>% length
+
+```
+
 
 
 
@@ -197,9 +211,9 @@ quantif      <- read_csv("data-raw/Quantification.csv")
 
 subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
 
-load("data/test.rda")
-load("data/test2.rda")
-load("data/test3.rda")
+load("old-R-scripts/test.rda")
+load("old-R-scripts/test2.rda")
+load("old-R-scripts/test3.rda")
 
 test %>% str
 cnt_data1 <-

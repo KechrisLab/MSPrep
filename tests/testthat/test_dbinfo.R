@@ -1,14 +1,15 @@
 
 
-context("prepare_msprep() related functions")
+context("ms_prepare() related functions")
 
 
 ### Read in data files
-pathclinical <- system.file("extdata", "Clinical.csv", package = "MSPrep")
+# pathclinical <- system.file("data-raw", "Clinical.csv", package = "MSPrep")
 pathquant    <- system.file("extdata", "Quantification.csv", package = "MSPrep")
-pathlink     <- system.file("extdata", "SubjectLinks.csv", package = "MSPrep")
+# pathlink     <- system.file("data-raw", "SubjectLinks.csv", package = "MSPrep")
 path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-quant        <- read.csv(pathquant)
+data(msquant)
+quant        <- msquant 
 load(path_olddata)
 
 # Generate tidy dataset from wide quant data
@@ -74,7 +75,7 @@ test_that("New version of summarized dataset matches old version", {
   # load("R/sysdata.rda")
 
   sum_data <-
-    prepped_data$summary_data %>%
+    prepped_data$data %>%
     dplyr::select(subject_id, spike, mz, rt, abundance_summary) %>%
     tidyr::unite(id, spike, subject_id, sep = "_") %>% 
     tidyr::unite(metabolite, mz, rt, sep = "_")

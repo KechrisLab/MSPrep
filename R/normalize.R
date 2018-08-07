@@ -6,15 +6,14 @@
 # #' remove batch effects in raw, quantile, and median normalized data.
 # #' Generates data driven controls if none exist.
 # #' 
-# #' @param metafin Imputated and filtered dataset to use for normalization
-# #' @param clindat Name of clinical datafile
-# #' @param link1 Column header in clindat that links to subject IDs.
-# #' @param pheno Name of phenotype variable in clindat.
-# #' @param batch Name of batch variable in clindat.
-# #' @param ncont Number of controls to estimate/utilize.
+# #' @param msprep_obj An MSPrep object that has been filtered, normalized, and
+# #' imputed.
+# #' @param method One of 6 methods.  3 are normalization and 3 are batch
+# #' correction + normalization? TODO: updated this.
+# #' @param n_control Number of controls to estimate/utilize.
 # #' @param controls Vector of control identifiers.  Leave blank for data driven
 # #' controls. Vector of column numbers from metafin dataset of that control.
-# #' @param ncomp Number of factors to use in CRMN algorithm.
+# #' @param n_comp Number of factors to use in CRMN algorithm.
 # #' @return controls List of compounds that were used as controls
 # #' @return crmn_adj CRMN adjusted dataset (log2)
 # #' @return log_data Log2 data with no adjustment
@@ -65,7 +64,111 @@
 # #'
 # #' @importFrom dplyr case_when
 # #' @export
-# ms_normalize <- function(msprepped,
-#                          method = c("halfmin", "bpca", "bpca + halfmin", "knn")) {
+# ms_normalize <- function(msprep_obj,
+#                          method = c("ComBat",
+#                                     "quantile + ComBat",
+#                                     "median + ComBat",
+#                                     "CRMN",
+#                                     "RUV",
+#                                     "SVA"),
+#                          n_control = NULL,
+#                          controls  = NULL,
+#                          n_comp    = NULL) {
+# 
+#   # Validate inputs
+#   stopifnot(class(msprep_obj) == "msprep")
+#   # NOTE: check whether all require imputation or if other valid stages
+#   stopifnot(stage(msprep_obj) %in% c("imputed"))
+#   method <- match.arg(method) # requires 1 argument from vec in function arg
+# 
+#   # # Prep data - replace 0's with NA's -- for minval and bpca() (all methods?)
+#   # data <- mutate_at(msprep_obj$data, vars("abundance_summary"), 
+#   #                   replace_missing, 0)
+# 
+#   # normalize/batch correct data
+#   data <-
+#     switch(method,
+#            "ComBat"            = normalize_combat(data),
+#            "quantile + ComBat" = normalize_quantile_combat(data, grouping_vars(msprep_obj)),
+#            "median + ComBat"   = normalize_median_combat(data),
+#            "CRMN"              = normalize_crmn(data),
+#            "RUV"               = normalize_ruv(data),
+#            "SVA"               = normalize_sva(data),
+#            stop("Invalid normalize method - provide argument from list in",
+#                 "function definition and help file"))
+# 
+#   # Prep output object
+#   msprep_obj$data  <- data
+#   attr(msprep_obj, "normalize_method") <- method
+#   stage(msprep_obj) <- "normalized"
+# 
+#   # ...and:
+#   return(msprep_obj)
+# 
 # 
 # }
+# 
+# 
+# #' @importFrom preprocessCore normalize.quantiles
+# normalize_combat <- function(data) {
+# 
+#   # Combat batch correction
+#   rtn <- combat(rtn)
+# 
+#   return(rtn)
+# 
+# }
+# 
+# #' @importFrom preprocessCore normalize.quantiles
+# normalize_quantile_combat <- function(data, grouping_vars) {
+# 
+#   # Quantile normalization
+#   mat   <- data_to_wide_matrix(data, grouping_vars)
+#   rwnm  <- rownames(mat)
+#   colnm <- colnames(mat)
+#   rtn   <- normalize.quantiles(mat)
+#   rownames(rtn) <- rwnm
+#   colnames(rtn) <- colnm
+# 
+#   # Combat batch correction
+#   rtn <- combat(rtn)
+# 
+#   return(rtn)
+# 
+# }
+# 
+# 
+# normalize_median_combat <- function(data) {
+# 
+# }
+# 
+# 
+# 
+# 
+# normalize_crmn <- function(data) {
+# }
+# 
+# # wait on this -- need to rewrite genadj and ruv functions
+# normalize_ruv <- function(data) {
+# 
+#   gen_adj()
+# }
+# 
+# # wait on this -- need to rewrite genadj function and pick apart related code in
+# # main  function
+# normalize_sva <- function(data) {
+# }
+# 
+# 
+# 
+# 
+# # Utility functions for ms_normalize()
+# log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
+# 
+# combat <- function(data, phenotype, batch) {
+# 
+# 
+# }
+# 
+# 
+# 

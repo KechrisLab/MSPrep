@@ -38,6 +38,7 @@
 #' @importFrom dplyr ungroup 
 #' @importFrom dplyr filter
 #' @importFrom dplyr full_join
+#' @importFrom dplyr n
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
@@ -47,17 +48,16 @@ ms_filter <- function (msprep_obj, filter_percent = 0.5) {
   stopifnot(stage(msprep_obj) == "prepared")
 
   filter_status <- 
-    msprep_obj$data %>%
-      group_by(mz, rt) %>% 
-      summarise(perc_present = sum(abundance_summary != 0) / n()) %>%
-      mutate(keep = perc_present >= filter_percent) %>%
+      group_by(msprep_obj$data, .data$mz, .data$rt) %>%
+      summarise(perc_present = sum(.data$abundance_summary != 0) / n()) %>%
+      mutate(keep = .data$perc_present >= filter_percent) %>%
       ungroup
 
   filtereddata <- 
     full_join(msprep_obj$data,
-              filter_status %>% select(mz, rt, keep),
+              select(filter_status, .data$mz, .data$rt, .data$keep),
               by = c("mz", "rt")) %>% 
-    filter(keep) %>% select(-keep)
+    filter(.data$keep) %>% select(-.data$keep)
 
   msprep_obj$data <- filtereddata
   attr(msprep_obj, "filter_status")  <- filter_status

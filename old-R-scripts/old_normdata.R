@@ -69,8 +69,6 @@
 #' 4818-4826.
 #'
 #' @examples
-#'   load("test2.Rdata")
-#'
 #'
 #'   path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
 #'   load(path_olddata)
@@ -107,17 +105,21 @@ normdata <- function (metafin, # imputed dataset
 
   compounds       <- ncol(metafin)
   subjects        <- nrow(metafin)
+
+  # qunatile normalization
   metan           <- t(preprocessCore::normalize.quantiles(t(metafin)))
   colnames(metan) <- colnames(metafin)
   rownames(metan) <- rownames(metafin)
-  final           <- as.data.frame(metafin)
   finaln          <- metan
 
-
-  log_final  <- convert(final)
-  log_finaln <- convert(finaln)
+  final           <- as.data.frame(metafin)
 
 
+  # Convert to log2 
+  log_final  <- convert(final) # for combat only, sva
+  log_finaln <- convert(finaln) # only for quantile + combat
+
+  # Combat procedure for combat-only and quantile + combat 
   final_rc  <- combat(as.data.frame(final), pheno, batch)
   final_com <- combat(as.data.frame(finaln), pheno, batch)
 
@@ -191,23 +193,23 @@ normdata <- function (metafin, # imputed dataset
   med_com      <- combat(as.data.frame(t(normed.med)), pheno, batch)
 
   list(#  unnormalized/batch corrected
-       log_data         = log_final,
-       log_data_combat  = final_rc,
+       log_data         = log_final, # log2'd
+       log_data_combat  = final_rc, # log2'd
        # quantile normalized/batch corrected
-       log_quant        = log_finaln,
-       log_quant_combat = final_com,
+       log_quant        = log_finaln, # log2'd
+       log_quant_combat = final_com, # log2'd
        # median normalized/batch corrected 
-       med_adj          = final_med,
-       med_combat       = med_com,
+       med_adj          = final_med, # log2'd
+       med_combat       = med_com, # NOT log2'd
        # SVA factor analysis 
-       sva_factors      = sva,
-       sva_adj          = sva_adj,
+       sva_factors      = sva, # log2'd
+       sva_adj          = sva_adj, # log2'd
        # RUV factor analysis
-       ruv_factors      = ruv_raw,
-       ruv_adj          = ruv_adj,
+       ruv_factors      = ruv_raw, # log2'd
+       ruv_adj          = ruv_adj, # log2'd
        # CRMN normalized
-       crmn_adj         = final_crmn,
-       controls         = contout)
+       crmn_adj         = final_crmn, # log2'd
+       controls         = contout) # log2'd
 
 }
 
@@ -217,6 +219,7 @@ normdata <- function (metafin, # imputed dataset
 
 
 
+# what does this do?
 convert <- function(dset) {
 
   s_dset <- as.data.frame(matrix(NA, ncol = ncol(dset), 
@@ -233,19 +236,20 @@ convert <- function(dset) {
 
 combat <- function(dset, pheno, batch) {
 
-  compounds <- ncol(dset)
+#   compounds <- ncol(dset)
   temp      <- dset
   temp$mid  <- rownames(temp)
+  # wide matrix format + subject id (or spike_subjectid)
   test      <- merge(temp, clindat, by.x = "mid", by.y = as.character(link1))
   d1        <- t(dset)
   colnames(d1) <- dset[, 1]
-  d2    <- subset(test, select = pheno)
-  d2a   <- model.matrix(~as.factor(d2[, 1]))
-  d3    <- subset(test, select = batch)
-  count <- matrix(0, nrow = compounds, ncol = 1)
-  d1mod <- matrix(0, nrow = compounds, ncol = subjects)
+  d2    <- subset(test, select = pheno) # spike only
+  d2a   <- model.matrix(~as.factor(d2[, 1])) # spike in model matrix form
+  d3    <- subset(test, select = batch) # operator ids
+#   count <- matrix(0, nrow = compounds, ncol = 1)
+#   d1mod <- matrix(0, nrow = compounds, ncol = subjects)
 
-  for (j in 1:compounds) { d1mod[j, ] <- log2(as.numeric(d1[j, ])) }
+  d1mod <- log_base2(d1)
 
   # Here the element "d2a" is Gold Stage phenotype and "d3" is the batch.
   comadj <- t(sva::ComBat(d1mod, mod = d2a, batch = d3[,1])) 
