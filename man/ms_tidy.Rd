@@ -6,8 +6,9 @@
 frame}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
-  id_extra_txt = "Neutral_Operator_Dif_Pos_", separator = "_",
-  id_spike_pos = 1, id_subject_pos = 2, id_replicate_pos = 3)
+  col_extra_txt = "Neutral_Operator_Dif_Pos_", col_names = c("spike",
+  "subject_id", "replicate"), separator = "_",
+  subject_id = "subject_id", grouping_vars = "spike")
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
@@ -16,24 +17,23 @@ ms_tidy(quantification_data, mz = "mz", rt = "rt",
 
 \item{rt}{Name of the column containing retention time.}
 
-\item{id_extra_txt}{Text to remove when converting quant variable names to
+\item{col_extra_txt}{Text to remove when converting quant variable names to
 variables.}
 
-\item{separator}{Character/string separating spike, subject and replicate
+\item{col_names}{Vector of the ordered ID names to extract from the variable
+names}
+
+\item{separator}{Character/string separating spike, subject, and replicate
 ids.}
 
-\item{id_spike_pos}{Order in which the spike number occurs in the quant
-variable names (after \code{id_extra_txt} is removed).}
+\item{subject_id}{String to use for name of new subject id variable}
 
-\item{id_subject_pos}{Order in which the subject id occurs in the quant
-variable names.}
-
-\item{id_replicate_pos}{Order in which the replicate id occurs in the quant
-variable names.}
+\item{grouping_vars}{Names of new/created variables to group by in
+summarizing the dataset.}
 }
 \value{
-A tidy data frame of quant data, with columns mz, rt, spike,
-subject_id, replicate, and abundance.
+A tidy data frame of quant data, with columns mz, rt, subject_id,
+replicate, and abundance.
 }
 \description{
 Function reads in wide dataset of mass spec quantification data and converts
@@ -44,7 +44,7 @@ containing MS quantification data.
 }
 \details{
 It also assumes that the column names of quantification data start with some
-consistent, informational but unnecessary text (id_extra_txt), and contain
+consistent, informational but unnecessary text (col_extra_txt), and contain
 the spike, subject ID, and replicate ID in a consistent position, all
 separated by a consistent separator.
 

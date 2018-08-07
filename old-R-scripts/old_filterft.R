@@ -40,7 +40,7 @@ filterft <- function (metaf, filterpercent = 0.5) {
 
 
   # count is a vector of the percent present for each compound
-  # toss is indicator vector for keep (= 1) /remove (= 0)
+  # toss is indicator vector for keep (= 1) /remove (= 0) (based on what?
 
   # metaf   <- original matrix
   # metafin <- filtered matrix with only the compunds present >= filterpercent
@@ -70,7 +70,8 @@ filterft <- function (metaf, filterpercent = 0.5) {
   tests <- cbind(toss, t(metaf))
   metafin <- t(subset(tests, toss != 0)[, -1])
   metaimp <- matrix(NA, nrow = nrow(metafin), ncol = ncol(metafin))
-  # Create matrix where 0's are replace with NA's
+
+  # Replace 0's with NAs (all this does)
   for (i in 1:nrow(metafin)) {
     for (j in 1:ncol(metafin)) {
       # sean jacobson added this so that missing data would be ignored
@@ -97,13 +98,15 @@ filterft <- function (metaf, filterpercent = 0.5) {
     }
   }
 
+  # Half-min val imputation
   minval <- metafin
   for (i in 1:nrow(metaf)) {
     for (j in 1:ncol(metafin)) {
       # sean jacobson added this for missing data
       # if(is.na(metafin[i, j])){minval[i,j] <- NA; next}
       if (metafin[i, j] == 0) {
-        minval[i, j] <- min(metaimp[, j], na.rm = TRUE) / 2
+        minval[i, j] <- 
+          min(metaimp[, j], na.rm = TRUE) / 2
       }
       else {
         minval[i, j] <- metafin[i, j]
@@ -111,8 +114,10 @@ filterft <- function (metaf, filterpercent = 0.5) {
     }
   }
 
+#   browser() # DEBUG LINE
+
   metabpca <- pcaMethods::pca(metaimp, nPcs = 3, method = "bpca")
-  bpca <- completeObs(metabpca)
+  bpca <- pcaMethods::completeObs(metabpca)
   colnames(bpca) <- colnames(metafin)
   rownames(bpca) <- rownames(metafin)
   coldrop <- 1

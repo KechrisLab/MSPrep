@@ -1,5 +1,6 @@
 
 [![Build Status](https://travis-ci.org/KechrisLab/MSPrep.svg?branch=master)](https://travis-ci.org/KechrisLab/MSPrep)
+[![codecov](https://codecov.io/gh/KechrisLab/MSPrep/branch/master/graph/badge.svg)](https://codecov.io/gh/KechrisLab/MSPrep)
 
 
 # MSPrep 
@@ -41,7 +42,7 @@ dat <-
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
-# dat <- ms_impute(method = "kNN") # not yet working
-
+dat <- ms_impute(method = "knn") 
+# dat <- ms_normalize(method = "knn") # not yet implemented
 
 ```

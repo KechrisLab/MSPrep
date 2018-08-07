@@ -8,7 +8,7 @@
 #' containing MS quantification data.  
 #' 
 #' It also assumes that the column names of quantification data start with some
-#' consistent, informational but unnecessary text (id_extra_txt), and contain
+#' consistent, informational but unnecessary text (col_extra_txt), and contain
 #' the spike, subject ID, and replicate ID in a consistent position, all
 #' separated by a consistent separator.
 #'
@@ -20,19 +20,18 @@
 #' @param quantification_data Data frame containing the quantification data.
 #' @param mz Name of the column containing mass-to-charge ratios.
 #' @param rt Name of the column containing retention time.
-#' @param id_extra_txt Text to remove when converting quant variable names to
+#' @param col_extra_txt Text to remove when converting quant variable names to
 #'   variables.
-#' @param separator Character/string separating spike, subject and replicate
-#'   ids.
-#' @param id_spike_pos Order in which the spike number occurs in the quant
-#'   variable names (after \code{id_extra_txt} is removed).
-#' @param id_subject_pos Order in which the subject id occurs in the quant
-#'   variable names.
-#' @param id_replicate_pos Order in which the replicate id occurs in the quant
-#'   variable names.
+#' @param col_names Vector of the ordered ID names to extract from the variable
+#' names
+#' @param separator Character/string separating spike, subject, and replicate
+#' ids.
+#' @param subject_id String to use for name of new subject id variable
+#' @param grouping_vars Names of new/created variables to group by in
+#' summarizing the dataset.
 #'
-#' @return A tidy data frame of quant data, with columns mz, rt, spike,
-#' subject_id, replicate, and abundance.
+#' @return A tidy data frame of quant data, with columns mz, rt, subject_id,
+#' replicate, and abundance.
 #'
 #' @examples
 #'
@@ -51,32 +50,30 @@
 #' @importFrom dplyr mutate
 #' @importFrom dplyr arrange
 #' @importFrom tidyr separate
+#' @importFrom tidyr unite
 #' @importFrom stringr str_replace_all
 #' @importFrom magrittr %>%
+#' @importFrom rlang UQ
 #' @export
 ms_tidy <- function(quantification_data,
                     mz = "mz", 
                     rt = "rt",
-                    id_extra_txt     = "Neutral_Operator_Dif_Pos_",
+                    col_extra_txt     = "Neutral_Operator_Dif_Pos_",
+                    col_names         = c("spike", "subject_id", "replicate"),
                     separator        = "_",
-                    id_spike_pos     = 1,
-                    id_subject_pos   = 2,
-                    id_replicate_pos = 3) {
+                    subject_id       = "subject_id",
+                    grouping_vars    = "spike") {
 
-  # create vector of order of id parts
-  into <-
-    data_frame(name = c("spike", "subject_id", "replicate"),
-               order = c(id_spike_pos, id_subject_pos, id_replicate_pos)) %>%
-    arrange(order) %>% .[["name"]]
-
-  # gather data to long format (adds id/varnames as column), remove id_extra_txt
-  # from id column, and convert id column to separate spike,subject,replicate
+  # gather data to long format (adds id/varnames as column), remove col_extra_txt
+  # from id column, and convert id column to separate subject,replicate
   # variables
   rtn <-
-    tibble::as_data_frame(quantification_data) %>%
-    tidyr::gather(key = id_col, value = abundance, -mz, -rt) %>%
-    dplyr::mutate(id_col = stringr::str_replace_all(id_col, id_extra_txt, "")) %>%
-    tidyr::separate(id_col, sep = separator, into = into)
+    as_data_frame(quantification_data) %>%
+    gather(key = "id_col", value = "abundance", -mz, -rt) %>%
+    mutate_at(vars("mz", "rt"), as.numeric) %>%
+    mutate(id_col = str_replace_all(.data$id_col, col_extra_txt, ""))
+  # Split and recombine id names 
+  rtn <- separate(rtn, .data$id_col, sep = separator, into = col_names)
 
   return(rtn)
 

@@ -54,14 +54,19 @@ vignette: |
 
 setwd("~/Projects/KechrisLab/MSPrep")
 library(devtools)
+```
 
-#source("https://bioconductor.org/biocLite.R")
-#biocLite()
-#library(BiocInstaller)
-#biocLite("pcaMethods")
-#biocLite("crmn")
-#biocLite("preprocessCore")
-#biocLite("sva")
+```{r developercode, eval=FALSE}
+# Code for development only
+#
+source("https://bioconductor.org/biocLite.R")
+biocLite()
+library(BiocInstaller)
+biocLite("pcaMethods")
+biocLite("crmn")
+biocLite("preprocessCore")
+biocLite("sva")
+biocLite("BiocStyle")
 
 # for dev
 # library(tidyverse)
@@ -83,14 +88,14 @@ library(devtools)
 # # imputed
 # 
 # 
-
 ``` 
+
 
 ```{r build-pkg, eval=FALSE}
 
 devtools::document()
 devtools::check()
-devtools::install("../MSPrep", build_vignettes = TRUE)
+devtools::install(".", build_vignettes = FALSE)
 
 ```
 
@@ -101,6 +106,7 @@ devtools::install("../MSPrep", build_vignettes = TRUE)
 # Don't require mz_rt, but one of these IDs 
 # add imputation references for bpca and knn to vignette
 # keep in mind that normalization methods --  0 should be treated as missing 
+if (!require("devtools")) install.packages("devtools")
 
 # Load package
 library(MSPrep)
@@ -112,13 +118,36 @@ as_data_frame(msquant)
 names(msquant)
 
 # Tidy and create summarized dataset
-dat <- 
-  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
+dat <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "bpca")
+dat_knn <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "knn")
 
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
-dat <- ms_impute(method = "kNN")
+dat <- ms_impute(method = "bpca")
+
+# Install package
+# if (!require("devtools")) install.packages("devtools")
+# devtools::install_github("KechrisLab/MSPrep")
+
+# Load package
+library(MSPrep)
+library(tidyverse)
+
+# Load example quantification dataset and view 
+data(msquant)
+as_data_frame(msquant)
+names(msquant)
+
+# Use pipe to tidy and create summarized dataset
+dat <- 
+  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
+
+# Use MSPrep functions one at a time
+dat <- ms_tidy(msquant)
+dat <- ms_prepare(dat)
+dat <- ms_filter(dat)
+dat <- ms_impute(method = "knn") # not yet working
 
 ```
 
@@ -131,6 +160,20 @@ dat <- ms_impute(method = "kNN")
 
 
 
+
+```{r debugging wide-mat-to-data}
+filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
+filtered_data %>% ms_impute(method = "halfmin")
+
+grp <- MSPrep:::grouping_vars(filtered_data)
+dat <- filtered_data$data
+
+
+MSPrep:::data_to_wide_matrix(dat, grp) %>% 
+  MSPrep:::wide_matrix_to_data(., grp) %>% 
+  .$rt %>% levels %>% length
+
+```
 
 
 
@@ -168,9 +211,9 @@ quantif      <- read_csv("data-raw/Quantification.csv")
 
 subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
 
-load("data/test.rda")
-load("data/test2.rda")
-load("data/test3.rda")
+load("old-R-scripts/test.rda")
+load("old-R-scripts/test2.rda")
+load("old-R-scripts/test3.rda")
 
 test %>% str
 cnt_data1 <-
