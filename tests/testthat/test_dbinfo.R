@@ -1,6 +1,6 @@
 
 
-context("prepare_msprep() related functions")
+context("ms_prepare() related functions")
 
 
 ### Read in data files

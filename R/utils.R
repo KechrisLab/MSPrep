@@ -16,6 +16,7 @@ stage <- function(x) attr(x, "stage")
   x
 }
 
+
 # Functions for assigning and getting grouping_vars attribute (e.g. spike)
 grouping_vars <- function(x) attr(x, "grouping_vars")
 
@@ -24,16 +25,26 @@ grouping_vars <- function(x) attr(x, "grouping_vars")
   x
 }
 
-# Arrange used in all fns
+
+# Standard arrange for data object used in msprep_obj
 ms_arrange <- function(data, ...) arrange(data, .data$subject_id, .data$mz, .data$rt, ...)
+
+
+valid_cols <- function(grouping_vars)  {
+  grouping_vars <- as.character(grouping_vars)
+  sort(c("subject_id", "mz", "rt", "abundance_summary", grouping_vars))
+}
+
+
 
 # Internal function - replace missing val with NA
 replace_missing <- function(abundance, missing_val) {
   ifelse(abundance == missing_val, NA, abundance)
 }
 
-# Internal function -- spread data
 
+
+# Internal function -- spread data
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
@@ -50,8 +61,6 @@ data_to_wide_matrix <- function(data, grouping_vars) {
 }
 
 # Internal function -- undo spread
-# TODO: should rt be a numeric -- several levels with colons in the value
-
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
 #' @importFrom tibble rownames_to_column
