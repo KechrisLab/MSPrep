@@ -4,7 +4,7 @@
 #' Filters compounds to those found in specified percentage of subjects and
 #' performs data imputation.
 #'
-#' @param msprepped Summarized dataset output as sum_data1 from readdata() function
+#' @param msprep_obj Summarized dataset output as sum_data1 from readdata() function
 #' @param filter_percent Percent to filter the data
 #' @return Placeholder
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
@@ -38,51 +38,35 @@
 #' @importFrom dplyr ungroup 
 #' @importFrom dplyr filter
 #' @importFrom dplyr full_join
+#' @importFrom dplyr n
 #' @importFrom rlang .data
 #' @importFrom magrittr %>%
 #' @export
-ms_filter <- function (msprepped, filter_percent = 0.5) {
+ms_filter <- function (msprep_obj, filter_percent = 0.5) {
 
-  stopifnot("msprepped" %in% class(msprepped))
+  stopifnot(class(msprep_obj) == "msprep")
+  stopifnot(stage(msprep_obj) == "prepared")
+
   filter_status <- 
-    msprepped$summary_data %>%
-      group_by(mz, rt) %>% 
-      summarise(perc_present = sum(abundance_summary != 0) / n()) %>%
-      mutate(keep = perc_present >= filter_percent) %>%
+      group_by(msprep_obj$data, .data$mz, .data$rt) %>%
+      summarise(perc_present = sum(.data$abundance_summary != 0) / n()) %>%
+      mutate(keep = .data$perc_present >= filter_percent) %>%
       ungroup
 
   filtereddata <- 
-    full_join(msprepped$summary_data,
-              filter_status %>% select(mz, rt, keep),
+    full_join(msprep_obj$data,
+              select(filter_status, .data$mz, .data$rt, .data$keep),
               by = c("mz", "rt")) %>% 
-    filter(keep) %>% select(-keep)
+    filter(.data$keep) %>% select(-.data$keep)
 
-  msfiltered <- 
-    msprepped %>%
-      append(list("filter_status" = filter_status), after = 4) %>% 
-      append(list("filter_percent" = filter_percent))
+  msprep_obj$data <- filtereddata
+  attr(msprep_obj, "filter_status")  <- filter_status
+  attr(msprep_obj, "filter_percent") <- filter_percent
+  stage(msprep_obj)                  <- "filtered"
 
-  msfiltered$summary_data <- filtereddata
-  class(msfiltered) <- c("msfiltered", class(msprepped))
-
-  return(msfiltered)
+  return(msprep_obj)
 
 }
 
-print.msfiltered <- function(x) {
-  cat("filtered msprep object\n")
-  cat("    Count of compounds present in >= ", round(x$filter_percent*100, digits = 3), "% of patients = ", sum(x$filter_status$keep), "\n")
-  cat("    Replicate count: ", x$replicate_count, "\n")
-  cat("    Patient count: ", length(unique(x$clinical$subject_id)), "\n")
-  cat("    Count of spike levels: ", length(unique(x$clinical$spike)), "\n")
-  cat("    Count patient-spike combinations: ", nrow(x$clinical), "\n")
-  cat("    Count of patient-spike compounds summarized by median: ", nrow(x$medians), "\n")
-  cat("    User-defined parameters \n")
-  cat("        cvmax = ", x$cvmax, "\n")
-  cat("        min_proportion_present = ", round(x$min_proportion_present, digits=3), "\n")
-  cat("        filter percent = ", x$filter_percent, "\n")
-  cat("    Dataset:\n")
-  print(x$summary_data, n = 6)
-}
 
 
