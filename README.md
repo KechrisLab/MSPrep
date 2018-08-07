@@ -42,8 +42,7 @@ dat <-
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat)
 dat <- ms_filter(dat)
-# dat <- ms_impute(method = "kNN") # implementation in progress
+dat <- ms_impute(method = "knn") 
 # dat <- ms_normalize(method = "knn") # not yet implemented
-
 
 ```

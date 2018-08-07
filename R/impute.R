@@ -1,4 +1,3 @@
-
 #' Imputes dataset
 #'
 #' Performs data imputation.
@@ -113,7 +112,6 @@ impute_bpca <- function(data, grouping_vars) {
   return(data)
 
 }
-
 
 
 #' @importFrom VIM kNN
