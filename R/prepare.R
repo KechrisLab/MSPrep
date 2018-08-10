@@ -13,7 +13,8 @@
 #' @param replicate Name (string) of the replicate column. Set to NULL if no
 #' replicates. TODO: test NULL.
 #' @param abundance Name (string) of the abundance column.
-#' @param grouping_vars Name (string) of the grouping_vars column.
+#' @param grouping_vars Name (string) or vector of names of the grouping_vars column.
+#' @param batch Name (string) of the column representing batches.
 #' @param mz Mass-to-charge ratio variable name.
 #' @param rt Retention time variable name.
 #' @param cvmax Acceptable level of coefficient of variation between replicates.
@@ -30,7 +31,9 @@
 #' 
 #' # Convert dataset to tidy format
 #' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-#' prepped_data <- ms_prepare(tidy_data, replicate = "replicate")
+#' prepped_data <- ms_prepare(tidy_data, 
+#'                            replicate = "replicate", 
+#'                            batch = "subject_id")
 #' 
 #' # Or, using tidyverse/magrittr pipes 
 #' library(magrittr)
@@ -64,6 +67,7 @@ ms_prepare <- function(data,
                        replicate     = "replicate",
                        abundance     = "abundance",
                        grouping_vars = "spike",
+                       batch         = NULL,
                        mz            = "mz",
                        rt            = "rt",
                        cvmax         = 0.50,
@@ -72,16 +76,19 @@ ms_prepare <- function(data,
 
   # Check args
   stopifnot(is.data.frame(data))
-  my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
+#   my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
+  stopifnot(is.null(batch) | length(batch) == 1)
+  stopifnot(is.null(replicate) | length(replicate) == 1)
 
   # rlang magic 
-  grouping_vars = sym(grouping_vars)
+  grouping_quo = syms(grouping_vars)
 
   # Convert to tibble data frame
   data <- as_tibble(data)
 
   # Replace provided variable names with standardized ones
-  data <- standardize_dataset(data, subject_id, replicate, abundance, grouping_vars, mz, rt)
+  data <- standardize_dataset(data, subject_id, replicate, abundance,
+                              grouping_quo, batch, mz, rt)
 
   # Replace miss val with NAs 
   data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
@@ -89,14 +96,14 @@ ms_prepare <- function(data,
   # Check/error on datatypes
   #stopifnot(is.numeric(data[rt], data[mz]))
 
-  # Get replicate count for each mz/rt/grouping_vars/subject combo
+  # Get replicate count for each mz/rt/grouping_quo/subject combo
   replicate_count <- length(unique(data[["replicate"]]))
 
   # Roughly check if all compounds are present in each replicate
   stopifnot(nrow(data) %% replicate_count == 0)
 
-  quant_summary <- ms_arrange(data, UQ(grouping_vars), replicate)
-  quant_summary <- group_by(quant_summary, subject_id, mz, rt, UQ(grouping_vars))
+  quant_summary <- ms_arrange(data, `!!!`(grouping_quo), replicate)
+  quant_summary <- group_by(quant_summary, subject_id, mz, rt, `!!!`(grouping_quo))
 
   # Calculate remaining summary measures
   quant_summary <- summarise(quant_summary,
@@ -122,25 +129,27 @@ ms_prepare <- function(data,
                        .data$summary_measure == "mean"   ~ .data$mean_abundance,
                        TRUE                              ~ 0))
   quant_summary <- mutate_at(quant_summary,
-                             vars(subject_id, "summary_measure", UQ(grouping_vars)),
+                             vars(subject_id, "summary_measure", `!!!`(grouping_quo)),
                              factor)
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, UQ(grouping_vars), "mz", "rt", "abundance_summary"))
+                             vars(subject_id, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, UQ(grouping_vars), "mz", "rt", "n_present",
+                              vars(subject_id, `!!!`(grouping_quo), "mz", "rt", "n_present",
                                    "cv_abundance", "summary_measure"))
 
   # Summaries that used medians
   medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, UQ(grouping_vars), "mz", "rt",
+  medians        <- select_at(medians, vars(subject_id, `!!!`(grouping_quo), "mz", "rt",
                                             "abundance_summary"))
 
   # Total number of compounds identified
   n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
+  
+  # Vector of groupings
 
   # Create return object & return
   structure(list("data" = summary_data,
@@ -149,7 +158,8 @@ ms_prepare <- function(data,
             replicate_count = replicate_count,
             cvmax           = cvmax,
             min_proportion_present = min_proportion_present,
-            grouping_vars = as_string(grouping_vars),
+            grouping_vars = grouping_vars,
+            batch = batch,
             class = "msprep",
             stage = "prepared")
 
@@ -158,11 +168,18 @@ ms_prepare <- function(data,
 print.msprep <- function(x) {
 
   stage <- stage(x)
+  if (is.null(batch_var(x)))  {
+    batch_statement <- "" 
+  } else {
+    batch_statement <- paste0("; Batch var: ", batch_var(x))
+  }
 
   cat("msprep dataset\n")
   cat(paste("    Stage:", stage, "\n"))
   cat("    Replicate count: ", attr(x, "replicate_count"), "\n")
   cat("    Patient count: ", length(unique(x$data$subject_id)), "\n")
+  cat("    Grouping vars:", paste(grouping_vars(x), collapse = ", "),
+      batch_statement, "\n")
   cat("    Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
   cat("    Prepare summary: \n")
   cat("        User-defined parameters: \n")
@@ -210,7 +227,7 @@ select_summary_measure <- function(n_present,
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
 standardize_dataset <- function(data, subject_id, replicate, abundance, grouping_vars,
-                                mz, rt) {
+                                batch, mz, rt) {
 
   # Rename required variables
   subject_id = sym(subject_id)
@@ -230,9 +247,16 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
   if (!is.null(replicate)) {
     replicate <- sym(replicate)
     data      <- data %>% rename("replicate" = UQ(replicate))
-  } else {
-    data$replicate <- "None"
-  }
+  } #else {
+#     data$replicate <- "01"
+  #}
+
+  if (!is.null(batch)) {
+    batch <- sym(batch)
+    data      <- data %>% rename("batch" = UQ(batch))
+  } #else {
+#     data$batch <- "01"
+  #}
 
   return(data)
 
