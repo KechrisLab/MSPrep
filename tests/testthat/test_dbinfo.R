@@ -8,8 +8,8 @@ context("ms_prepare() related functions")
 pathquant    <- system.file("extdata", "Quantification.csv", package = "MSPrep")
 # pathlink     <- system.file("data-raw", "SubjectLinks.csv", package = "MSPrep")
 path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-data(msquant)
-quant        <- msquant 
+data(msquant_subject1)
+quant        <- msquant_subject1 
 load(path_olddata)
 
 # Generate tidy dataset from wide quant data

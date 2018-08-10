@@ -2,8 +2,8 @@
 context("ms_impute()")
 
 set.seed(9999)
-data(msquant)
-tidy_data       <- ms_tidy(msquant, mz = "mz", rt = "rt")
+data(msquant_subject1)
+tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt")
 prepped_data    <- tidy_data %>% ms_prepare %>% ms_filter(0.8)
 halfmin_imputed <- prepped_data %>% ms_impute("halfmin")
 knn_imputed     <- prepped_data %>% ms_impute("knn")
