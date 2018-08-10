@@ -55,10 +55,12 @@
 # #' # Load object generated from readdata() function
 # #' data(msquant)
 # #'
-# #' imputed_data <- 
-# #'   msquant %>% 
-# #'     ms_tidy %>% ms_prepare %>% ms_filter(filter_percent = 0.80) %>%
-# #'     ms_impute(method = "halfmin")
+# #' imputed_data <-
+# #'   msquant %>%
+# #'   ms_tidy %>%
+# #'   ms_prepare %>%
+# #'   ms_filter(filter_percent = 0.80) %>%
+# #'   ms_impute(method = "halfmin")
 # #' normalized_data <- ms_normalize(imputed_data)
 # #'
 # #'
@@ -119,6 +121,7 @@
 # 
 # }
 # 
+# 
 # #' @importFrom preprocessCore normalize.quantiles
 # normalize_quantile_combat <- function(data, grouping_vars) {
 # 
@@ -165,8 +168,39 @@
 # # Utility functions for ms_normalize()
 # log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
 # 
+# 
+# 
+# 
+# data <- imputed_data$data %>% MSPrep:::data_to_wide_matrix(., MSPrep:::grouping_vars(imputed_data))
+# data <- 
+# 
 # combat <- function(data, phenotype, batch) {
 # 
+#   # data == wide matrix data w/ rownames
+#   # batch == "Operator" -- i.e. 
+#   # pheno == "Spike"
+# 
+#   #   compounds <- ncol(data)
+#   temp      <- data
+#   temp$mid  <- rownames(temp)
+#   # wide matrix format + subject id (or spike_subjectid)
+#   test      <- merge(temp, clindat, by.x = "mid", by.y = as.character(link1))
+#   d1        <- t(data)
+#   colnames(d1) <- data[, 1]
+#   d2    <- subset(test, select = phenotype) # spike only
+#   d2a   <- model.matrix(~as.factor(d2[, 1])) # spike in model matrix form
+#   d3    <- subset(test, select = batch) # operator ids
+# #   count <- matrix(0, nrow = compounds, ncol = 1)
+# #   d1mod <- matrix(0, nrow = compounds, ncol = subjects)
+# 
+#   d1mod <- log_base2(d1)
+# 
+#   # Here the element "d2a" is Gold Stage phenotype and "d3" is the batch.
+#   comadj <- t(sva::ComBat(d1mod, mod = d2a, batch = d3[,1])) 
+#   colnames(comadj) <- colnames(data)
+#   rownames(comadj) <- rownames(data)
+# 
+#   return(comadj)
 # 
 # }
 # 

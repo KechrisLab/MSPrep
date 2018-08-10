@@ -25,6 +25,14 @@ grouping_vars <- function(x) attr(x, "grouping_vars")
   x
 }
 
+# Functions for assigning and getting batch attribute (e.g. operator)
+batch_var <- function(x) attr(x, "batch")
+
+`batch_var<-` <- function(x, value) {
+  attr(x, "batch_var") <- value
+  x
+}
+
 
 # Standard arrange for data object used in msprep_obj
 ms_arrange <- function(data, ...) arrange(data, .data$subject_id, .data$mz, .data$rt, ...)
