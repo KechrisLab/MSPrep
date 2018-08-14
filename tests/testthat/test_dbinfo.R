@@ -14,7 +14,9 @@ load(path_olddata)
 
 # Generate tidy dataset from wide quant data
 tidy_data    <- ms_tidy(quant, mz = "mz", rt = "rt")
-prepped_data <- tidy_data %>% ms_prepare
+prepped_data <- tidy_data %>% ms_prepare(replicate = "replicate", 
+                                         batch = "batch",
+                                         grouping_vars = "spike")
 
 
 
@@ -76,8 +78,8 @@ test_that("New version of summarized dataset matches old version", {
 
   sum_data <-
     prepped_data$data %>%
-    dplyr::select(subject_id, spike, mz, rt, abundance_summary) %>%
-    tidyr::unite(id, spike, subject_id, sep = "_") %>% 
+    dplyr::select(batch, spike, mz, rt, abundance_summary) %>%
+    tidyr::unite(id, spike, batch, sep = "_") %>% 
     tidyr::unite(metabolite, mz, rt, sep = "_")
 
   #new_sum_data <- sum_data %>% 

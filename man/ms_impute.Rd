@@ -18,7 +18,8 @@ bpca (Bayesian PCA), knn (k-nearest neighbors).}
 A msprep object with missing data imputed.
 }
 \description{
-Performs data imputation.
+Performs data imputation for a given mz_rt value (not separately for batches
+or grouping variables).
 }
 \details{
 minval Filtered dataset with missing values replaced by 1/2 minimum
@@ -33,7 +34,11 @@ library(magrittr)
 # Load object generated from readdata() function
 data(msquant)
 
-filtered_data <- msquant \%>\% ms_tidy \%>\% ms_prepare \%>\% ms_filter(0.80)
+filtered_data <- msquant \%>\% ms_tidy \%>\% 
+  ms_prepare(replicate = "replicate", 
+             batch = "batch", 
+             grouping_vars = "spike") \%>\% 
+  ms_filter(0.80)
 imputed_data  <- ms_impute(filtered_data, "halfmin")
 
 }

@@ -33,14 +33,24 @@ batch_var <- function(x) attr(x, "batch")
   x
 }
 
+# Functions for assigning and getting replicate attribute
+replicate_var <- function(x) attr(x, "replicate")
+
+`replicate_var<-` <- function(x, value) {
+  attr(x, "replicate_var") <- value
+  x
+}
 
 # Standard arrange for data object used in msprep_obj
-ms_arrange <- function(data, ...) arrange(data, .data$subject_id, .data$mz, .data$rt, ...)
+ms_arrange <- function(data, ...) {
+  other_vars <- list(...)
+  arrange(data, .data$subject_id, .data$mz, .data$rt, `!!!`(syms(other_vars)))
+}
 
 
-valid_cols <- function(grouping_vars)  {
-  grouping_vars <- as.character(grouping_vars)
-  sort(c("subject_id", "mz", "rt", "abundance_summary", grouping_vars))
+valid_cols <- function(extra_vars)  {
+  extra_vars <- as.character(extra_vars)
+  sort(c("subject_id", "mz", "rt", "abundance_summary", extra_vars))
 }
 
 
@@ -56,13 +66,13 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
-data_to_wide_matrix <- function(data, grouping_vars) {
+data_to_wide_matrix <- function(data, grouping_vars, batch) {
 
   data %>% 
     unite(col = "compound", "mz", "rt") %>% 
     spread(key = "compound", value = "abundance_summary")  %>%
     as.data.frame %>%
-    unite(col = "rwnm", "subject_id", grouping_vars) %>%
+    unite(col = "rwnm", "subject_id", batch, grouping_vars) %>%
     column_to_rownames(var = "rwnm") %>%
     as.matrix
 
@@ -78,7 +88,7 @@ data_to_wide_matrix <- function(data, grouping_vars) {
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr vars
-wide_matrix_to_data <- function(wide, grouping_vars) {
+wide_matrix_to_data <- function(wide, grouping_vars, batch) {
 
   sym_id <- sym("subject_id")
   sym_mz <- sym("mz")
@@ -86,12 +96,13 @@ wide_matrix_to_data <- function(wide, grouping_vars) {
 
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "_", into = c("subject_id", grouping_vars))
+  rtn <- rtn %>% separate("rwnm", sep = "_", into = c("subject_id", batch, grouping_vars))
   rtn <- rtn %>% as_tibble
-  rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary", -"subject_id", -grouping_vars)
+  rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
+                        -"subject_id", -grouping_vars, -batch)
   rtn <- rtn %>% separate("mz_rt", sep = "_", into = c("mz", "rt"))
-  rtn <- standardize_datatypes(rtn, grouping_vars)
-  rtn <- ms_arrange(rtn)
+  rtn <- standardize_datatypes(rtn, grouping_vars, batch)
+  rtn <- ms_arrange(rtn, batch, grouping_vars)
 
   return(rtn)
 
