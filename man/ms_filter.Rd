@@ -37,7 +37,10 @@ library(magrittr)
 # Load example dataset, tidy it, prepare it, then filter it
 data(msquant)
 
-prepped_data <- msquant \%>\% ms_tidy \%>\% ms_prepare
+prepped_data <- msquant \%>\% ms_tidy \%>\%
+  ms_prepare(replicate = "replicate",
+             batch = "batch",
+             grouping_vars = "spike")
 filtered_data <- ms_filter(prepped_data, 0.80)
 
 }

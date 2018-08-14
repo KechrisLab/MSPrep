@@ -6,28 +6,29 @@
 and normalization. Also provides summaries of data structure (replicates,
 subjects, grouping_vars, etc.)}
 \usage{
-ms_prepare(data, subject_id = "subject_id", replicate = "replicate",
-  abundance = "abundance", grouping_vars = "spike", batch = NULL,
-  mz = "mz", rt = "rt", cvmax = 0.5, missing_val = 1,
+ms_prepare(data, abundance = "abundance", mz = "mz", rt = "rt",
+  subject_id = "subject_id", replicate = NULL, batch = NULL,
+  grouping_vars = NULL, cvmax = 0.5, missing_val = 1,
   min_proportion_present = 1/3)
 }
 \arguments{
 \item{data}{A tidy dataframe of quantification data.}
+
+\item{abundance}{Name (string) of the abundance column.}
+
+\item{mz}{Mass-to-charge ratio variable name.}
+
+\item{rt}{Retention time variable name.}
 
 \item{subject_id}{Name (string) of the subject ID column.}
 
 \item{replicate}{Name (string) of the replicate column. Set to NULL if no
 replicates. TODO: test NULL.}
 
-\item{abundance}{Name (string) of the abundance column.}
-
-\item{grouping_vars}{Name (string) or vector of names of the grouping_vars column.}
-
 \item{batch}{Name (string) of the column representing batches.}
 
-\item{mz}{Mass-to-charge ratio variable name.}
-
-\item{rt}{Retention time variable name.}
+\item{grouping_vars}{Variable name (string) or vector of names of the
+phenotypes or comparison groups.}
 
 \item{cvmax}{Acceptable level of coefficient of variation between replicates.}
 
@@ -56,11 +57,15 @@ data(msquant)
 tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
 prepped_data <- ms_prepare(tidy_data, 
                            replicate = "replicate", 
-                           batch = "subject_id")
+                           batch = "batch",
+                           grouping_vars = "spike")
 
 # Or, using tidyverse/magrittr pipes 
 library(magrittr)
-prepped_data <- msquant \%>\% ms_tidy \%>\% ms_prepare
+prepped_data <- msquant \%>\% ms_tidy \%>\%
+  ms_prepare(replicate = "replicate",
+             batch = "batch",
+             grouping_vars = "spike")
 
 str(prepped_data)
 str(prepped_data$summary_data)

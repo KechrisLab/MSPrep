@@ -13,7 +13,8 @@
 #' @param replicate Name (string) of the replicate column. Set to NULL if no
 #' replicates. TODO: test NULL.
 #' @param abundance Name (string) of the abundance column.
-#' @param grouping_vars Name (string) or vector of names of the grouping_vars column.
+#' @param grouping_vars Variable name (string) or vector of names of the
+#' phenotypes or comparison groups.
 #' @param batch Name (string) of the column representing batches.
 #' @param mz Mass-to-charge ratio variable name.
 #' @param rt Retention time variable name.
@@ -33,11 +34,15 @@
 #' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
 #' prepped_data <- ms_prepare(tidy_data, 
 #'                            replicate = "replicate", 
-#'                            batch = "subject_id")
-#' 
+#'                            batch = "batch",
+#'                            grouping_vars = "spike")
+#'
 #' # Or, using tidyverse/magrittr pipes 
 #' library(magrittr)
-#' prepped_data <- msquant %>% ms_tidy %>% ms_prepare
+#' prepped_data <- msquant %>% ms_tidy %>%
+#'   ms_prepare(replicate = "replicate",
+#'              batch = "batch",
+#'              grouping_vars = "spike")
 #'
 #' str(prepped_data)
 #' str(prepped_data$summary_data)
@@ -47,7 +52,6 @@
 #' @importFrom dplyr mutate 
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr group_by 
-#' @importFrom dplyr arrange 
 #' @importFrom dplyr summarise 
 #' @importFrom dplyr ungroup 
 #' @importFrom dplyr case_when
@@ -63,20 +67,20 @@
 #' @importFrom stats sd
 #' @export
 ms_prepare <- function(data,
-                       subject_id    = "subject_id",
-                       replicate     = "replicate",
                        abundance     = "abundance",
-                       grouping_vars = "spike",
-                       batch         = NULL,
                        mz            = "mz",
                        rt            = "rt",
+                       subject_id    = "subject_id",
+                       replicate     = NULL,
+                       batch         = NULL,
+                       grouping_vars = NULL,
                        cvmax         = 0.50,
                        missing_val   = 1,
                        min_proportion_present = 1/3) {
 
   # Check args
   stopifnot(is.data.frame(data))
-#   my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
+  # my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
   stopifnot(is.null(batch) | length(batch) == 1)
   stopifnot(is.null(replicate) | length(replicate) == 1)
 
@@ -102,8 +106,8 @@ ms_prepare <- function(data,
   # Roughly check if all compounds are present in each replicate
   stopifnot(nrow(data) %% replicate_count == 0)
 
-  quant_summary <- ms_arrange(data, `!!!`(grouping_quo), replicate)
-  quant_summary <- group_by(quant_summary, subject_id, mz, rt, `!!!`(grouping_quo))
+  quant_summary <- ms_arrange(data, batch, grouping_vars, replicate)
+  quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
 
   # Calculate remaining summary measures
   quant_summary <- summarise(quant_summary,
@@ -129,39 +133,39 @@ ms_prepare <- function(data,
                        .data$summary_measure == "mean"   ~ .data$mean_abundance,
                        TRUE                              ~ 0))
   quant_summary <- mutate_at(quant_summary,
-                             vars(subject_id, "summary_measure", `!!!`(grouping_quo)),
+                             vars(subject_id, "summary_measure", batch, `!!!`(grouping_quo)),
                              factor)
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
+                             vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
+  summary_data <- ms_arrange(summary_data, batch, grouping_vars)
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, `!!!`(grouping_quo), "mz", "rt", "n_present",
+                              vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "n_present",
                                    "cv_abundance", "summary_measure"))
 
   # Summaries that used medians
   medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, `!!!`(grouping_quo), "mz", "rt",
+  medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt",
                                             "abundance_summary"))
 
   # Total number of compounds identified
   n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
-  
-  # Vector of groupings
 
   # Create return object & return
   structure(list("data" = summary_data,
                  replicate_info  = replicate_info,
                  medians         = medians),
-            replicate_count = replicate_count,
-            cvmax           = cvmax,
+            replicate_count        = replicate_count,
+            cvmax                  = cvmax,
             min_proportion_present = min_proportion_present,
-            grouping_vars = grouping_vars,
-            batch = batch,
-            class = "msprep",
-            stage = "prepared")
+            grouping_vars          = grouping_vars,
+            batch_var              = batch,
+            replicate_var          = replicate,
+            stage = "prepared",
+            class = "msprep")
 
 }
 
@@ -241,7 +245,7 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
            "mz"         = UQ(mz),
            "rt"         = UQ(rt))
 
-  data <- standardize_datatypes(data, grouping_vars)
+  data <- standardize_datatypes(data, grouping_vars, batch)
 
   # Rename optional variables if present
   if (!is.null(replicate)) {
@@ -262,11 +266,11 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
 
 }
 
-standardize_datatypes <- function(data, grouping_vars) {
+standardize_datatypes <- function(data, grouping_vars, batch) {
 
   count_var   <- c("abundance_summary", "abundance")
   count_var   <- count_var[count_var %in% colnames(data)]
-  factor_vars <- c("subject_id", as.character(grouping_vars))
+  factor_vars <- c("subject_id", as.character(grouping_vars), batch)
   data <- mutate_at(data, factor_vars, as.factor)
   data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
 
