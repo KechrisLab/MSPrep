@@ -1,7 +1,7 @@
 #' 
 #' Prepare a mass spec quantification data frame for filtering, imputation,
 #' and normalization. Also provides summaries of data structure (replicates,
-#' subjects, grouping_vars, etc.)
+#' subjects, groupingvars, etc.)
 #'
 #' Function reads in raw data files and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
@@ -13,7 +13,7 @@
 #' @param replicate Name (string) of the replicate column. Set to NULL if no
 #' replicates. TODO: test NULL.
 #' @param abundance Name (string) of the abundance column.
-#' @param grouping_vars Variable name (string) or vector of names of the
+#' @param groupingvars Variable name (string) or vector of names of the
 #' phenotypes or comparison groups.
 #' @param batch Name (string) of the column representing batches.
 #' @param mz Mass-to-charge ratio variable name.
@@ -35,14 +35,14 @@
 #' prepped_data <- ms_prepare(tidy_data, 
 #'                            replicate = "replicate", 
 #'                            batch = "batch",
-#'                            grouping_vars = "spike")
+#'                            groupingvars = "spike")
 #'
 #' # Or, using tidyverse/magrittr pipes 
 #' library(magrittr)
 #' prepped_data <- msquant %>% ms_tidy %>%
 #'   ms_prepare(replicate = "replicate",
 #'              batch = "batch",
-#'              grouping_vars = "spike")
+#'              groupingvars = "spike")
 #'
 #' str(prepped_data)
 #' str(prepped_data$summary_data)
@@ -73,7 +73,7 @@ ms_prepare <- function(data,
                        subject_id    = "subject_id",
                        replicate     = NULL,
                        batch         = NULL,
-                       grouping_vars = NULL,
+                       groupingvars = NULL,
                        cvmax         = 0.50,
                        missing_val   = 1,
                        min_proportion_present = 1/3) {
@@ -85,7 +85,7 @@ ms_prepare <- function(data,
   stopifnot(is.null(replicate) | length(replicate) == 1)
 
   # rlang magic 
-  grouping_quo = syms(grouping_vars)
+  grouping_quo = syms(groupingvars)
 
   # Convert to tibble data frame
   data <- as_tibble(data)
@@ -106,7 +106,7 @@ ms_prepare <- function(data,
   # Roughly check if all compounds are present in each replicate
   stopifnot(nrow(data) %% replicate_count == 0)
 
-  quant_summary <- ms_arrange(data, batch, grouping_vars, replicate)
+  quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
   quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
 
   # Calculate remaining summary measures
@@ -139,7 +139,7 @@ ms_prepare <- function(data,
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
                              vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
-  summary_data <- ms_arrange(summary_data, batch, grouping_vars)
+  summary_data <- ms_arrange(summary_data, batch, groupingvars)
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
@@ -161,7 +161,7 @@ ms_prepare <- function(data,
             replicate_count        = replicate_count,
             cvmax                  = cvmax,
             min_proportion_present = min_proportion_present,
-            grouping_vars          = grouping_vars,
+            groupingvars          = groupingvars,
             batch_var              = batch,
             replicate_var          = replicate,
             stage = "prepared",
@@ -230,7 +230,7 @@ select_summary_measure <- function(n_present,
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
-standardize_dataset <- function(data, subject_id, replicate, abundance, grouping_vars,
+standardize_dataset <- function(data, subject_id, replicate, abundance, groupingvars,
                                 batch, mz, rt) {
 
   # Rename required variables
@@ -245,7 +245,7 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
            "mz"         = UQ(mz),
            "rt"         = UQ(rt))
 
-  data <- standardize_datatypes(data, grouping_vars, batch)
+  data <- standardize_datatypes(data, groupingvars, batch)
 
   # Rename optional variables if present
   if (!is.null(replicate)) {
@@ -266,11 +266,11 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
 
 }
 
-standardize_datatypes <- function(data, grouping_vars, batch) {
+standardize_datatypes <- function(data, groupingvars, batch) {
 
   count_var   <- c("abundance_summary", "abundance")
   count_var   <- count_var[count_var %in% colnames(data)]
-  factor_vars <- c("subject_id", as.character(grouping_vars), batch)
+  factor_vars <- c("subject_id", as.character(groupingvars), batch)
   data <- mutate_at(data, factor_vars, as.factor)
   data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
 

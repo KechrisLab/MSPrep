@@ -16,7 +16,7 @@ load(path_olddata)
 tidy_data    <- ms_tidy(quant, mz = "mz", rt = "rt")
 prepped_data <- tidy_data %>% ms_prepare(replicate = "replicate", 
                                          batch = "batch",
-                                         grouping_vars = "spike")
+                                         groupingvars = "spike")
 
 
 

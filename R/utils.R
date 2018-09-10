@@ -18,10 +18,10 @@ stage <- function(x) attr(x, "stage")
 
 
 # Functions for assigning and getting grouping_vars attribute (e.g. spike)
-grouping_vars <- function(x) attr(x, "grouping_vars")
+grouping_vars <- function(x) attr(x, "groupingvars")
 
 `grouping_vars<-` <- function(x, value) {
-  attr(x, "grouping_vars") <- value
+  attr(x, "groupingvars") <- value
   x
 }
 
@@ -66,13 +66,13 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
-data_to_wide_matrix <- function(data, grouping_vars, batch) {
+data_to_wide_matrix <- function(data, groupingvars, batch) {
 
   data %>% 
     unite(col = "compound", "mz", "rt") %>% 
     spread(key = "compound", value = "abundance_summary")  %>%
     as.data.frame %>%
-    unite(col = "rwnm", "subject_id", batch, grouping_vars) %>%
+    unite(col = "rwnm", "subject_id", batch, groupingvars) %>%
     column_to_rownames(var = "rwnm") %>%
     as.matrix
 
@@ -88,7 +88,7 @@ data_to_wide_matrix <- function(data, grouping_vars, batch) {
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr vars
-wide_matrix_to_data <- function(wide, grouping_vars, batch) {
+wide_matrix_to_data <- function(wide, groupingvars, batch) {
 
   sym_id <- sym("subject_id")
   sym_mz <- sym("mz")
@@ -96,13 +96,13 @@ wide_matrix_to_data <- function(wide, grouping_vars, batch) {
 
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "_", into = c("subject_id", batch, grouping_vars))
+  rtn <- rtn %>% separate("rwnm", sep = "_", into = c("subject_id", batch, groupingvars))
   rtn <- rtn %>% as_tibble
   rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
-                        -"subject_id", -grouping_vars, -batch)
+                        -"subject_id", -groupingvars, -batch)
   rtn <- rtn %>% separate("mz_rt", sep = "_", into = c("mz", "rt"))
-  rtn <- standardize_datatypes(rtn, grouping_vars, batch)
-  rtn <- ms_arrange(rtn, batch, grouping_vars)
+  rtn <- standardize_datatypes(rtn, groupingvars, batch)
+  rtn <- ms_arrange(rtn, batch, groupingvars)
 
   return(rtn)
 

@@ -5,7 +5,7 @@ set.seed(9999)
 data(msquant_subject1)
 tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt")
 prepped_data    <- tidy_data %>% 
-  ms_prepare(replicate = "replicate", batch = "batch", grouping_vars = "spike") %>%
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
   ms_filter(0.8)
 
 # impute_methods <- c("halfmin", "knn", "bpcs")

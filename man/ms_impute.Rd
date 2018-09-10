@@ -37,7 +37,7 @@ data(msquant)
 filtered_data <- msquant \%>\% ms_tidy \%>\% 
   ms_prepare(replicate = "replicate", 
              batch = "batch", 
-             grouping_vars = "spike") \%>\% 
+             groupingvars = "spike") \%>\% 
   ms_filter(0.80)
 imputed_data  <- ms_impute(filtered_data, "halfmin")
 
