@@ -7,8 +7,7 @@ frame}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
   col_extra_txt = "Neutral_Operator_Dif_Pos_", col_names = c("spike",
-  "subject_id", "replicate"), separator = "_",
-  subject_id = "subject_id", grouping_vars = "spike")
+  "batch", "replicate", "subject_id"), separator = "_")
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
@@ -25,14 +24,9 @@ names}
 
 \item{separator}{Character/string separating spike, subject, and replicate
 ids.}
-
-\item{subject_id}{String to use for name of new subject id variable}
-
-\item{grouping_vars}{Names of new/created variables to group by in
-summarizing the dataset.}
 }
 \value{
-A tidy data frame of quant data, with columns mz, rt, subject_id,
+A tidy data frame of quant data, with columns mz, rt,
 replicate, and abundance.
 }
 \description{

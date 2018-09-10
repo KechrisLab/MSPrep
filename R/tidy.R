@@ -26,11 +26,8 @@
 #' names
 #' @param separator Character/string separating spike, subject, and replicate
 #' ids.
-#' @param subject_id String to use for name of new subject id variable
-#' @param grouping_vars Names of new/created variables to group by in
-#' summarizing the dataset.
 #'
-#' @return A tidy data frame of quant data, with columns mz, rt, subject_id,
+#' @return A tidy data frame of quant data, with columns mz, rt,
 #' replicate, and abundance.
 #'
 #' @examples
@@ -59,10 +56,8 @@ ms_tidy <- function(quantification_data,
                     mz = "mz", 
                     rt = "rt",
                     col_extra_txt     = "Neutral_Operator_Dif_Pos_",
-                    col_names         = c("spike", "subject_id", "replicate"),
-                    separator        = "_",
-                    subject_id       = "subject_id",
-                    grouping_vars    = "spike") {
+                    col_names         = c("spike", "batch", "replicate", "subject_id"),
+                    separator        = "_") {
 
   # gather data to long format (adds id/varnames as column), remove col_extra_txt
   # from id column, and convert id column to separate subject,replicate
