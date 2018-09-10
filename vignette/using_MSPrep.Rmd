@@ -118,13 +118,20 @@ as_data_frame(msquant)
 names(msquant)
 
 # Tidy and create summarized dataset
-dat <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "bpca")
-dat_knn <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8) %>% ms_impute(method = "knn")
+dat <- msquant %>% ms_tidy %>% 
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+  ms_filter(0.8) %>% ms_impute(method = "bpca")
+dat_knn <- msquant %>% ms_tidy %>% 
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+  ms_filter(0.8) %>% ms_impute(method = "knn")
+dat_halfmin <- msquant %>% ms_tidy %>% 
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+  ms_filter(0.8) %>% ms_impute(method = "halfmin")
 
 dat <- ms_tidy(msquant)
-dat <- ms_prepare(dat)
+dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
 dat <- ms_filter(dat)
-dat <- ms_impute(method = "bpca")
+dat <- ms_impute(dat, method = "bpca")
 
 # Install package
 # if (!require("devtools")) install.packages("devtools")
@@ -145,10 +152,14 @@ dat <-
 
 # Use MSPrep functions one at a time
 dat <- ms_tidy(msquant)
-dat <- ms_prepare(dat)
+dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
 dat <- ms_filter(dat)
 dat <- ms_impute(method = "knn") # not yet working
 
+
+# TODO: need better error message here, when user doesn't define replicate,
+#       batch, groupingvars
+dat <- ms_tidy %>% ms_prepare
 ```
 
 

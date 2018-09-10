@@ -124,7 +124,7 @@ normdata <- function (metafin, # imputed dataset
   final_com <- combat(as.data.frame(finaln), pheno, batch)
 
 
-  sva <- as.data.frame(svaestimate(log_final, pheno, batch))
+  sva <- as.data.frame(svaestimate(log_final, pheno, batch, compounds))
   for (i in 1:ncol(sva)) {
     colnames(sva)[i] <- paste("f", i, sep = "")
   }
@@ -150,14 +150,14 @@ normdata <- function (metafin, # imputed dataset
   if (length(controls) > 0) { ctl <- controls }
 
   contout <- cbind(ctl, colnames(log_final)[ctl])
-  ruv_raw <- as.data.frame(ruv(log_final, ncol(sva), ctl, pheno))
+  ruv_raw <- as.data.frame(ruv(log_final, ncol(sva), ctl, pheno, compounds))
 
   for (i in 1:ncol(ruv_raw)) {
     colnames(ruv_raw)[i] <- paste("f", i, sep = "")
   }
 
-  ruv_adj     <- genadj(log_final, ruv_raw)
-  sva_adj     <- genadj(log_final, sva)
+  ruv_adj     <- genadj(log_final, ruv_raw, compounds)
+  sva_adj     <- genadj(log_final, sva, compounds)
   final_shift <- final
   Y           <- t(final_shift)
   Ya          <- t(final_shift)[ctl, ]
@@ -260,7 +260,7 @@ combat <- function(dset, pheno, batch) {
 
 }
 
-svaestimate <- function(dset, pheno, batch) {
+svaestimate <- function(dset, pheno, batch, compounds) {
 
   d1           <- t(dset[, 1:compounds])
   colnames(d1) <- rownames(dset)
@@ -279,7 +279,7 @@ svaestimate <- function(dset, pheno, batch) {
 
 }
 
-ruv <- function(dset, k, ctl, pheno) {
+ruv <- function(dset, k, ctl, pheno, compounds) {
 
   d1       <- t(dset[, 1:compounds])
   count    <- matrix(0, nrow = compounds, ncol = 1)
@@ -297,9 +297,9 @@ ruv <- function(dset, k, ctl, pheno) {
 
 }
 
-genadj <- function(dset, factors) {
+genadj <- function(dset, factors, compounds) {
 
-  out <- sapply(1:compounds, 
+  out <- sapply(1:compounds,
     function(j) {
       fit <- lm(dset[, j] ~ as.matrix(factors, ncol = 1))
       fit$fitted.values
@@ -313,3 +313,4 @@ genadj <- function(dset, factors) {
 }
 
 
+log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
