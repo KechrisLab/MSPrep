@@ -4,11 +4,11 @@
 \alias{ms_prepare}
 \title{Prepare a mass spec quantification data frame for filtering, imputation,
 and normalization. Also provides summaries of data structure (replicates,
-subjects, grouping_vars, etc.)}
+subjects, groupingvars, etc.)}
 \usage{
 ms_prepare(data, abundance = "abundance", mz = "mz", rt = "rt",
   subject_id = "subject_id", replicate = NULL, batch = NULL,
-  grouping_vars = NULL, cvmax = 0.5, missing_val = 1,
+  groupingvars = NULL, cvmax = 0.5, missing_val = 1,
   min_proportion_present = 1/3)
 }
 \arguments{
@@ -27,7 +27,7 @@ replicates. TODO: test NULL.}
 
 \item{batch}{Name (string) of the column representing batches.}
 
-\item{grouping_vars}{Variable name (string) or vector of names of the
+\item{groupingvars}{Variable name (string) or vector of names of the
 phenotypes or comparison groups.}
 
 \item{cvmax}{Acceptable level of coefficient of variation between replicates.}
@@ -58,14 +58,14 @@ tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
 prepped_data <- ms_prepare(tidy_data, 
                            replicate = "replicate", 
                            batch = "batch",
-                           grouping_vars = "spike")
+                           groupingvars = "spike")
 
 # Or, using tidyverse/magrittr pipes 
 library(magrittr)
 prepped_data <- msquant \%>\% ms_tidy \%>\%
   ms_prepare(replicate = "replicate",
              batch = "batch",
-             grouping_vars = "spike")
+             groupingvars = "spike")
 
 str(prepped_data)
 str(prepped_data$summary_data)

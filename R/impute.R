@@ -27,7 +27,7 @@
 #' filtered_data <- msquant %>% ms_tidy %>% 
 #'   ms_prepare(replicate = "replicate", 
 #'              batch = "batch", 
-#'              grouping_vars = "spike") %>% 
+#'              groupingvars = "spike") %>% 
 #'   ms_filter(0.80)
 #' imputed_data  <- ms_impute(filtered_data, "halfmin")
 #'
@@ -83,14 +83,14 @@ ms_impute <- function(msprep_obj,
 #' @importFrom rlang !!
 #' @importFrom rlang !!!
 # Imputation using half of the minimum value
-impute_halfmin <- function(data, grouping_vars, batch) {
+impute_halfmin <- function(data, groupingvars, batch) {
 
   sym_mz <- sym("mz")
   sym_rt <- sym("rt")
 
   # NOTE: other imputation methods operate across all batchs/groups for a given
   # mz_rt
-  #   grp  <- syms(c(grouping_vars, batch))
+  #   grp  <- syms(c(groupingvars, batch))
   data <- group_by(data, `!!`(sym_mz), `!!`(sym_rt))
 
   halfmin <- function(x) {
@@ -108,14 +108,14 @@ impute_halfmin <- function(data, grouping_vars, batch) {
 
 #' @importFrom pcaMethods pca
 #' @importFrom pcaMethods completeObs
-impute_bpca <- function(data, grouping_vars, batch) {
+impute_bpca <- function(data, groupingvars, batch) {
 
   # 1. Bayesian pca imputation
-  data <- data_to_wide_matrix(data, grouping_vars, batch) 
+  data <- data_to_wide_matrix(data, groupingvars, batch) 
   data <- pca(data, nPcs = 3, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
-  data <- wide_matrix_to_data(data, grouping_vars, batch)
-  data <- halfmin_if_any_negative(data, grouping_vars, batch)
+  data <- wide_matrix_to_data(data, groupingvars, batch)
+  data <- halfmin_if_any_negative(data, groupingvars, batch)
 
   return(data)
 
@@ -123,13 +123,13 @@ impute_bpca <- function(data, grouping_vars, batch) {
 
 
 #' @importFrom VIM kNN
-impute_knn <- function(data, grouping_vars, batch, k = 5) {
+impute_knn <- function(data, groupingvars, batch, k = 5) {
 
-  data <- data_to_wide_matrix(data, grouping_vars, batch) 
+  data <- data_to_wide_matrix(data, groupingvars, batch) 
   rwnm <- rownames(data)
   data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
   rownames(data) <- rwnm
-  data <- wide_matrix_to_data(data, grouping_vars, batch)
+  data <- wide_matrix_to_data(data, groupingvars, batch)
   data <- halfmin_if_any_negative(data)
 
   return(data)
@@ -138,13 +138,13 @@ impute_knn <- function(data, grouping_vars, batch, k = 5) {
 
 
 
-halfmin_if_any_negative <-  function(data, grouping_vars, batch) {
+halfmin_if_any_negative <-  function(data, groupingvars, batch) {
 
   num_neg <- sum(data$abundance_summary < 0)
   if (any(num_neg)) {
     message("Found ", num_neg, " negative imputed values using KNN, reverting to half-min imputation for these values")
     data$abundance_summary <- setmissing_negative_vals(data$abundance_summary)
-    data <- impute_halfmin(data, grouping_vars, batch)
+    data <- impute_halfmin(data, groupingvars, batch)
   }
 
   return(data)
