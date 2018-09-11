@@ -66,16 +66,25 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
-data_to_wide_matrix <- function(data, groupingvars, batch) {
+data_to_wide_matrix <- function(data, groupingvars, batch, asmatrix = TRUE) {
 
-  data %>% 
+  internal_id <- internal_id_order(groupingvars, batch)
+
+  rtn <- data %>% 
     unite(col = "compound", "mz", "rt") %>% 
     spread(key = "compound", value = "abundance_summary")  %>%
     as.data.frame %>%
-    unite(col = "rwnm", "subject_id", batch, groupingvars) %>%
-    column_to_rownames(var = "rwnm") %>%
-    as.matrix
+    unite(col = "rwnm", internal_id) %>%
+    column_to_rownames(var = "rwnm") 
 
+  if (asmatrix) rtn <- as.matrix(rtn)
+
+  return(rtn)
+
+}
+
+internal_id_order <- function(groupingvars, batch) {
+  c("subject_id", batch, groupingvars)
 }
 
 # Internal function -- undo spread
@@ -96,7 +105,7 @@ wide_matrix_to_data <- function(wide, groupingvars, batch) {
 
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "_", into = c("subject_id", batch, groupingvars))
+  rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id_order(groupingvars, batch))
   rtn <- rtn %>% as_tibble
   rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
                         -"subject_id", -groupingvars, -batch)
