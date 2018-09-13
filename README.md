@@ -11,7 +11,7 @@ A processing pipeline for the summarization, normalization and diagnostics of
 mass spectrometry–based metabolomics data.
 
 Original manuscript published in
-[Biometrics](https://academic.oup.com/bioinformatics/article/30/1/133/236721)
+[Bioinformatics](https://academic.oup.com/bioinformatics/article/30/1/133/236721)
 
 This refactoring of the original package seeks to extend the package to any number
 of replicates and allow for more normalization and imputation methods.
