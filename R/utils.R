@@ -83,7 +83,7 @@ data_to_wide_matrix <- function(data, groupingvars, batch, asmatrix = TRUE) {
 
 }
 
-internal_id_order <- function(groupingvars, batch) {
+internal_id_order <- function(groupingvars = NULL, batch = NULL) {
   c("subject_id", batch, groupingvars)
 }
 
@@ -103,9 +103,11 @@ wide_matrix_to_data <- function(wide, groupingvars, batch) {
   sym_mz <- sym("mz")
   sym_rt <- sym("rt")
 
+  internal_id <- internal_id_order(groupingvars, batch)
+
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id_order(groupingvars, batch))
+  rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id)
   rtn <- rtn %>% as_tibble
   rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
                         -"subject_id", -groupingvars, -batch)
