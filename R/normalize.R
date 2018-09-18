@@ -302,7 +302,6 @@ isIS <- function(data, factors, n_control, n_compounds, controls) {
 
   for (i in 1:n_compounds) {
     if (j <= 10) {
-      cat("sanity check:\n", j, "\n", i, "\n", ctlo[j], "\n")
       if (ctlo[j] == i) {
         isISvec[i] <- TRUE
         j       <- j + 1
