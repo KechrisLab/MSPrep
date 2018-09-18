@@ -67,11 +67,12 @@ imputed_data <-
   ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") \%>\%
   ms_filter(filter_percent = 0.80) \%>\%
   ms_impute(method = "halfmin")
-normalized_data_qC  <- ms_normalize(imputed_data, method = "quantile + ComBat")
-normalized_data_C   <- ms_normalize(imputed_data, method = "ComBat")
-normalized_data_sva <- ms_normalize(imputed_data, method = "SVA")
-normalized_data_ruv <- ms_normalize(imputed_data, method = "RUV")
+normalized_data_qC   <- ms_normalize(imputed_data, method = "quantile + ComBat")
+normalized_data_C    <- ms_normalize(imputed_data, method = "ComBat")
+normalized_data_sva  <- ms_normalize(imputed_data, method = "SVA")
+normalized_data_ruv  <- ms_normalize(imputed_data, method = "RUV")
 normalized_data_crmn <- ms_normalize(imputed_data, method = "CRMN")
+normalized_data_medC <- ms_normalize(imputed_data, method = "median + ComBat")
 
 
 }
