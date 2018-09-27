@@ -145,6 +145,7 @@ normdata <- function (metafin, # imputed dataset
   }
 
   control2 <- control[order(control[, 6], control[, 5]), ]
+  # Grab top n with no missing (=0) and smallest Coef of Variation
   ctl <- as.numeric(control2[, 2][1:max(ncont, ncol(sva) + 5)])
 
   if (length(controls) > 0) { ctl <- controls }
@@ -219,7 +220,7 @@ normdata <- function (metafin, # imputed dataset
 
 
 
-# what does this do?
+# what does this do? --- all it does is log2 all of the values............
 convert <- function(dset) {
 
   s_dset <- as.data.frame(matrix(NA, ncol = ncol(dset), 
@@ -283,8 +284,7 @@ ruv <- function(dset, k, ctl, pheno, compounds) {
 
   d1       <- t(dset[, 1:compounds])
   count    <- matrix(0, nrow = compounds, ncol = 1)
-  d1mod    <- d1
-  Y        <- d1mod
+  Y        <- d1
   dset$mid <- rownames(dset)
   test     <- merge(dset, clindat, by.x = "mid", by.y = link1)
   X        <- subset(test, select = pheno)
