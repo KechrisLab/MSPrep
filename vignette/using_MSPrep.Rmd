@@ -96,6 +96,8 @@ biocLite("BiocStyle")
 devtools::document()
 devtools::check()
 devtools::install(".", build_vignettes = FALSE)
+devtools::test()
+
 
 ```
 
@@ -132,6 +134,7 @@ dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
 dat <- ms_filter(dat)
 dat <- ms_impute(dat, method = "bpca")
+dat <- ms_normalize(dat, method = "ComBat")
 
 # Install package
 # if (!require("devtools")) install.packages("devtools")
