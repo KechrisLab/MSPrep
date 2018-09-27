@@ -41,13 +41,14 @@ dat <-
   msquant %>%
   ms_tidy %>%
   ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-  ms_filter(0.8)
+  ms_filter(0.8) %>%
+  ms_normalize(method = "quantile + ComBat")
 
 # Use MSPrep functions one at a time
 dat <- ms_tidy(msquant)
 dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
 dat <- ms_filter(dat)
-dat <- ms_impute(method = "knn") 
-# dat <- ms_normalize(method = "knn") # not yet implemented
+dat <- ms_impute(method = "knn")
+dat <- ms_normalize(method = "quantile + ComBat")
 
 ```
