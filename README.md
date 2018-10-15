@@ -40,15 +40,16 @@ names(msquant)
 dat <-
   msquant %>%
   ms_tidy %>%
-  ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
   ms_filter(0.8) %>%
+  ms_impute(method = "halfmin") %>%
   ms_normalize(method = "quantile + ComBat")
 
 # Use MSPrep functions one at a time
 dat <- ms_tidy(msquant)
-dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
 dat <- ms_filter(dat)
-dat <- ms_impute(method = "knn")
-dat <- ms_normalize(method = "quantile + ComBat")
+dat <- ms_impute(dat, method = "knn")
+dat <- ms_normalize(dat, method = "quantile + ComBat")
 
 ```
