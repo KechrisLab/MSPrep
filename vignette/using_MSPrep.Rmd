@@ -52,7 +52,7 @@ vignette: |
 
 ```{r load-dependencies, eval=FALSE}
 
-setwd("~/Projects/KechrisLab/MSPrep")
+setwd("~/")
 library(devtools)
 ```
 
@@ -113,6 +113,7 @@ if (!require("devtools")) install.packages("devtools")
 # Load package
 library(MSPrep)
 library(tidyverse)
+library(magrittr)
 
 # Load quantification dataset
 data(msquant)
@@ -167,15 +168,8 @@ dat <- ms_tidy %>% ms_prepare
 
 
 
-
-
-
-
-
-
-
-
 ```{r debugging wide-mat-to-data}
+library(magrittr)
 filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
 filtered_data %>% ms_impute(method = "halfmin")
 
@@ -188,32 +182,6 @@ MSPrep:::data_to_wide_matrix(dat, grp) %>%
   .$rt %>% levels %>% length
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ```{r fix-included-data, eval=FALSE}
@@ -310,3 +278,50 @@ Identifiers in the datasets
 
 ```
 
+# MSPrep
+
+MSPrep provides the five key functions for preparing metabolomics data for analysis.
+
+## Getting our columns in order
+
+In order to allow MSPrep to do the heavy lifting, we first need to get our data into the correct format. Most mass spectrometry data will have a similar format, so not much should be required to get it ready.
+
+Two columns are for the mass-to-charge ratio and the retention-time. They can have any name you'd like (usually "mz" and "rt").
+
+The other columns are for the other variables. These column names contain information about their contents which will be used later in the pipeline. There are three pieces of information which need to be present at the end of each of the column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
+
+As an example take a look at the provided dataset, msquant.
+
+```{r}
+data("msquant")
+strsplit(colnames(msquant)[3], "_")
+```
+
+The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" won't be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
+
+With our data in this format, we can start the pipeline.
+
+## Tidying the data
+
+The first step is to extract the information from the column names discussed above, and get it into a tidy data frame. We can do this with the ms_tidy function.
+
+```{r}
+tidied_data = ms_tidy(msquant, mz = "mz", rt = "rt", col_extra_txt = "Neutral_Operator_Dif_Pos_", separator = "_", col_names = c("spike", "batch", "replicate", "subject_id"))
+```
+
+Note, the names chosen for col_name are arbitratry, but we will use them later on.
+
+## Preparing the data
+
+This step summarizes the technical replicates. It does this using the following procedure for each compound in each batch.
+
+1. If there are less than a minimum proportion of the values found among the replicates (usually one or zero), leave value empty. Otherwise proceed.
+1. Calculate the coefficient of variation between the replicates using $c_v = \frac{\sigma}{\mu}$.
+2. For three replicates, if the coefficient of variation is above a specified level, use the median value for the compound, to correct for the large dispersion.
+3. Otherwise, use the mean value of the replicates for the compound.
+
+```{r}
+summarized_data = ms_prepare(tidied_data, mz = "mz", rt = "r", replicate = "replicate", batch = "batch", groupingvars = "spike", subject_id = "subject_id", cvmax = 0.50, min_proportion_present = 1/3, missing_val = 1)
+```
+
+## Filtering
