@@ -16,7 +16,7 @@ Original manuscript published in
 This refactoring of the original package seeks to extend the package to any number
 of replicates and allow for more normalization and imputation methods.
 
-To install and use the package follow the examples below.  Note that you will
+To install and use the package follow the examples below.  Note that you
 may need to tidy your own dataset, replacing the ms_tidy function in this
 pipeline.  See `?ms_tidy` or the dataset resulting from `ms_tidy(msquant)` for
 more detail.
