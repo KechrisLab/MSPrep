@@ -127,7 +127,17 @@ impute_knn <- function(data, groupingvars, batch, k = 5) {
 
   data <- data_to_wide_matrix(data, groupingvars, batch) 
   rwnm <- rownames(data)
-  data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
+  cnm<- colnames(data)
+  
+  ### transpose
+  data <- VIM:::kNN(as.data.frame(t(data)), k = k, imp_var = FALSE)
+  
+  ## transpose again (to 'untranspose' bsaically)
+  data<- t(data)
+  
+  ### set column names same as prior to knn function
+  colnames(data) <- cnm
+  
   rownames(data) <- rwnm
   data <- wide_matrix_to_data(data, groupingvars, batch)
   data <- halfmin_if_any_negative(data)
