@@ -278,7 +278,11 @@ Identifiers in the datasets
 
 # MSPrep
 
-MSPrep provides the five key functions for preparing metabolomics data for analysis.
+MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
+1. an explanation what each of the functions does
+2. suggestions for how to select parameters
+3. an explanation of how to use the final outputted data
+4. code to perform all of the steps in a pipeline
 
 ## Getting our columns in order
 
@@ -364,7 +368,7 @@ In order to make comparisons between compounds, the data need to be normalized. 
 normalized_data = ms_normalize(imputed_data, method ="CRMN")
 ```
 
-## Final output## Final output## Final output
+## Final output
 
 ## Performing all steps as a pipline
 
