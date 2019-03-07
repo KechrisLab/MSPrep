@@ -352,8 +352,28 @@ imputed_data = ms_impute(filtered_data, method ="knn", k = 5)
 
 ## Normalizing the data
 
+In order to make comparisons between compounds, the data need to be normalized. This step performs one of six normalization strategies. 
+1. ComBat ()
+1. quantile + ComBat
+2. median + ComBat
+3. CRMN ()
+4. RUV ()
+5. SVA ()
+
 ```{r}
 normalized_data = ms_normalize(imputed_data, method ="CRMN")
 ```
 
-## Final output
+## Final output## Final output## Final output
+
+## Performing all steps as a pipline
+
+```{r}
+dat <-
+  msquant %>%
+  ms_tidy %>%
+  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
+  ms_filter(0.8) %>%
+  ms_impute(method = "halfmin") %>%
+  ms_normalize(method = "quantile + ComBat")
+```
