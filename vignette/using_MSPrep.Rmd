@@ -364,8 +364,10 @@ In order to make comparisons between compounds, the data need to be normalized. 
 4. RUV ()
 5. SVA ()
 
+For experiments which have control compounds, a list of the column numbers containing them should be provided in the controls parameter. Otherwise, simply leave the controls parameter blank or NULL. 
+
 ```{r}
-normalized_data = ms_normalize(imputed_data, method ="CRMN")
+normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n_comp = 2, n_control = 10)
 ```
 
 ## Final output
