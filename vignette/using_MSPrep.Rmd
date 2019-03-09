@@ -3,17 +3,19 @@ title: "Using MSPrep"
 author: 
     - name: Matt Mulvahill
       email: matthew.mulvahill@ucdenver.edu
-      affiliation: CU Anschutz
+      affiliation: UC Anschutz
     - name: Grant Hughes
       email: fill@me.in
       affiliation: National Jewish Hospital
     - name: Sean Jacobson
-      email: fill@me.in
+      email: jacobsons@njhealth.org
       affiliation: National Jewish Hospital
     - name: Katerina Kechris
-      affiliation: CU Anschutz
+      email: katerina.kechris@ucdenver.edu
+      affiliation: UC Anschutz
     - name: Harrison Pielke-Lombardo
-      affiliation: CU Anschutz
+      email: harrison.pielke-lombardo@ucdenver.edu
+      affiliation: UC Anschutz
 package: MSPrep
 output: 
   BiocStyle::html_document:
@@ -40,7 +42,7 @@ vignette: |
 # </style>
 ```
 
-# MSPrep
+# Introduction
 
 MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
 1. an explanation what each of the functions does
@@ -48,14 +50,14 @@ MSPrep provides the five key functions for preparing metabolomics data for analy
 3. an explanation of how to use the final outputted data
 4. code to perform all of the steps in a pipeline
 
-## Loading libraries
+# Loading libraries
 
 ```{r}
 library(MSPrep)
 library(tidyverse)
 ```
 
-## Getting our columns in order
+# Getting our columns in order
 
 In order to allow MSPrep to do the heavy lifting, we first need to get our data into the correct format. Most mass spectrometry data will have a similar format, so not much should be required to get it ready.
 
@@ -78,7 +80,7 @@ Identifiers in the datasets
 
 With our data in this format, we can start the pipeline.
 
-## Tidying the data
+# Tidying the data
 
 The first step is to extract the information from the column names discussed above, and get it into a tidy data frame. We can do this with the ms_tidy function.
 
@@ -88,7 +90,7 @@ tidied_data = ms_tidy(msquant, mz = "mz", rt = "rt", col_extra_txt = "Neutral_Op
 
 Note, the names chosen for col_name are arbitratry, but we will use them later on.
 
-## Preparing the data
+# Preparing the data
 
 This step summarizes the technical replicates. It does this using the following procedure for each compound in each batch.
 
@@ -101,7 +103,7 @@ This step summarizes the technical replicates. It does this using the following 
 summarized_data = ms_prepare(tidied_data, mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike", subject_id = "subject_id", cvmax = 0.50, min_proportion_present = 1/3, missing_val = 1)
 ```
 
-## Filtering missing compounds
+# Filtering missing compounds
 
 This step is pretty straight forward but very important. Simply supply a percentage of the number of samples for which a compound needs to have data present for in order to be kept.
 
@@ -109,7 +111,7 @@ This step is pretty straight forward but very important. Simply supply a percent
 filtered_data = ms_filter(summarized_data, filter_percent=0.8)
 ```
 
-## Imputing missing values
+# Imputing missing values
 
 Next, you'll need to make a decision about how you'd like to handle the remaining missing data.There are three methods provided. 
 1. half-min (half the minimum value)
@@ -122,7 +124,7 @@ Half-min is the fastest and is often sufficient. KNN typically takes the longest
 imputed_data = ms_impute(filtered_data, method ="knn", k = 5)
 ```
 
-## Normalizing the data
+# Normalizing the data
 
 In order to make comparisons between compounds, the data need to be normalized. This step performs one of six normalization strategies. 
 1. ComBat ()
@@ -138,9 +140,9 @@ For experiments which have control compounds, a list of the column numbers conta
 normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n_comp = 2, n_control = 10)
 ```
 
-## Final output
+# Final output
 
-## Performing all steps as a pipline
+# Performing all steps as a pipline
 
 Often, you will want to just perform the whole pipeline. This can easily be done in a single statement using the %>% operator from the magrittr package. This threads the result of each function into the first position of the next.
 
