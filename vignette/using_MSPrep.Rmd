@@ -12,6 +12,8 @@ author:
       affiliation: National Jewish Hospital
     - name: Katerina Kechris
       affiliation: CU Anschutz
+    - name: Harrison Pielke-Lombardo
+      affiliation: CU Anschutz
 package: MSPrep
 output: 
   BiocStyle::html_document:
@@ -38,244 +40,6 @@ vignette: |
 # </style>
 ```
 
-# Introduction
-
-# Getting to know MSPrep
-
-
-# My initial notes and development code
-
-
-- vignette
-- fit into 'bioconductor' workflow
-
-
-```{r load-dependencies, eval=FALSE}
-
-setwd("~/")
-library(devtools)
-```
-
-```{r developercode, eval=FALSE}
-# Code for development only
-#
-source("https://bioconductor.org/biocLite.R")
-biocLite()
-library(BiocInstaller)
-biocLite("pcaMethods")
-biocLite("crmn")
-biocLite("preprocessCore")
-biocLite("sva")
-biocLite("BiocStyle")
-
-# for dev
-# library(tidyverse)
-# library(rlang)
-# library(pcaMethods)
-# library(crmn)
-# library(preprocessCore)
-# library(sva)
-# 
-# 
-# source("R/tidy.R")
-# source("R/prepare.R")
-# 
-# quant <- read.csv("./data-raw/Quantification.csv")
-# # Convert dataset to tidy format
-# tidy_data     <- ms_tidy(quant, mz = "mz", rt = "rt")
-# prepped_data  <- ms_prepare(tidy_data, replicate = "replicate")
-# filtered_data <- ms_filter(prepped_data, filter_percent = 0.5)
-# # imputed
-# 
-# 
-``` 
-
-
-```{r build-pkg, eval=FALSE}
-
-devtools::document()
-devtools::check()
-devtools::install(".", build_vignettes = FALSE)
-devtools::test()
-
-
-```
-
-
-```{r load-data, eval=FALSE}
-
-# Will need a columns for annotation, databse id, etc.
-# Don't require mz_rt, but one of these IDs 
-# add imputation references for bpca and knn to vignette
-# keep in mind that normalization methods --  0 should be treated as missing 
-if (!require("devtools")) install.packages("devtools")
-
-# Load package
-library(MSPrep)
-library(tidyverse)
-
-# Load quantification dataset
-data(msquant)
-as_data_frame(msquant)
-names(msquant)
-
-# Tidy and create summarized dataset
-dat <- msquant %>% ms_tidy %>% 
-  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-  ms_filter(0.8) %>% ms_impute(method = "bpca")
-dat_knn <- msquant %>% ms_tidy %>% 
-  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-  ms_filter(0.8) %>% ms_impute(method = "knn")
-dat_halfmin <- msquant %>% ms_tidy %>% 
-  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-  ms_filter(0.8) %>% ms_impute(method = "halfmin")
-
-dat <- ms_tidy(msquant)
-dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
-dat <- ms_filter(dat)
-dat <- ms_impute(dat, method = "bpca")
-dat <- ms_normalize(dat, method = "ComBat")
-
-# Install package
-# if (!require("devtools")) install.packages("devtools")
-# devtools::install_github("KechrisLab/MSPrep")
-
-# Load package
-library(MSPrep)
-library(tidyverse)
-
-# Load example quantification dataset and view 
-data(msquant)
-as_data_frame(msquant)
-names(msquant)
-
-# Use pipe to tidy and create summarized dataset
-dat <- 
-  msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.8)
-
-# Use MSPrep functions one at a time
-dat <- ms_tidy(msquant)
-dat <- ms_prepare(dat, replicate = "replicate", batch = "batch", groupingvars = "spike")
-dat <- ms_filter(dat)
-dat <- ms_impute(method = "knn") # not yet working
-
-
-# TODO: need better error message here, when user doesn't define replicate,
-#       batch, groupingvars
-dat <- ms_tidy %>% ms_prepare
-```
-
-
-
-```{r debugging wide-mat-to-data}
-filtered_data <- msquant %>% ms_tidy %>% ms_prepare %>% ms_filter(0.80)
-filtered_data %>% ms_impute(method = "halfmin")
-
-grp <- MSPrep:::grouping_vars(filtered_data)
-dat <- filtered_data$data
-
-
-MSPrep:::data_to_wide_matrix(dat, grp) %>% 
-  MSPrep:::wide_matrix_to_data(., grp) %>% 
-  .$rt %>% levels %>% length
-
-```
-
-
-```{r fix-included-data, eval=FALSE}
-library(tidyverse)
-clinical     <- read_csv("data-raw/Clinical.csv")
-quantif      <- read_csv("data-raw/Quantification.csv")
-# mz: Mass/Charge ratio
-# rt: Retention time
-
-subjectlinks <- read_csv("data-raw/SubjectLinks.csv")
-
-load("old-R-scripts/test.rda")
-load("old-R-scripts/test2.rda")
-load("old-R-scripts/test3.rda")
-
-test %>% str
-cnt_data1 <-
-  test$sum_data1 %>%
-  t %>% as.data.frame %>%
-  rownames_to_column %>%
-  as_data_frame %>%
-  gather(key = run_replicate, value = count, -rowname) %>%
-  rename(
-
-
-test2 %>% str
-test3 %>% str
-
-```
-
-
-Identifiers in the datasets
-- LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
-- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
-
-
-```{r read-rules-from-manuscript, eval=FALSE}
-############################################################
-# Rules from manuscript
-############################################################
-
-  cv = sd/mean
-  prop_present <- n_present / n_replicates
-
-  #  - **Only abundances that are found in at least two of three replicates are kept. **
-  # TODO: check with Katerina on when to set this to 0 -- should it be only if 1
-  # rep is present or some proportion of total replicates
-  if (prop_present <= min_proportion_present) summary_measure <- NA # or <- 0 # default min_proportion_present = 1/3 
-
-  #  - If CV is below the user-specified level, the average of the replicates is used. 
-  # base summary stat, if not needed
-  # if (cv <= cv_max) mean()
-
-  #  - If the CV is above the specified level and found in exactly two of three
-  #    replicates, the summarization is not used and the observation is left
-  #    blank. 
-  # TODO: check with Katerina -- should this be 2/3rds for any replicate number
-  # or just when 3 replicates and 2 only present (and cv > cvmax obvi)?
-  if (cv > cv_max & (n_replicates == 3 & n_present == 2)) summary_measure <- NA # or <- 0
-
-  #  - If the compound was found in all three replicates but with unacceptable CV,
-  #    the median is used as the summarization measure. 
-  # TODO: check with Katerina -- should this be median if at least 3 present of 3+ replicates and cv >
-  # cvmax, or strictly all present?
-  if (cv > cv_max & n_present == n_replicates) summary_measure <- median()
-
-
-# NOTE: text from manuscript
-#  The first processing step is summarization of technical replicates, three
-#  replicates required per subject/sample. MSPrep provides options to remove
-#  erroneous data and to reduce the effect of extreme observations. 
-#
-#  - The user specifies a cutoff for the coefficient of variation (CV),
-#    calculated by dividing the standard deviation of the replicates by the
-#    average, yielding a measure for magnitude of the variation between
-#    replicates.
-#
-#  The summarization routine summarizes each compound by subject (or sample) and
-#  returns a single observation per compound per subject. 
-#
-#  - **Only abundances that are found in at least two of three replicates are kept. **
-#  - If CV is below the user-specified level, the average of the replicates is used. 
-#  - If the CV is above the specified level and found in exactly two of three
-#    replicates, the summarization is not used and the observation is left
-#    blank. 
-#  - If the compound was found in all three replicates but with unacceptable CV,
-#    the median is used as the summarization measure. 
-# 
-#  This approach removes potential erroneous data. We have found that
-#  most compounds with high CV have two consistent and one extreme observation.
-#  Using the median reduces the effect of the extreme observation.
-
-############################################################
-
-```
-
 # MSPrep
 
 MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
@@ -283,6 +47,13 @@ MSPrep provides the five key functions for preparing metabolomics data for analy
 2. suggestions for how to select parameters
 3. an explanation of how to use the final outputted data
 4. code to perform all of the steps in a pipeline
+
+## Loading libraries
+
+```{r}
+library(MSPrep)
+library(tidyverse)
+```
 
 ## Getting our columns in order
 
@@ -301,14 +72,11 @@ strsplit(colnames(msquant)[3], "_")
 
 The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" won't be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
 
+Identifiers in the datasets
+- LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
+- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
+
 With our data in this format, we can start the pipeline.
-
-## Loading libraries
-
-```{r}
-library(MSPrep)
-library(tidyverse)
-```
 
 ## Tidying the data
 
