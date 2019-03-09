@@ -374,6 +374,8 @@ normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n
 
 ## Performing all steps as a pipline
 
+Often, you will want to just perform the whole pipeline. This can easily be done in a single statement using the %>% operator from the magrittr package. This threads the result of each function into the first position of the next.
+
 ```{r}
 dat <-
   msquant %>%
