@@ -24,7 +24,7 @@
 #'   variables.
 #' @param col_names Vector of the ordered ID names to extract from the variable
 #' names.
-#' @param separator Character/string separating spike, subject, and replicate
+#' @param separator Character or text separating spike, subject, and replicate
 #' ids in column names.
 #'
 #' @return A tidy data frame of quant data, with columns mz, rt,
