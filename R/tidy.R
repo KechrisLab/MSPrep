@@ -1,7 +1,7 @@
-#' Function for converting wide mass spec quantification data into a tidy data
-#' frame
+#' Function for converting wide mass spectrometry quantification data into a tidy data
+#' frame.
 #'
-#' Function reads in wide dataset of mass spec quantification data and converts
+#' Function reads in wide dataset of mass spectrometry quantification data and converts
 #' it to a tidy dataset.  This function assumes that the dataset is in a wide
 #' format, with a column representing the retention time (rt), another
 #' representing the mass-to-charge ratio (mz), and the remaining columns
@@ -23,9 +23,9 @@
 #' @param col_extra_txt Text to remove when converting quant variable names to
 #'   variables.
 #' @param col_names Vector of the ordered ID names to extract from the variable
-#' names
+#' names.
 #' @param separator Character/string separating spike, subject, and replicate
-#' ids.
+#' ids in column names.
 #'
 #' @return A tidy data frame of quant data, with columns mz, rt,
 #' replicate, and abundance.
