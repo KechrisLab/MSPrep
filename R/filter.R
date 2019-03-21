@@ -1,5 +1,5 @@
 
-#' Filters and imputes dataset
+#' Filters dataset
 #'
 #' Filters compounds to those found in specified percentage of subjects.
 #'
