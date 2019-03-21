@@ -1,10 +1,10 @@
 
 #' Function for filtering prepared dataset.
 #'
-#' Filters compounds to those found in specified percentage of subjects.
+#' Filters compounds to those found in specified proportion of subjects.
 #'
 #' @param msprep_obj Prepared MSPrep object.
-#' @param filter_percent Percent to filter the data
+#' @param filter_percent Decimal value representing to proportion to filter the data.
 #' @return An `msprep` object with `stage(rtn) == "filtered"` containing
 #' filtered quantification data.
 #' @references 
