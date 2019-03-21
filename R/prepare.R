@@ -10,7 +10,7 @@
 #' coefficient of variation below specified level, or median for those found in
 #' 3 replicates but excess CV.
 #'
-#' @param data A tidy dataframe of quantification data.
+#' @param data Tidied dataset.
 #' @param subject_id Name of the subject ID column.
 #' @param replicate Name of the replicate column. Set to NULL if no
 #' replicates.

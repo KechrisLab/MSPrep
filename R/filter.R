@@ -1,9 +1,9 @@
 
-#' Filters dataset
+#' Function for filtering prepared dataset.
 #'
 #' Filters compounds to those found in specified percentage of subjects.
 #'
-#' @param msprep_obj Summarized dataset output as sum_data1 from readdata() function
+#' @param msprep_obj Prepared MSPrep object.
 #' @param filter_percent Percent to filter the data
 #' @return An `msprep` object with `stage(rtn) == "filtered"` containing
 #' filtered quantification data.
