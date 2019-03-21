@@ -25,15 +25,14 @@
 
 
 
-#' Perform normalization and batch corrections
+#' Function for performing normalization and batch corrections on imputed data.
 #' 
 #' Perform normalization and batch corrections on specified imputation dataset.
 #' Routines included are quantile, RUV, SVA, median, and CRMN.  Combat to
 #' remove batch effects in raw, quantile, and median normalized data.
 #' Generates data driven controls if none exist.
 #' 
-#' @param msprep_obj An MSPrep object that has been filtered, normalized, and
-#' imputed.
+#' @param msprep_obj Imputed MSPrep object.
 #' @param method One of 6 methods.  3 are normalization and 3 are batch
 #' correction + normalization? TODO: updated this.
 #' @param n_control Number of controls to estimate/utilize.

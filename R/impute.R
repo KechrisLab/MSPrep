@@ -1,9 +1,9 @@
-#' Imputes dataset
+#' Function for imputing on filtered data.
 #'
 #' Performs data imputation for a given mz_rt value (not separately for batches
 #' or grouping variables).
 #'
-#' @param msprep_obj An MSPrep object that has been filtered and normalized
+#' @param msprep_obj Filtered MSPrep object.
 #' @param method Imputation method.  One of half-min (half the minimum value),
 #' bpca (Bayesian PCA), knn (k-nearest neighbors).
 #' @param k Number of clusters for 'knn' method.
