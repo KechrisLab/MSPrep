@@ -4,10 +4,13 @@
 #' or grouping variables).
 #'
 #' @param msprep_obj Filtered MSPrep object.
-#' @param method Imputation method.  One of half-min (half the minimum value),
-#' bpca (Bayesian PCA), knn (k-nearest neighbors).
+#' @param method Name of imputation method to use. 
+#' Options are:
+#' - halfmin (half the minimum value)
+#' - bpca (Bayesian PCA)
+#' - knn (k-nearest neighbors)
 #' @param k Number of clusters for 'knn' method.
-#' @return A msprep object with missing data imputed.
+#' @return An msprep object with missing data imputed.
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
 #' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
