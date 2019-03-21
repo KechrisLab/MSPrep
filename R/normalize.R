@@ -1,30 +1,3 @@
-# ################################################################################
-# # testing setup
-# ################################################################################
-# # New testing
-# dat <- imputed_data
-# data         <- dat$data
-# groupingvars <- MSPrep:::grouping_vars(dat)
-# batch        <- MSPrep:::batch_var(dat)
-################################################################################
-# Old testing
-#   # data == wide matrix data w/ rownames
-#   # batch == "Operator" -- i.e. 
-#   # pheno == "Spike"
-#   # clindat == Clinical.csv
-#   # link1 == "SubjectID"
-# path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-# load(path_olddata)
-# clinical <- read_csv("data-raw/Clinical.csv")
-# pheno    <- "Spike"
-# batch    <- "Operator"
-# link1    <- "SubjectID"
-# olddata  <- as.data.frame(old_readdata_result$sum_data)
-# clindat  <- clinical
-################################################################################
-
-
-
 #' Function for performing normalization and batch corrections on imputed data.
 #' 
 #' Perform normalization and batch corrections on specified imputation dataset.
@@ -490,6 +463,31 @@ control_summary <- function(data) {
 
 # Utility functions for ms_normalize()
 log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
+
+# ################################################################################
+# # testing setup
+# ################################################################################
+# # New testing
+# dat <- imputed_data
+# data         <- dat$data
+# groupingvars <- MSPrep:::grouping_vars(dat)
+# batch        <- MSPrep:::batch_var(dat)
+################################################################################
+# Old testing
+#   # data == wide matrix data w/ rownames
+#   # batch == "Operator" -- i.e. 
+#   # pheno == "Spike"
+#   # clindat == Clinical.csv
+#   # link1 == "SubjectID"
+# path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
+# load(path_olddata)
+# clinical <- read_csv("data-raw/Clinical.csv")
+# pheno    <- "Spike"
+# batch    <- "Operator"
+# link1    <- "SubjectID"
+# olddata  <- as.data.frame(old_readdata_result$sum_data)
+# clindat  <- clinical
+################################################################################
 
 
 
