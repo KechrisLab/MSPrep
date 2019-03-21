@@ -20,7 +20,7 @@
 #' @param quantification_data Data frame containing the quantification data.
 #' @param mz Name of the column containing mass-to-charge ratios.
 #' @param rt Name of the column containing retention time.
-#' @param col_extra_txt Text to remove when converting quant variable names to
+#' @param col_extra_txt Text to remove from column names when converting column names to
 #'   variables.
 #' @param col_names Vector of the ordered ID names to extract from the variable
 #' names.
