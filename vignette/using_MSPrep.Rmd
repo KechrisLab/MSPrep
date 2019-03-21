@@ -45,10 +45,10 @@ vignette: |
 # Introduction
 
 MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
-1. an explanation what each of the functions does
-2. suggestions for how to select parameters
-3. an explanation of how to use the final outputted data
-4. code to perform all of the steps in a pipeline
+- an explanation what each of the functions does
+- suggestions for how to select parameters
+- an explanation of how to use the final outputted data
+- code to perform all of the steps in a pipeline
 
 # Loading libraries
 
@@ -63,7 +63,7 @@ In order to allow MSPrep to do the heavy lifting, we first need to get our data 
 
 Two columns are for the mass-to-charge ratio and the retention-time. They can have any name you'd like (usually "mz" and "rt").
 
-The other columns are for the other variables. These column names contain information about their contents which will be used later in the pipeline. There are three pieces of information which need to be present at the end of each of the column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
+The other columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline. There are three pieces of information which need to be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
 
 As an example take a look at the provided dataset, msquant.
 
