@@ -1,19 +1,12 @@
 
-#' Filters and imputes dataset
+#' Function for filtering prepared dataset.
 #'
-#' Filters compounds to those found in specified percentage of subjects and
-#' performs data imputation.
+#' Filters compounds to those found in specified proportion of subjects.
 #'
-#' @param msprep_obj Summarized dataset output as sum_data1 from readdata() function
-#' @param filter_percent Percent to filter the data
-#' @return Placeholder
-#' @details minval Filtered dataset with missing values replaced by 1/2 minimum
-#' observed value for that compound.
-#' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
-#' from PCAMethods package.
-#' @details withzero Filtered dataset with no imputation.
-#' @details count List of all compounds and the percent present for each
-#' compound.
+#' @param msprep_obj Prepared MSPrep object.
+#' @param filter_percent Decimal value representing to proportion to filter the data.
+#' @return An `msprep` object with `stage(rtn) == "filtered"` containing
+#' filtered quantification data.
 #' @references 
 #'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
 #'   expression profile data. Bioinformatics, 19, 2088-2096

@@ -1,57 +1,40 @@
-# ################################################################################
-# # testing setup
-# ################################################################################
-# # New testing
-# dat <- imputed_data
-# data         <- dat$data
-# groupingvars <- MSPrep:::grouping_vars(dat)
-# batch        <- MSPrep:::batch_var(dat)
-################################################################################
-# Old testing
-#   # data == wide matrix data w/ rownames
-#   # batch == "Operator" -- i.e. 
-#   # pheno == "Spike"
-#   # clindat == Clinical.csv
-#   # link1 == "SubjectID"
-# path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-# load(path_olddata)
-# clinical <- read_csv("data-raw/Clinical.csv")
-# pheno    <- "Spike"
-# batch    <- "Operator"
-# link1    <- "SubjectID"
-# olddata  <- as.data.frame(old_readdata_result$sum_data)
-# clindat  <- clinical
-################################################################################
-
-
-
-#' Perform normalization and batch corrections
+#' Function for performing normalization and batch corrections on imputed data.
 #' 
 #' Perform normalization and batch corrections on specified imputation dataset.
-#' Routines included are quantile, RUV, SVA, median, and CRMN.  Combat to
-#' remove batch effects in raw, quantile, and median normalized data.
+#' Routines included are: 
+#' - quantile
+#' - RUV (remove unwanted variation)
+#' - SVA (surrogate variable analysis)
+#' - median 
+#' - CRMN(cross-contribution compensating multiple standard normalization)  
+#' 
+#' Combat to remove batch effects in raw, quantile, and median normalized data.
 #' Generates data driven controls if none exist.
 #' 
-#' @param msprep_obj An MSPrep object that has been filtered, normalized, and
-#' imputed.
-#' @param method One of 6 methods.  3 are normalization and 3 are batch
-#' correction + normalization? TODO: updated this.
+#' @param msprep_obj Imputed MSPrep object.
+#' @param method Name of normalization method.
+#' - ComBat (only ComBat batch correction)
+#' - quantile + ComBat (quantile with ComBat batch correction)
+#' - median + ComBat (median with ComBat batch correction)
+#' - CRMN
+#' - RUV
+#' - SVA
 #' @param n_control Number of controls to estimate/utilize.
 #' @param controls Vector of control identifiers.  Leave blank for data driven
 #' controls. Vector of column numbers from metafin dataset of that control.
 #' @param n_comp Number of factors to use in CRMN algorithm.
-#' @return controls List of compounds that were used as controls
-#' @return crmn_adj CRMN adjusted dataset (log2)
-#' @return log_data Log2 data with no adjustment
-#' @return log_data_combat Log2 data with Combat batch adjustment
-#' @return log_quant Log2 Quantile adjusted
-#' @return log_quant_combat Log2 Quantile with Combat data
-#' @return med_adj Median adjusted dataset
-#' @return med_combat Median adjusted with Combat
-#' @return ruv_adj RUV adjusted dataset (log2)
+#' @return controls List of compounds that were used as controls.
+#' @return crmn_adj Log2 CRMN normalized data.
+#' @return log_data Log2 dataset (no normalization)
+#' @return log_data_combat Log2 with ComBat batch effect corrected dataset.
+#' @return log_quant Log2 quantile normalized dataset.
+#' @return log_quant_combat Log2 quantile with ComBat correction normalized dataset.
+#' @return med_adj Median normalized dataset.
+#' @return med_combat Median with ComBat normalized dataset.
+#' @return ruv_adj Log2 RUV normalized dataset .
 #' @return ruv_factors Matrix of factors generated in RUV for use as covariates
 #' in later analysis.
-#' @return sva_adj SVA adjusted dataset (log2)
+#' @return sva_adj Log2 SVA normalized dataset.
 #' @return sva_factors Matrix of factors generated in SVA for use as covariates
 #' in later analysis.
 #' @references 
@@ -491,6 +474,31 @@ control_summary <- function(data) {
 
 # Utility functions for ms_normalize()
 log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
+
+# ################################################################################
+# # testing setup
+# ################################################################################
+# # New testing
+# dat <- imputed_data
+# data         <- dat$data
+# groupingvars <- MSPrep:::grouping_vars(dat)
+# batch        <- MSPrep:::batch_var(dat)
+################################################################################
+# Old testing
+#   # data == wide matrix data w/ rownames
+#   # batch == "Operator" -- i.e. 
+#   # pheno == "Spike"
+#   # clindat == Clinical.csv
+#   # link1 == "SubjectID"
+# path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
+# load(path_olddata)
+# clinical <- read_csv("data-raw/Clinical.csv")
+# pheno    <- "Spike"
+# batch    <- "Operator"
+# link1    <- "SubjectID"
+# olddata  <- as.data.frame(old_readdata_result$sum_data)
+# clindat  <- clinical
+################################################################################
 
 
 

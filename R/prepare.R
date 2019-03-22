@@ -1,5 +1,7 @@
-#' 
-#' Prepare a mass spec quantification data frame for filtering, imputation,
+#' Function for summarizing tidied dataset and preparing for filtering, imputation, 
+#' and normalization.
+#'
+#' Prepares a mass spec quantification data frame for filtering, imputation,
 #' and normalization. Also provides summaries of data structure (replicates,
 #' subjects, groupingvars, etc.)
 #'
@@ -8,20 +10,21 @@
 #' coefficient of variation below specified level, or median for those found in
 #' 3 replicates but excess CV.
 #'
-#' @param data A tidy dataframe of quantification data.
-#' @param subject_id Name (string) of the subject ID column.
-#' @param replicate Name (string) of the replicate column. Set to NULL if no
-#' replicates. TODO: test NULL.
-#' @param abundance Name (string) of the abundance column.
-#' @param groupingvars Variable name (string) or vector of names of the
+#' @param data Tidied dataset.
+#' @param subject_id Name of the subject ID column.
+#' @param replicate Name of the replicate column. Set to NULL if no
+#' replicates.
+#' @param abundance Name of the abundance column.
+#' @param groupingvars Variable name or vector of names of the
 #' phenotypes or comparison groups.
-#' @param batch Name (string) of the column representing batches.
-#' @param mz Mass-to-charge ratio variable name.
-#' @param rt Retention time variable name.
-#' @param cvmax Acceptable level of coefficient of variation between replicates.
+#' @param batch Name of the column representing batches.
+#' @param mz Name of mass-to-charge ratio variable.
+#' @param rt Name of retention time variable.
+#' @param cvmax Decimal value from 0 to 1 representing the acceptable level of coefficient 
+#' of variation between replicates.
 #' @param missing_val Value of missing data in the quantification data file.
-#' @param min_proportion_present  Minimum proportion present to summarize with
-#' median or mean. Below this the compound will be set to 0.
+#' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
+#' to summarize with median or mean. Below this the compound will be set to 0.
 #' @return An `msprep` object with `stage(rtn) == "prepared"` containing
 #' summarised quantification data, a dataset of compounds summarised by medians,
 #' and other related summaries.
@@ -77,6 +80,7 @@ ms_prepare <- function(data,
                        cvmax         = 0.50,
                        missing_val   = 1,
                        min_proportion_present = 1/3) {
+  # TODO: test replicate = NULL.
 
   # Check args
   stopifnot(is.data.frame(data))
