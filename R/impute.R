@@ -1,13 +1,16 @@
-#' Imputes dataset
+#' Function for imputing on filtered data.
 #'
 #' Performs data imputation for a given mz_rt value (not separately for batches
 #' or grouping variables).
 #'
-#' @param msprep_obj An MSPrep object that has been filtered and normalized
-#' @param method Imputation method.  One of half-min (half the minimum value),
-#' bpca (Bayesian PCA), knn (k-nearest neighbors).
+#' @param msprep_obj Filtered MSPrep object.
+#' @param method Name of imputation method to use. 
+#' Options are:
+#' - halfmin (half the minimum value)
+#' - bpca (Bayesian PCA)
+#' - knn (k-nearest neighbors)
 #' @param k Number of clusters for 'knn' method.
-#' @return A msprep object with missing data imputed.
+#' @return An msprep object with missing data imputed.
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
 #' @details bpca Filtered dataset with missing values imputed by a Bayesian PCA
@@ -127,7 +130,17 @@ impute_knn <- function(data, groupingvars, batch, k = 5) {
 
   data <- data_to_wide_matrix(data, groupingvars, batch) 
   rwnm <- rownames(data)
-  data <- kNN(as.data.frame(data), k = k, imp_var = FALSE)
+  cnm<- colnames(data)
+  
+  ### transpose
+  data <- VIM:::kNN(as.data.frame(t(data)), k = k, imp_var = FALSE)
+  
+  ## transpose again (to 'untranspose' bsaically)
+  data<- t(data)
+  
+  ### set column names same as prior to knn function
+  colnames(data) <- cnm
+  
   rownames(data) <- rwnm
   data <- wide_matrix_to_data(data, groupingvars, batch)
   data <- halfmin_if_any_negative(data)
