@@ -3,7 +3,7 @@ title: "Using MSPrep"
 author: 
     - name: Matt Mulvahill
       email: matt.mulvahill@gmail.com
-      affiliation: Product Intelligence @ Charter Communications
+      affiliation: Charter Communications
     - name: Grant Hughes
       email: dydxhughes@gmail.com
     - name: Sean Jacobson
@@ -14,7 +14,7 @@ author:
       affiliation: University of Colorado Anschutz Medical Campus
     - name: Katerina Kechris
       email: katerina.kechris@ucdenver.edu
-      affiliation: University of Colorado Anschutz Medical Cam
+      affiliation: University of Colorado Anschutz Medical Campus
 package: MSPrep
 output: 
   BiocStyle::html_document:
@@ -44,7 +44,7 @@ vignette: |
 # Introduction
 
 MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
-- an explanation what each of the functions does
+- an explanation of each functions
 - suggestions for how to select parameters
 - an explanation of how to use the final outputted data
 - code to perform all of the steps in a pipeline
