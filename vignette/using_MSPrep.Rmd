@@ -2,20 +2,19 @@
 title: "Using MSPrep"
 author: 
     - name: Matt Mulvahill
-      email: matthew.mulvahill@ucdenver.edu
-      affiliation: UC Anschutz
+      email: matt.mulvahill@gmail.com
+      affiliation: Product Intelligence @ Charter Communications
     - name: Grant Hughes
-      email: fill@me.in
-      affiliation: National Jewish Hospital
+      email: dydxhughes@gmail.com
     - name: Sean Jacobson
       email: jacobsons@njhealth.org
       affiliation: National Jewish Hospital
-    - name: Katerina Kechris
-      email: katerina.kechris@ucdenver.edu
-      affiliation: UC Anschutz
     - name: Harrison Pielke-Lombardo
       email: harrison.pielke-lombardo@ucdenver.edu
-      affiliation: UC Anschutz
+      affiliation: University of Colorado Anschutz Medical Campus
+    - name: Katerina Kechris
+      email: katerina.kechris@ucdenver.edu
+      affiliation: University of Colorado Anschutz Medical Cam
 package: MSPrep
 output: 
   BiocStyle::html_document:
