@@ -126,14 +126,14 @@ imputed_data = ms_impute(filtered_data, method ="knn", k = 5)
 
 # Normalizing the data
 
-In order to make comparisons between sample, the data need to be normalized. This step performs one of six normalization strategies. 
+In order to make comparisons between sample, the data may need to be normalized. This step performs one of six normalization strategies. 
 
-# ComBat ()
-# quantile + ComBat()
-# median + ComBat()
-# CRMN ()
-# RUV ()
-# SVA ()
+1. ComBat ()
+2. quantile + ComBat()
+3. median + ComBat()
+4. CRMN ()
+5. RUV ()
+6. SVA ()
 
 For experiments which have control compounds, a list of the column numbers containing them should be provided in the controls variable. Otherwise, simply leave the controls parameter blank or NULL. 
 
