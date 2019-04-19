@@ -75,10 +75,6 @@ colnames(msquant)[1: 6]
 
 The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" won't be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
 
-Identifiers in the datasets
-- LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
-- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
-
 With our data in this format, we can start the pipeline.
 
 # Tidying the data
