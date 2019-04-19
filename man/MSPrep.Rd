@@ -7,52 +7,13 @@
 \title{Package for summarizing, filtering, imputing, and normalizing metabolomics data.}
 \description{
 This package performs summarization of replicates, filtering by frequency,
-three different options for missing data, and five options for normalizing
-dataset. Also generates diagnostic plots of imputations and normalizations.
+three different options for handling/imputing missing data, and five options for normalizing
+data.
 }
 \details{
-Package for processing of metabolomic quantification data.  Requires three
-input datasets.  The quantification dataset must have a row per compound, a
-column for retention time named rt, a column for mass named mz, and a column
-for each LC/MS run with column names corresponding to an identifier in the
-subject link dataset.  Each subject should have been run in triplicates.
-The subject link dataset must provide a subject link from each LC/MS run and
-the corresponding subject identifier from the clinical data file.  The
-clinical dataset must contain the unique subject identifier and any
-clinically relevant outcomes, phenotypes, batch and/or covariates of
-interest.  
-
-These three datasets are utilized by the first function of the program
-readdata() which will summarize the quantification data as the mean or
-median of the observation depending on how many replicates the compound is
-found in and a specified cutoff level for the coefficient of variation
-between the replicates.  
-
-The filterft function takes the summarized data and filters to compounds
-that are found in a specified percentage of the subjects.  The filtered data
-can still contain missing observations.  Three datasets, one with the
-missing observations, one where missing are estimated by the BPCA algorithm,
-and one where missing are replaced with 1/2 the minimum observation for that
-compound, are generated from this function.
-
-The graphimputations function will output a histogram of the densities of
-each of the three datasets generated in the filterft function.  Can restrict
-to a certain range to exclude extreme outliers or focus only a specific
-range of abundances.  
-
-The normdata function implements five normalization routines and one
-explicit batch effect adjustment algorithm. Median, Quantile, CRMN, RUV, and
-SVA are the five normalization alorithms.  Median, quantile, and
-non-normalized data all have the Combat batch removal algorithm performed.
-CRMN and RUV require controls which can either be specified or data driven
-controls are selected.  The current implementation of the RUV algorithm
-selects the number of factors based on the number of significant factors
-found in the SVA algorithm.  
-
-The gendiagnostics function creates four diagnostic graphs for each
-normalization method. A PCA plot with number indicating batches and colors
-indicating primary categorical phenotype.  Boxplot of abundances by subject,
-batch, and phenotype are also included.
+Package for processing of mass spectrometry quantification data. Five functions are provided
+and are intended to be used in sequence (as a pipeline) to produce cleaned and normalized data.
+These are ms_tidy, ms_prepare, ms_filter, ms_impute, and ms_normalize.
 }
 \examples{
    #  #library(crmn)
@@ -155,4 +116,12 @@ Spectrometry without Isotopic Labeling or Spiked Standards. Anal. Chem., 75,
 }
 \author{
 Grant Hughes
+
+Matt Mulvahill
+
+Sean Jacobson
+
+Katerina Kechris
+
+Harrison Pielke-Lombardo
 }

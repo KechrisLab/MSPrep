@@ -2,8 +2,8 @@
 % Please edit documentation in R/tidy.R
 \name{ms_tidy}
 \alias{ms_tidy}
-\title{Function for converting wide mass spec quantification data into a tidy data
-frame}
+\title{Function for converting wide mass spectrometry quantification data into a tidy data
+frame.}
 \usage{
 ms_tidy(quantification_data, mz = "mz", rt = "rt",
   col_extra_txt = "Neutral_Operator_Dif_Pos_", col_names = c("spike",
@@ -16,21 +16,21 @@ ms_tidy(quantification_data, mz = "mz", rt = "rt",
 
 \item{rt}{Name of the column containing retention time.}
 
-\item{col_extra_txt}{Text to remove when converting quant variable names to
+\item{col_extra_txt}{Text to remove from column names when converting column names to
 variables.}
 
 \item{col_names}{Vector of the ordered ID names to extract from the variable
-names}
+names.}
 
-\item{separator}{Character/string separating spike, subject, and replicate
-ids.}
+\item{separator}{Character or text separating spike, subject, and replicate
+ids in column names.}
 }
 \value{
 A tidy data frame of quant data, with columns mz, rt,
 replicate, and abundance.
 }
 \description{
-Function reads in wide dataset of mass spec quantification data and converts
+Function reads in wide dataset of mass spectrometry quantification data and converts
 it to a tidy dataset.  This function assumes that the dataset is in a wide
 format, with a column representing the retention time (rt), another
 representing the mass-to-charge ratio (mz), and the remaining columns

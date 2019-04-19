@@ -2,18 +2,22 @@
 % Please edit documentation in R/normalize.R
 \name{ms_normalize}
 \alias{ms_normalize}
-\title{Perform normalization and batch corrections}
+\title{Function for performing normalization and batch corrections on imputed data.}
 \usage{
 ms_normalize(msprep_obj, method = c("ComBat", "quantile + ComBat",
   "median + ComBat", "CRMN", "RUV", "SVA"), n_control = 10,
   controls = NULL, n_comp = 2)
 }
 \arguments{
-\item{msprep_obj}{An MSPrep object that has been filtered, normalized, and
-imputed.}
+\item{msprep_obj}{Imputed MSPrep object.}
 
-\item{method}{One of 6 methods.  3 are normalization and 3 are batch
-correction + normalization? TODO: updated this.}
+\item{method}{Name of normalization method.
+- ComBat (only ComBat batch correction)
+- quantile + ComBat (quantile with ComBat batch correction)
+- median + ComBat (median with ComBat batch correction)
+- CRMN
+- RUV
+- SVA}
 
 \item{n_control}{Number of controls to estimate/utilize.}
 
@@ -23,36 +27,43 @@ controls. Vector of column numbers from metafin dataset of that control.}
 \item{n_comp}{Number of factors to use in CRMN algorithm.}
 }
 \value{
-controls List of compounds that were used as controls
+controls List of compounds that were used as controls.
 
-crmn_adj CRMN adjusted dataset (log2)
+crmn_adj Log2 CRMN normalized data.
 
-log_data Log2 data with no adjustment
+log_data Log2 dataset (no normalization)
 
-log_data_combat Log2 data with Combat batch adjustment
+log_data_combat Log2 with ComBat batch effect corrected dataset.
 
-log_quant Log2 Quantile adjusted
+log_quant Log2 quantile normalized dataset.
 
-log_quant_combat Log2 Quantile with Combat data
+log_quant_combat Log2 quantile with ComBat correction normalized dataset.
 
-med_adj Median adjusted dataset
+med_adj Median normalized dataset.
 
-med_combat Median adjusted with Combat
+med_combat Median with ComBat normalized dataset.
 
-ruv_adj RUV adjusted dataset (log2)
+ruv_adj Log2 RUV normalized dataset .
 
 ruv_factors Matrix of factors generated in RUV for use as covariates
 in later analysis.
 
-sva_adj SVA adjusted dataset (log2)
+sva_adj Log2 SVA normalized dataset.
 
 sva_factors Matrix of factors generated in SVA for use as covariates
 in later analysis.
 }
 \description{
 Perform normalization and batch corrections on specified imputation dataset.
-Routines included are quantile, RUV, SVA, median, and CRMN.  Combat to
-remove batch effects in raw, quantile, and median normalized data.
+Routines included are: 
+- quantile
+- RUV (remove unwanted variation)
+- SVA (surrogate variable analysis)
+- median 
+- CRMN(cross-contribution compensating multiple standard normalization)
+}
+\details{
+Combat to remove batch effects in raw, quantile, and median normalized data.
 Generates data driven controls if none exist.
 }
 \examples{

@@ -2,9 +2,8 @@
 % Please edit documentation in R/prepare.R
 \name{ms_prepare}
 \alias{ms_prepare}
-\title{Prepare a mass spec quantification data frame for filtering, imputation,
-and normalization. Also provides summaries of data structure (replicates,
-subjects, groupingvars, etc.)}
+\title{Function for summarizing tidied dataset and preparing for filtering, imputation, 
+and normalization.}
 \usage{
 ms_prepare(data, abundance = "abundance", mz = "mz", rt = "rt",
   subject_id = "subject_id", replicate = NULL, batch = NULL,
@@ -12,30 +11,31 @@ ms_prepare(data, abundance = "abundance", mz = "mz", rt = "rt",
   min_proportion_present = 1/3)
 }
 \arguments{
-\item{data}{A tidy dataframe of quantification data.}
+\item{data}{Tidied dataset.}
 
-\item{abundance}{Name (string) of the abundance column.}
+\item{abundance}{Name of the abundance column.}
 
-\item{mz}{Mass-to-charge ratio variable name.}
+\item{mz}{Name of mass-to-charge ratio variable.}
 
-\item{rt}{Retention time variable name.}
+\item{rt}{Name of retention time variable.}
 
-\item{subject_id}{Name (string) of the subject ID column.}
+\item{subject_id}{Name of the subject ID column.}
 
-\item{replicate}{Name (string) of the replicate column. Set to NULL if no
-replicates. TODO: test NULL.}
+\item{replicate}{Name of the replicate column. Set to NULL if no
+replicates.}
 
-\item{batch}{Name (string) of the column representing batches.}
+\item{batch}{Name of the column representing batches.}
 
-\item{groupingvars}{Variable name (string) or vector of names of the
+\item{groupingvars}{Variable name or vector of names of the
 phenotypes or comparison groups.}
 
-\item{cvmax}{Acceptable level of coefficient of variation between replicates.}
+\item{cvmax}{Decimal value from 0 to 1 representing the acceptable level of coefficient 
+of variation between replicates.}
 
 \item{missing_val}{Value of missing data in the quantification data file.}
 
-\item{min_proportion_present}{Minimum proportion present to summarize with
-median or mean. Below this the compound will be set to 0.}
+\item{min_proportion_present}{Decimal value from 0 to 1 representing the minimum proportion present 
+to summarize with median or mean. Below this the compound will be set to 0.}
 }
 \value{
 An `msprep` object with `stage(rtn) == "prepared"` containing
@@ -43,6 +43,11 @@ summarised quantification data, a dataset of compounds summarised by medians,
 and other related summaries.
 }
 \description{
+Prepares a mass spec quantification data frame for filtering, imputation,
+and normalization. Also provides summaries of data structure (replicates,
+subjects, groupingvars, etc.)
+}
+\details{
 Function reads in raw data files and summarizes technical replicates as the
 mean of observations for compounds found in 2 or 3 replicates and with
 coefficient of variation below specified level, or median for those found in

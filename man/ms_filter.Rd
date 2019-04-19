@@ -2,33 +2,21 @@
 % Please edit documentation in R/filter.R
 \name{ms_filter}
 \alias{ms_filter}
-\title{Filters and imputes dataset}
+\title{Function for filtering prepared dataset.}
 \usage{
 ms_filter(msprep_obj, filter_percent = 0.5)
 }
 \arguments{
-\item{msprep_obj}{Summarized dataset output as sum_data1 from readdata() function}
+\item{msprep_obj}{Prepared MSPrep object.}
 
-\item{filter_percent}{Percent to filter the data}
+\item{filter_percent}{Decimal value representing to proportion to filter the data.}
 }
 \value{
-Placeholder
+An `msprep` object with `stage(rtn) == "filtered"` containing
+filtered quantification data.
 }
 \description{
-Filters compounds to those found in specified percentage of subjects and
-performs data imputation.
-}
-\details{
-minval Filtered dataset with missing values replaced by 1/2 minimum
-observed value for that compound.
-
-bpca Filtered dataset with missing values imputed by a Bayesian PCA
-from PCAMethods package.
-
-withzero Filtered dataset with no imputation.
-
-count List of all compounds and the percent present for each
-compound.
+Filters compounds to those found in specified proportion of subjects.
 }
 \examples{
 

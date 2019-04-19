@@ -2,20 +2,23 @@
 % Please edit documentation in R/impute.R
 \name{ms_impute}
 \alias{ms_impute}
-\title{Imputes dataset}
+\title{Function for imputing on filtered data.}
 \usage{
 ms_impute(msprep_obj, method = c("halfmin", "bpca", "knn"), k = 5)
 }
 \arguments{
-\item{msprep_obj}{An MSPrep object that has been filtered and normalized}
+\item{msprep_obj}{Filtered MSPrep object.}
 
-\item{method}{Imputation method.  One of half-min (half the minimum value),
-bpca (Bayesian PCA), knn (k-nearest neighbors).}
+\item{method}{Name of imputation method to use. 
+Options are:
+- halfmin (half the minimum value)
+- bpca (Bayesian PCA)
+- knn (k-nearest neighbors)}
 
 \item{k}{Number of clusters for 'knn' method.}
 }
 \value{
-A msprep object with missing data imputed.
+An msprep object with missing data imputed.
 }
 \description{
 Performs data imputation for a given mz_rt value (not separately for batches

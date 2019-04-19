@@ -49,4 +49,4 @@ NeedsCompilation: no
 License: GPL-3
 biocViews: TBD
 Encoding: UTF-8
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
