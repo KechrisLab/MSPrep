@@ -97,6 +97,8 @@ This step summarizes the technical replicates, using the following procedure for
 2. For three replicates, if the coefficient of variation is above a specified level, use the median value for the compound, to correct for the large dispersion.
 3. Otherwise, use the mean value of the replicates for the compound.
 
+The cv cutoff (cvmax) parameter has a default value of 0.50 and the default minimum proportion present (min_proportion_present) is 1/3.
+
 ```{r Prepare}
 summarized_data = ms_prepare(tidied_data, mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike", subject_id = "subject_id", cvmax = 0.50, min_proportion_present = 1/3, missing_val = 1)
 ```
@@ -139,8 +141,6 @@ For experiments which have control compounds, a list of the column numbers conta
 ```{r Normalize}
 normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n_comp = 2, n_control = 10)
 ```
-
-# Final output
 
 # Performing all steps as a pipline
 
