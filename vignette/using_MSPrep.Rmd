@@ -2,20 +2,19 @@
 title: "Using MSPrep"
 author: 
     - name: Matt Mulvahill
-      email: matthew.mulvahill@ucdenver.edu
-      affiliation: UC Anschutz
+      email: matt.mulvahill@gmail.com
+      affiliation: Charter Communications
     - name: Grant Hughes
-      email: fill@me.in
-      affiliation: National Jewish Hospital
+      email: dydxhughes@gmail.com
     - name: Sean Jacobson
       email: jacobsons@njhealth.org
       affiliation: National Jewish Hospital
-    - name: Katerina Kechris
-      email: katerina.kechris@ucdenver.edu
-      affiliation: UC Anschutz
     - name: Harrison Pielke-Lombardo
       email: harrison.pielke-lombardo@ucdenver.edu
-      affiliation: UC Anschutz
+      affiliation: University of Colorado Anschutz Medical Campus
+    - name: Katerina Kechris
+      email: katerina.kechris@ucdenver.edu
+      affiliation: University of Colorado Anschutz Medical Campus
 package: MSPrep
 output:
   BiocStyle::pdf_document: default
@@ -45,8 +44,8 @@ vignette: |
 
 # Introduction
 
-MSPrep provides the five key functions for preparing metabolomics data for analysis. This vignette will provide
-- an explanation what each of the functions does
+MSPrep provides five key functions for preparing metabolomics data for analysis. This vignette will provide
+- an explanation of each functions
 - suggestions for how to select parameters
 - an explanation of how to use the final outputted data
 - code to perform all of the steps in a pipeline
@@ -60,20 +59,20 @@ library(tidyverse)
 
 # Getting our columns in order
 
-In order to allow MSPrep to do the heavy lifting, we first need to get our data into the correct format. Most mass spectrometry data will have a similar format, so not much should be required to get it ready.
+We first need to format the data. The following format is expected for most types of data generated from mass spectrometry.
 
-Two columns are for the mass-to-charge ratio and the retention-time. They can have any name you'd like (usually "mz" and "rt").
+The first two columns are for the mass-to-charge ratio and the retention-time, in this order. They can have any name you would like (e.g., "mz" and "rt").
 
-The other columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline. There are three pieces of information which need to be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
+The next columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline (e.g., SampleID). There are three pieces of information which need to be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
 
-As an example take a look at the provided dataset, msquant.
+As an example see the provided dataset, msquant.
 
 ```{r Intro}
 data(msquant)
 colnames(msquant)[1: 6]
 ```
 
-The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" won't be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
+The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" will not be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike-in value. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
 
 With our data in this format, we can start the pipeline.
 
@@ -87,14 +86,14 @@ tidied_data = ms_tidy(msquant, mz = "mz", rt = "rt", col_extra_txt =
                       col_names = c("spike","batch", "replicate", "subject_id"))
 ```
 
-Note, the names chosen for col_name are arbitratry, but we will use them later on.
+Note, the names chosen for col_names are arbitratry, but we will use them later on.
 
 # Preparing the data
 
-This step summarizes the technical replicates. It does this using the following procedure for each compound in each batch.
+This step summarizes the technical replicates, using the following procedure for each compound in each batch.
 
-1. If there are less than a minimum proportion of the values found among the replicates (usually one or zero), leave value empty. Otherwise proceed.
-1. Calculate the coefficient of variation between the replicates using $c_v = \frac{\sigma}{\mu}$.
+1. If there are less than a minimum proportion of the values found among the replicates (usually one or zero), leave the value empty. Otherwise proceed.
+1. Calculate the coefficient of variation between the replicates using $c_v = \frac{\sigma}{\mu}$, where $\mu$ is the mean and $\sigma$ is the standard deviation.
 2. For three replicates, if the coefficient of variation is above a specified level, use the median value for the compound, to correct for the large dispersion.
 3. Otherwise, use the mean value of the replicates for the compound.
 
@@ -104,7 +103,7 @@ summarized_data = ms_prepare(tidied_data, mz = "mz", rt = "rt", replicate = "rep
 
 # Filtering missing compounds
 
-This step is pretty straight forward but very important. Simply supply a percentage of the number of samples for which a compound needs to have data present for in order to be kept.
+This step is straightforward but very important. Simply supply a percentage of the number of samples for which a compound needs to have data present in order to be retained in the next steps.
 
 ```{r Filter}
 filtered_data = ms_filter(summarized_data, filter_percent=0.8)
@@ -112,12 +111,13 @@ filtered_data = ms_filter(summarized_data, filter_percent=0.8)
 
 # Imputing missing values
 
-Next, you'll need to make a decision about how you'd like to handle the remaining missing data.There are three methods provided. 
+Next, depending on the downstream analysis, you may need to impute missing data. We provide three methods:
+
 1. half-min (half the minimum value)
 2. bpca (Bayesian PCA), 
 3. knn (k-nearest neighbors)
 
-Half-min is the fastest and is often sufficient. KNN typically takes the longest. If you choose to use KNN, you can provide a value for k.
+Half-min is the fastest, but may introduce bias. KNN typically takes the longest. If you choose to use KNN, you can provide a value for k.
 
 ```{r Impute}
 imputed_data = ms_impute(filtered_data, method ="knn", k = 5)
@@ -125,15 +125,16 @@ imputed_data = ms_impute(filtered_data, method ="knn", k = 5)
 
 # Normalizing the data
 
-In order to make comparisons between compounds, the data need to be normalized. This step performs one of six normalization strategies. 
-1. ComBat ()
-1. quantile + ComBat
-2. median + ComBat
-3. CRMN ()
-4. RUV ()
-5. SVA ()
+In order to make comparisons between sample, the data may need to be normalized. This step performs one of six normalization strategies. 
 
-For experiments which have control compounds, a list of the column numbers containing them should be provided in the controls parameter. Otherwise, simply leave the controls parameter blank or NULL. 
+1. ComBat ()
+2. quantile + ComBat()
+3. median + ComBat()
+4. CRMN ()
+5. RUV ()
+6. SVA ()
+
+For experiments which have control compounds, a list of the column numbers containing them should be provided in the controls variable. Otherwise, simply leave the controls parameter blank or NULL. 
 
 ```{r Normalize}
 normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n_comp = 2, n_control = 10)
@@ -143,7 +144,7 @@ normalized_data = ms_normalize(imputed_data, method ="CRMN", controls = NULL,  n
 
 # Performing all steps as a pipline
 
-Often, you will want to just perform the whole pipeline. This can easily be done in a single statement using the %>% operator from the magrittr package. This threads the result of each function into the first position of the next.
+Often, you will want to perform the whole pipeline. This can easily be done in a single statement using the %>% operator from the magrittr package. This threads the result of each function into the first position of the next.
 
 ```{r Pipeline}
 dat <-
