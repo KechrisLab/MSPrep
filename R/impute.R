@@ -10,6 +10,8 @@
 #' - bpca (Bayesian PCA)
 #' - knn (k-nearest neighbors)
 #' @param k Number of clusters for 'knn' method.
+#' @param nPcs Number of  principle components used for re-estimation for 
+#' 'bpca' method.
 #' @return An msprep object with missing data imputed.
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
@@ -39,7 +41,7 @@
 #' @export
 ms_impute <- function(msprep_obj,
                       method = c("halfmin", "bpca", "knn"),
-                      k = 5) {
+                      k = 5, nPcs = 3) {
 
   # Validate inputs
   stopifnot(class(msprep_obj) == "msprep")
@@ -56,7 +58,7 @@ ms_impute <- function(msprep_obj,
   data <-
     switch(method,
            "halfmin" = impute_halfmin(data, grp, batch),
-           "bpca"    = impute_bpca(data, grp, batch),
+           "bpca"    = impute_bpca(data, grp, batch, nPcs),
            "knn"     = impute_knn(data, grp, batch, k),
            stop("Invalid impute method - you should never see this warning."))
 
@@ -111,11 +113,11 @@ impute_halfmin <- function(data, groupingvars, batch) {
 
 #' @importFrom pcaMethods pca
 #' @importFrom pcaMethods completeObs
-impute_bpca <- function(data, groupingvars, batch) {
+impute_bpca <- function(data, groupingvars, batch, nPcs = 3) {
 
   # 1. Bayesian pca imputation
   data <- data_to_wide_matrix(data, groupingvars, batch) 
-  data <- pca(data, nPcs = 3, method = "bpca")
+  data <- pca(data, nPcs = nPcs, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
   data <- wide_matrix_to_data(data, groupingvars, batch)
   data <- halfmin_if_any_negative(data, groupingvars, batch)
