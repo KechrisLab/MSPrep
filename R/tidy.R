@@ -65,7 +65,7 @@ ms_tidy <- function(quantification_data,
   rtn <-
     as_data_frame(quantification_data) %>%
     gather(key = "id_col", value = "abundance", -mz, -rt) %>%
-    mutate_at(vars("mz", "rt"), as.numeric) %>%
+    mutate_at(vars(mz, rt), as.numeric) %>%
     mutate(id_col = str_replace_all(.data$id_col, col_extra_txt, ""))
   # Split and recombine id names 
   rtn <- separate(rtn, .data$id_col, sep = separator, into = col_names)
