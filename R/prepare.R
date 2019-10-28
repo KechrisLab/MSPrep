@@ -108,10 +108,59 @@ ms_prepare <- function(data,
   replicate_count <- length(unique(data[["replicate"]]))
 
   # Roughly check if all compounds are present in each replicate
-  stopifnot(nrow(data) %% replicate_count == 0)
-
-  quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
-  quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
+  stopifnot(replicate_count == 0 | nrow(data) %% replicate_count == 0)
+  
+  # Handle sets with no replicates
+  # Skip all summarization
+  if(is.null(replicate)){
+    
+    if(!is.null(groupingvars)){
+      summary_data <- ms_arrange(data, batch, groupingvars)
+    }
+    else{
+      summary_data <- ms_arrange(data)
+    }
+    
+    # Rename "abundance" to "abundance_summary" to comply with remainder of
+    # package
+    summary_data <- summary_data %>% rename("abundance_summary" = "abundance")
+    
+    # Replace NAs w/ 0
+    summary_data$abundance_summary <- replace_na(summary_data$abundance_summary, 0)
+    
+    # Create return object & return
+    return(structure(list("data" = summary_data,
+                   replicate_info  = NULL,
+                   medians         = NULL),
+              replicate_count        = NULL,
+              cvmax                  = cvmax,
+              min_proportion_present = min_proportion_present,
+              groupingvars          = groupingvars,
+              batch_var              = batch,
+              replicate_var          = replicate,
+              stage = "prepared",
+              class = "msprep"))
+  
+  }
+  
+  # Arrange and group data according to present function args
+  if(is.null(batch) & is.null(groupingvars)){
+    quant_summary <- ms_arrange(data, replicate)
+    quant_summary <- group_by(quant_summary, subject_id, mz, rt)
+  }
+  else if(is.null(batch)){
+    quant_summary <- ms_arrange(data, groupingvars, replicate)
+    quant_summary <- group_by(quant_summary, subject_id, mz, rt, `!!!`(grouping_quo))
+  }
+  else if(is.null(groupingvars)){
+    quant_summary <- ms_arrange(data, batch, replicate)
+    quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt)
+  }
+  else
+  {
+    quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
+    quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
+  }
 
   # Calculate remaining summary measures
   quant_summary <- summarise(quant_summary,
@@ -143,7 +192,10 @@ ms_prepare <- function(data,
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
                              vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
-  summary_data <- ms_arrange(summary_data, batch, groupingvars)
+  if(!is.null(batch) & !is.null(groupingvars)){
+    summary_data <- ms_arrange(summary_data, batch, groupingvars)
+  }
+  
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
@@ -154,6 +206,11 @@ ms_prepare <- function(data,
   medians        <- filter(quant_summary, .data$summary_measure == "median")
   medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt",
                                             "abundance_summary"))
+  
+  # Replace medians with NULL if no medians used
+  if(nrow(medians) == 0){
+    medians = NULL
+  }
 
   # Total number of compounds identified
   n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
@@ -256,14 +313,18 @@ standardize_dataset <- function(data, subject_id, replicate, abundance, grouping
     replicate <- sym(replicate)
     data      <- data %>% rename("replicate" = UQ(replicate))
   } #else {
-#     data$replicate <- "01"
+     #data$replicate <- "A"
   #}
 
   if (!is.null(batch)) {
     batch <- sym(batch)
     data      <- data %>% rename("batch" = UQ(batch))
   } #else {
-#     data$batch <- "01"
+     #data$batch <- "01"
+  #}
+  
+  #if(length(groupingvars) == 0){
+    #data$spike <- "1x"
   #}
 
   return(data)
