@@ -71,8 +71,9 @@
 #' @export
 ms_prepare <- function(data,
                        abundance     = "abundance",
-                       mz            = "mz",
-                       rt            = "rt",
+                       met_id        = NULL,
+                       mz            = NULL,
+                       rt            = NULL,
                        subject_id    = "subject_id",
                        replicate     = NULL,
                        batch         = NULL,
@@ -87,16 +88,30 @@ ms_prepare <- function(data,
   # my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
   stopifnot(is.null(batch) | length(batch) == 1)
   stopifnot(is.null(replicate) | length(replicate) == 1)
-
+  
+  if(is.null(met_id) & (is.null(mz) | is.null(rt))){
+    stop("Must include 'met_id' or both 'mz' and 'rt'")
+  }
+  
+  # create vector of metabolite id column names
+  met_vars <- c()
+  if (!is.null(met_id)){
+    met_vars <- c(met_vars, "met_id")
+  }
+  if (!is.null(mz) & !is.null(rt)){
+    met_vars <- c(met_vars, "mz", "rt")
+  }
+  
   # rlang magic 
   grouping_quo = syms(groupingvars)
+  id_group <- syms(met_vars)
 
   # Convert to tibble data frame
   data <- as_tibble(data)
 
   # Replace provided variable names with standardized ones
   data <- standardize_dataset(data, subject_id, replicate, abundance,
-                              grouping_quo, batch, mz, rt)
+                              grouping_quo, batch, met_id, mz, rt)
 
   # Replace miss val with NAs 
   data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
@@ -110,8 +125,7 @@ ms_prepare <- function(data,
   # Roughly check if all compounds are present in each replicate
   stopifnot(replicate_count == 0 | nrow(data) %% replicate_count == 0)
   
-  # Handle sets with no replicates
-  # Skip all summarization
+  # Skips all summarization for data sets with no replicates
   if(is.null(replicate)){
     
     if(!is.null(groupingvars)){
@@ -135,7 +149,8 @@ ms_prepare <- function(data,
               replicate_count        = NULL,
               cvmax                  = cvmax,
               min_proportion_present = min_proportion_present,
-              groupingvars          = groupingvars,
+              met_vars               = met_vars,
+              groupingvars           = groupingvars,
               batch_var              = batch,
               replicate_var          = replicate,
               stage = "prepared",
@@ -146,20 +161,23 @@ ms_prepare <- function(data,
   # Arrange and group data according to present function args
   if(is.null(batch) & is.null(groupingvars)){
     quant_summary <- ms_arrange(data, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, mz, rt)
+    quant_summary <- group_by(quant_summary, subject_id, `!!!`(id_group))
   }
   else if(is.null(batch)){
     quant_summary <- ms_arrange(data, groupingvars, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, mz, rt, `!!!`(grouping_quo))
+    quant_summary <- group_by(quant_summary, subject_id, `!!!`(id_group), 
+                              `!!!`(grouping_quo))
   }
   else if(is.null(groupingvars)){
     quant_summary <- ms_arrange(data, batch, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt)
+    quant_summary <- group_by(quant_summary, subject_id, batch, 
+                              `!!!`(id_group))
   }
   else
   {
     quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
+    quant_summary <- group_by(quant_summary, subject_id, batch, `!!!`(id_group), 
+                              `!!!`(grouping_quo))
   }
 
   # Calculate remaining summary measures
@@ -191,7 +209,7 @@ ms_prepare <- function(data,
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
+                             vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(id_group), "abundance_summary"))
   if(!is.null(batch) & !is.null(groupingvars)){
     summary_data <- ms_arrange(summary_data, batch, groupingvars)
   }
@@ -199,12 +217,12 @@ ms_prepare <- function(data,
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "n_present",
+                              vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(id_group), "n_present",
                                    "cv_abundance", "summary_measure"))
 
   # Summaries that used medians
   medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt",
+  medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(id_group),
                                             "abundance_summary"))
   
   # Replace medians with NULL if no medians used
@@ -213,7 +231,7 @@ ms_prepare <- function(data,
   }
 
   # Total number of compounds identified
-  n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
+  n_compounds    <- nrow(distinct(select(quant_summary, `!!!`(id_group))))
 
   # Create return object & return
   structure(list("data" = summary_data,
@@ -222,7 +240,8 @@ ms_prepare <- function(data,
             replicate_count        = replicate_count,
             cvmax                  = cvmax,
             min_proportion_present = min_proportion_present,
-            groupingvars          = groupingvars,
+            met_vars               = met_vars,
+            groupingvars           = groupingvars,
             batch_var              = batch,
             replicate_var          = replicate,
             stage = "prepared",
@@ -291,20 +310,34 @@ select_summary_measure <- function(n_present,
 #' @importFrom dplyr rename
 #' @importFrom rlang sym
 #' @importFrom rlang UQ
-standardize_dataset <- function(data, subject_id, replicate, abundance, groupingvars,
-                                batch, mz, rt) {
+standardize_dataset <- function(data, subject_id, replicate, abundance, 
+                                groupingvars, batch, met_id, mz, rt) {
 
   # Rename required variables
   subject_id = sym(subject_id)
   abundance  = sym(abundance)
-  mz         = sym(mz)
-  rt         = sym(rt)
-
+  
   data <- data %>% 
     rename("subject_id" = UQ(subject_id),
-           "abundance"  = UQ(abundance),
-           "mz"         = UQ(mz),
-           "rt"         = UQ(rt))
+           "abundance"  = UQ(abundance))
+  
+  # Rename mz/rt if used
+  if (!is.null(mz) & !is.null(rt)) {
+    mz         = sym(mz)
+    rt         = sym(rt)
+  
+    data <- data %>% 
+      rename("mz"         = UQ(mz),
+             "rt"         = UQ(rt))
+  }
+  
+  # Rename met_id if used
+  if(!is.null(met_id)){
+    met_id         = sym(met_id)
+    
+    data <- data %>% 
+      rename("met_id" = UQ(met_id))
+  }
 
   data <- standardize_datatypes(data, groupingvars, batch)
 
@@ -337,8 +370,13 @@ standardize_datatypes <- function(data, groupingvars, batch) {
   count_var   <- count_var[count_var %in% colnames(data)]
   factor_vars <- c("subject_id", as.character(groupingvars), batch)
   data <- mutate_at(data, factor_vars, as.factor)
-  data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
-
+  
+  if ("rt" %in% colnames(data) & "mz" %in% colnames(data)) {
+    data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
+  }
+  if ("met_id" %in% colnames(data)) {
+    data <- mutate_at(data, "met_id", as.factor)
+  }
+  
+  return(data)
 }
-
-

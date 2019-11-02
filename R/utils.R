@@ -42,9 +42,21 @@ replicate_var <- function(x) attr(x, "replicate")
 }
 
 # Standard arrange for data object used in msprep_obj
+#' @importFrom dplyr arrange
 ms_arrange <- function(data, ...) {
   other_vars <- list(...)
-  arrange(data, .data$subject_id, .data$mz, .data$rt, `!!!`(syms(other_vars)))
+  if (("mz" %in% colnames(data)) & ("rt" %in% colnames(data)) & 
+      ("met_id" %in% colnames(data))) {
+    rtn <- arrange(data, .data$subject_id, .data$mz, .data$rt, .data$met_id, 
+                   `!!!`(syms(other_vars)))
+  } else if (("mz" %in% colnames(data)) & ("rt" %in% colnames(data))) {
+    rtn <- arrange(data, .data$subject_id, .data$mz, .data$rt, 
+                   `!!!`(syms(other_vars)))
+  } else {
+    rtn <- arrange(data, .data$subject_id, .data$met_id, 
+                   `!!!`(syms(other_vars)))
+  }
+  return(rtn)
 }
 
 
@@ -94,6 +106,7 @@ internal_id_order <- function(groupingvars = NULL, batch = NULL) {
 #' @importFrom tibble as_tibble
 #' @importFrom tidyr gather
 #' @importFrom tidyr separate
+#' @importFrom magrittr %>%
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr vars
@@ -109,11 +122,21 @@ wide_matrix_to_data <- function(wide, groupingvars, batch) {
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
   rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id)
   rtn <- rtn %>% as_tibble
-  rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
+  if(!is.null(groupingvars) & !is.null(batch)){
+    rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
                         -"subject_id", -groupingvars, -batch)
+  }
+  else
+    rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary", 
+                          -"subject_id")
   rtn <- rtn %>% separate("mz_rt", sep = "_", into = c("mz", "rt"))
-  rtn <- standardize_datatypes(rtn, groupingvars, batch)
-  rtn <- ms_arrange(rtn, batch, groupingvars)
+  rtn <- standardize_datatypes(rtn, groupingvars = groupingvars, batch = batch)
+  if(!is.null(groupingvars) & !is.null(batch)){
+    rtn <- ms_arrange(rtn, batch, groupingvars)
+  }
+  else {
+    rtn <- ms_arrange(rtn)
+  }
 
   return(rtn)
 
