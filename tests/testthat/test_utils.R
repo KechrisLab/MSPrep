@@ -2,9 +2,12 @@ context("utility functions")
 
 set.seed(9999)
 data(msquant_subject1)
-tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt")
+tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt",
+                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+                           separator = "_", 
+                           col_names = c("spike", "batch", "replicate", "subject_id"))
 prepped_data    <- tidy_data %>% 
-  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike")
+  ms_prepare(mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike")
 
 test_that("Check dataset transformations give back original dataset.", {
 

@@ -13,8 +13,13 @@ quant        <- msquant_subject1
 load(path_olddata)
 
 # Generate tidy dataset from wide quant data
-tidy_data    <- ms_tidy(quant, mz = "mz", rt = "rt")
-prepped_data <- tidy_data %>% ms_prepare(replicate = "replicate", 
+tidy_data    <- ms_tidy(quant, mz = "mz", rt = "rt",
+                        col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+                        separator = "_", 
+                        col_names = c("spike", "batch", "replicate", "subject_id"))
+prepped_data <- tidy_data %>% ms_prepare(mz = "mz",
+                                         rt = "rt",
+                                         replicate = "replicate", 
                                          batch = "batch",
                                          groupingvars = "spike")
 
