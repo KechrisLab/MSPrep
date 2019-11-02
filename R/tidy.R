@@ -51,24 +51,54 @@
 #' @importFrom stringr str_replace_all
 #' @importFrom magrittr %>%
 #' @importFrom rlang UQ
+#' @importFrom rlang !!!
+#' @importFrom rlang syms
 #' @export
 ms_tidy <- function(quantification_data,
-                    mz = "mz", 
-                    rt = "rt",
-                    col_extra_txt     = "Neutral_Operator_Dif_Pos_",
-                    col_names         = c("spike", "batch", "replicate", "subject_id"),
-                    separator        = "_") {
-
-  # gather data to long format (adds id/varnames as column), remove col_extra_txt
-  # from id column, and convert id column to separate subject,replicate
-  # variables
+                    met_id = NULL,
+                    mz = NULL, 
+                    rt = NULL,
+                    col_extra_txt     = NULL,
+                    col_names         = c("subject_id"),
+                    separator        = NULL) {
+  
+  # Check that at either met_id or both mz and rt are included
+  if(is.null(met_id) & (is.null(mz) | is.null(rt))){
+    stop("Must include met_id or both mz and rt")
+  }
+  
+  # Store whatever metabolite id args are present
+  id_group <- syms(c(met_id, mz, rt))
+  
+  # Gather data to long format (adds id/varnames as column), ensure mz and rt
+  # are numeric if present
   rtn <-
     as_data_frame(quantification_data) %>%
-    gather(key = "id_col", value = "abundance", -mz, -rt) %>%
-    mutate_at(vars(mz, rt), as.numeric) %>%
-    mutate(id_col = str_replace_all(.data$id_col, col_extra_txt, ""))
-  # Split and recombine id names 
-  rtn <- separate(rtn, .data$id_col, sep = separator, into = col_names)
+    gather(key = "id_col", value = "abundance", -c(!!!id_group))
+  
+  
+  # Ensure mz and rt are numeric if present
+  if (!is.null(mz) & !is.null(rt)){
+    rtn <- mutate_at(rtn, vars(mz, rt), as.numeric)
+  }
+  
+  # Remove col_extra_txt text if present
+  if(!is.null(col_extra_txt)){
+    rtn <- mutate(rtn, id_col = str_replace_all(.data$id_col, 
+                                                col_extra_txt, ""))
+  }
+  
+  # If only one column name, rename id_col appropriately. Otherwise split
+  # 'id_col' into new variable columns designated by col_names 
+  if(length(col_names) == 1){ 
+    colnames(rtn)[colnames(rtn) == "id_col"] <- col_names[1]
+  }
+  else if(!is.null(separator)){
+    rtn <- separate(rtn, .data$id_col, sep = separator, into = col_names)
+  }
+  else{
+    stop("Must include 'separator' if multiple 'col_names'")
+  }
 
   return(rtn)
 
