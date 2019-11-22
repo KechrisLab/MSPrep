@@ -41,7 +41,7 @@
 #' @export
 ms_impute <- function(msprep_obj,
                       method = c("halfmin", "bpca", "knn"),
-                      k = 5, nPcs = 3) {
+                      k = 5, nPcs = 3, compoundsAsNeighbors = FALSE) {
 
   # Validate inputs
   stopifnot(class(msprep_obj) == "msprep")
@@ -59,7 +59,7 @@ ms_impute <- function(msprep_obj,
     switch(method,
            "halfmin" = impute_halfmin(data, grp, batch),
            "bpca"    = impute_bpca(data, grp, batch, nPcs),
-           "knn"     = impute_knn(data, grp, batch, k),
+           "knn"     = impute_knn(data, grp, batch, k, compoundsAsNeighbors),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
@@ -128,17 +128,23 @@ impute_bpca <- function(data, groupingvars, batch, nPcs = 3) {
 
 
 #' @importFrom VIM kNN
-impute_knn <- function(data, groupingvars, batch, k = 5) {
-
+impute_knn <- function(data, groupingvars, batch, k = 5, compoundsAsNeighbors) {
+  
   data <- data_to_wide_matrix(data, groupingvars, batch) 
   rwnm <- rownames(data)
   cnm<- colnames(data)
   
-  ### transpose
-  data <- VIM:::kNN(as.data.frame(t(data)), k = k, imp_var = FALSE)
-  
-  ## transpose again (to 'untranspose' bsaically)
-  data<- t(data)
+  # Perform kNN imputation using compounds or samples as neighbors
+  if (compoundsAsNeighbors == TRUE) {
+    data <- VIM:::kNN(as.data.frame(data), k = k, imp_var = FALSE)
+  }
+  else {
+    ### transpose
+    data <- VIM:::kNN(as.data.frame(t(data)), k = k, imp_var = FALSE)
+    
+    ## transpose again (to 'untranspose' basically)
+    data <- t(data)
+  }
   
   ### set column names same as prior to knn function
   colnames(data) <- cnm
