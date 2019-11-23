@@ -62,6 +62,7 @@
 #' @importFrom dplyr filter
 #' @importFrom dplyr vars
 #' @importFrom tibble as_tibble
+#' @importFrom tidyr replace_na
 #' @importFrom rlang .data
 #' @importFrom rlang UQ
 #' @importFrom rlang sym
@@ -142,6 +143,10 @@ ms_prepare <- function(data,
     # Replace NAs w/ 0
     summary_data$abundance_summary <- replace_na(summary_data$abundance_summary, 0)
     
+    # Order columns
+    summary_data  <- select_at(summary_data, 
+                               vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(id_group), "abundance_summary"))
+    
     # Create return object & return
     return(structure(list("data" = summary_data,
                    replicate_info  = NULL,
@@ -212,6 +217,9 @@ ms_prepare <- function(data,
                              vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(id_group), "abundance_summary"))
   if(!is.null(batch) & !is.null(groupingvars)){
     summary_data <- ms_arrange(summary_data, batch, groupingvars)
+  }
+  else {
+    summary_data <- ms_arrange(summary_data)
   }
   
 

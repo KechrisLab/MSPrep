@@ -41,6 +41,14 @@ replicate_var <- function(x) attr(x, "replicate")
   x
 }
 
+# Functions for assigning and getting met_vars
+met_vars <- function(x) attr(x, "met_vars")
+
+`met_vars<-` <- function(x, value) {
+  attr(x, "met_vars") <- value
+  x
+}
+
 # Standard arrange for data object used in msprep_obj
 #' @importFrom dplyr arrange
 ms_arrange <- function(data, ...) {
@@ -78,14 +86,14 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
-data_to_wide_matrix <- function(data, groupingvars, batch, asmatrix = TRUE) {
+data_to_wide_matrix <- function(data, groupingvars, batch, met_vars, asmatrix = TRUE) {
 
   internal_id <- internal_id_order(groupingvars, batch)
 
   rtn <- data %>% 
-    unite(col = "compound", "mz", "rt") %>% 
-    spread(key = "compound", value = "abundance_summary")  %>%
-    as.data.frame %>%
+    unite(col = "compound", met_vars, sep = "%") %>%
+    spread(key = "compound", value = "abundance_summary") %>%
+    as.data.frame(rtn) %>%
     unite(col = "rwnm", internal_id) %>%
     column_to_rownames(var = "rwnm") 
 
@@ -110,7 +118,7 @@ internal_id_order <- function(groupingvars = NULL, batch = NULL) {
 #' @importFrom dplyr arrange
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr vars
-wide_matrix_to_data <- function(wide, groupingvars, batch) {
+wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
 
   sym_id <- sym("subject_id")
   sym_mz <- sym("mz")
@@ -129,7 +137,7 @@ wide_matrix_to_data <- function(wide, groupingvars, batch) {
   else
     rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary", 
                           -"subject_id")
-  rtn <- rtn %>% separate("mz_rt", sep = "_", into = c("mz", "rt"))
+  rtn <- rtn %>% separate("mz_rt", sep = "%", into = met_vars)
   rtn <- standardize_datatypes(rtn, groupingvars = groupingvars, batch = batch)
   if(!is.null(groupingvars) & !is.null(batch)){
     rtn <- ms_arrange(rtn, batch, groupingvars)

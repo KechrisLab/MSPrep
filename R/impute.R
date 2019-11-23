@@ -53,13 +53,14 @@ ms_impute <- function(msprep_obj,
                     replace_missing, 0)
   grp <- grouping_vars(msprep_obj)
   batch <- batch_var(msprep_obj)
+  met_vars <- met_vars(msprep_obj)
 
   # Impute data
   data <-
     switch(method,
-           "halfmin" = impute_halfmin(data, grp, batch),
-           "bpca"    = impute_bpca(data, grp, batch, nPcs),
-           "knn"     = impute_knn(data, grp, batch, k, compoundsAsNeighbors),
+           "halfmin" = impute_halfmin(data, grp, batch, met_vars),
+           "bpca"    = impute_bpca(data, grp, batch, met_vars, nPcs),
+           "knn"     = impute_knn(data, grp, batch, met_vars, k, compoundsAsNeighbors),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
@@ -88,15 +89,17 @@ ms_impute <- function(msprep_obj,
 #' @importFrom rlang !!
 #' @importFrom rlang !!!
 # Imputation using half of the minimum value
-impute_halfmin <- function(data, groupingvars, batch) {
+impute_halfmin <- function(data, groupingvars, batch, met_vars) {
 
   sym_mz <- sym("mz")
   sym_rt <- sym("rt")
+  sym_met_vars <- syms(met_vars)
 
   # NOTE: other imputation methods operate across all batchs/groups for a given
   # mz_rt
   #   grp  <- syms(c(groupingvars, batch))
-  data <- group_by(data, `!!`(sym_mz), `!!`(sym_rt))
+  # data <- group_by(data, `!!`(sym_mz), `!!!`(sym_met_vars))
+  data <- group_by(data, `!!!`(sym_met_vars))
 
   halfmin <- function(x) {
     ifelse(is.na(x), min(x, na.rm = TRUE)/2, x)
@@ -113,14 +116,14 @@ impute_halfmin <- function(data, groupingvars, batch) {
 
 #' @importFrom pcaMethods pca
 #' @importFrom pcaMethods completeObs
-impute_bpca <- function(data, groupingvars, batch, nPcs = 3) {
+impute_bpca <- function(data, groupingvars, batch, met_vars, nPcs = 3) {
 
   # 1. Bayesian pca imputation
-  data <- data_to_wide_matrix(data, groupingvars, batch) 
+  data <- data_to_wide_matrix(data, groupingvars, batch, met_vars) 
   data <- pca(data, nPcs = nPcs, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
-  data <- wide_matrix_to_data(data, groupingvars, batch)
-  data <- halfmin_if_any_negative(data, groupingvars, batch)
+  data <- wide_matrix_to_data(data, groupingvars, batch, met_vars)
+  data <- halfmin_if_any_negative(data, groupingvars, batch, met_vars)
 
   return(data)
 
@@ -128,11 +131,11 @@ impute_bpca <- function(data, groupingvars, batch, nPcs = 3) {
 
 
 #' @importFrom VIM kNN
-impute_knn <- function(data, groupingvars, batch, k = 5, compoundsAsNeighbors) {
+impute_knn <- function(data, groupingvars, batch, met_vars, k = 5, compoundsAsNeighbors) {
   
-  data <- data_to_wide_matrix(data, groupingvars, batch) 
+  data <- data_to_wide_matrix(data, groupingvars, batch, met_vars) 
   rwnm <- rownames(data)
-  cnm<- colnames(data)
+  cnm <- colnames(data)
   
   # Perform kNN imputation using compounds or samples as neighbors
   if (compoundsAsNeighbors == TRUE) {
@@ -150,8 +153,8 @@ impute_knn <- function(data, groupingvars, batch, k = 5, compoundsAsNeighbors) {
   colnames(data) <- cnm
   
   rownames(data) <- rwnm
-  data <- wide_matrix_to_data(data, groupingvars, batch)
-  data <- halfmin_if_any_negative(data)
+  data <- wide_matrix_to_data(data, groupingvars, batch, met_vars)
+  data <- halfmin_if_any_negative(data, groupingvars, batch, met_vars)
 
   return(data)
 
@@ -159,13 +162,13 @@ impute_knn <- function(data, groupingvars, batch, k = 5, compoundsAsNeighbors) {
 
 
 
-halfmin_if_any_negative <-  function(data, groupingvars, batch) {
+halfmin_if_any_negative <-  function(data, groupingvars, batch, met_vars) {
 
   num_neg <- sum(data$abundance_summary < 0)
   if (any(num_neg)) {
     message("Found ", num_neg, " negative imputed values using KNN, reverting to half-min imputation for these values")
     data$abundance_summary <- setmissing_negative_vals(data$abundance_summary)
-    data <- impute_halfmin(data, groupingvars, batch)
+    data <- impute_halfmin(data, groupingvars, batch, met_vars)
   }
 
   return(data)
