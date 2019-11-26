@@ -105,7 +105,7 @@ impute_halfmin <- function(data, groupingvars, batch, met_vars) {
     ifelse(is.na(x), min(x, na.rm = TRUE)/2, x)
   }
 
-  data <- mutate_at(data, vars("abundance_summary"), funs(halfmin))
+  data <- mutate_at(data, vars("abundance_summary"), halfmin)
   data <- ungroup(data)
 
   return(data)

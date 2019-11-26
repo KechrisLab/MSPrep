@@ -15,11 +15,10 @@ test_that("Check dataset transformations give back original dataset.", {
     batch <- batch_var(prepped_data)
     met_vars <- met_vars(prepped_data)
     original_data <- prepped_data$data
-    xfrmd_data <-
-      prepped_data$data %>%
-      data_to_wide_matrix(., grps, batch, met_vars) %>%
-      wide_matrix_to_data(., grps, batch, met_vars)
 
-    original_data == xfrmd_data
+    xfrmd_data <- data_to_wide_matrix(prepped_data$data, grps, batch, met_vars)
+    xfrmd_data <- wide_matrix_to_data(xfrmd_data, grps, batch, met_vars)
+    
+    expect_equal(original_data, xfrmd_data)
 
 })

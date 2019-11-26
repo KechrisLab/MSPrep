@@ -73,7 +73,7 @@ ms_tidy <- function(quantification_data,
   # Gather data to long format (adds id/varnames as column), ensure mz and rt
   # are numeric if present
   rtn <-
-    as_data_frame(quantification_data) %>%
+    as_tibble(quantification_data) %>%
     gather(key = "id_col", value = "abundance", -c(!!!id_group))
   
   

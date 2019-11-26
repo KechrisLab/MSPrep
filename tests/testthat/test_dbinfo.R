@@ -94,7 +94,7 @@ test_that("New version of summarized dataset matches old version", {
   old_sum <- old_sum %>% as.data.frame 
   old_sum <- old_sum %>% tibble::rownames_to_column(var = "id") 
   old_sum <- old_sum %>% tidyr::gather(key = metabolite, value = abundance_summary, -id) 
-  old_sum <- old_sum %>% tibble::as_data_frame(.)
+  old_sum <- old_sum %>% tibble::as_tibble(.)
   old_sum <- old_sum %>% dplyr::select(id, metabolite, abundance_summary)
   old_sum <- old_sum %>% tidyr::separate(metabolite, into = c("mz", "rt"), sep = "_")
   old_sum <- old_sum %>% dplyr::mutate(mz = as.numeric(mz))
