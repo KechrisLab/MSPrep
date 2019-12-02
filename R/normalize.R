@@ -78,7 +78,6 @@
 #' normalized_data_medC <- ms_normalize(imputed_data, method = "median + ComBat")
 #'
 #'
-#' @importFrom dplyr case_when
 #' @export
 ms_normalize <- function(msprep_obj,
                          method = c("ComBat",
@@ -408,7 +407,10 @@ normalize_median <- function(data, groupingvars, batch, met_vars, transform) {
 }
 
 
-
+#' @importFrom dplyr mutate_if
+#' @importFrom dplyr select
+#' @importFrom tidyr separate
+#' @importFrom stats model.matrix
 create_crmn_inputs <- function(data, groupingvars, batch, met_vars, n_control, controls) {
 
   internal_id <- internal_id_order(groupingvars, batch)
@@ -461,7 +463,7 @@ isIS <- function(data, factors, n_control, n_compounds, controls, met_vars) {
 }
 
 
-
+#' @importFrom dplyr arrange
 ctl_compounds <- function(control_summary_data, factors = NULL, n_control, controls) {
 
   if (length(controls) > 0) { 
@@ -478,7 +480,10 @@ ctl_compounds <- function(control_summary_data, factors = NULL, n_control, contr
 
 
 #' @importFrom dplyr mutate_if
+#' @importFrom dplyr select
 #' @importFrom stats model.matrix
+#' @importFrom tidyr separate
+#' @importFrom sva ComBat
 combat <- function(data, groupingvars, batch, met_vars, transform) {
   
   # Check that batches are present in data before proceeding
@@ -620,6 +625,8 @@ genadj <- function(data, groupingvars, batch, met_vars, factors) {
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
 #' @importFrom rlang .data
+#' @importFrom rlang syms
+#' @importFrom rlang !!!
 control_summary <- function(data, met_vars) {
   
   met_syms <- syms(met_vars)

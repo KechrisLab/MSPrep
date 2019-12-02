@@ -36,6 +36,8 @@
 #' @importFrom dplyr full_join
 #' @importFrom dplyr n
 #' @importFrom rlang .data
+#' @importFrom rlang syms
+#' @importFrom rlang !!!
 #' @importFrom magrittr %>%
 #' @export
 ms_filter <- function (msprep_obj, filter_percent = 0.5) {

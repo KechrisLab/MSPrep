@@ -43,8 +43,10 @@
 #'
 #' @importFrom tibble as_data_frame
 #' @importFrom tibble data_frame
+#' @importFrom tibble as_tibble
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate
+#' @importFrom dplyr mutate_at
 #' @importFrom dplyr arrange
 #' @importFrom tidyr separate
 #' @importFrom tidyr unite
@@ -68,13 +70,13 @@ ms_tidy <- function(quantification_data,
   }
   
   # Store whatever metabolite id args are present
-  id_group <- syms(c(met_id, mz, rt))
+  met_vars <- syms(c(met_id, mz, rt))
   
   # Gather data to long format (adds id/varnames as column), ensure mz and rt
   # are numeric if present
   rtn <-
     as_tibble(quantification_data) %>%
-    gather(key = "id_col", value = "abundance", -c(!!!id_group))
+    gather(key = "id_col", value = "abundance", -c(!!!met_vars))
   
   
   # Ensure mz and rt are numeric if present

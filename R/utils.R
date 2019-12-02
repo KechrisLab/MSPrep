@@ -51,6 +51,8 @@ met_vars <- function(x) attr(x, "met_vars")
 
 # Standard arrange for data object used in msprep_obj
 #' @importFrom dplyr arrange
+#' @importFrom rlang syms
+#' @importFrom rlang !!!
 ms_arrange <- function(data, ...) {
   other_vars <- list(...)
   if (("mz" %in% colnames(data)) & ("rt" %in% colnames(data)) & 
@@ -86,6 +88,7 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tibble column_to_rownames
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
+#' @importFrom magrittr %>%
 data_to_wide_matrix <- function(data, groupingvars, batch, met_vars, asmatrix = TRUE) {
 
   internal_id <- internal_id_order(groupingvars, batch)
