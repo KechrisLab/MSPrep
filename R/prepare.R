@@ -96,11 +96,11 @@ ms_prepare <- function(data,
   
   # create vector of metabolite id column names
   met_vars <- c()
-  if (!is.null(met_id)){
-    met_vars <- c(met_vars, "met_id")
-  }
   if (!is.null(mz) & !is.null(rt)){
     met_vars <- c(met_vars, "mz", "rt")
+  }
+  if (!is.null(met_id)){
+    met_vars <- c(met_vars, "met_id")
   }
   
   # rlang magic 
