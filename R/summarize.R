@@ -35,7 +35,7 @@
 #' 
 #' # Convert dataset to tidy format
 #' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-#' prepped_data <- ms_prepare(tidy_data, 
+#' prepped_data <- ms_summarize(tidy_data, 
 #'                            replicate = "replicate", 
 #'                            batch = "batch",
 #'                            groupingvars = "spike")
@@ -43,7 +43,7 @@
 #' # Or, using tidyverse/magrittr pipes 
 #' library(magrittr)
 #' prepped_data <- msquant %>% ms_tidy %>%
-#'   ms_prepare(replicate = "replicate",
+#'   ms_summarize(replicate = "replicate",
 #'              batch = "batch",
 #'              groupingvars = "spike")
 #'
@@ -72,8 +72,7 @@
 #' @importFrom rlang !!!
 #' @importFrom stats median
 #' @importFrom stats sd
-#' @export
-ms_prepare <- function(data,
+ms_summarize <- function(data,
                        abundance     = "abundance",
                        met_id        = NULL,
                        mz            = NULL,
@@ -297,7 +296,7 @@ print.msprep <- function(x) {
 
 
 #
-# Internal ms_prepare functions
+# Internal ms_summarize functions
 #
 
 #' @importFrom dplyr case_when
