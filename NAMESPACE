@@ -3,7 +3,6 @@
 export(ms_filter)
 export(ms_impute)
 export(ms_normalize)
-export(ms_prepare)
 export(ms_tidy)
 importFrom(VIM,kNN)
 importFrom(crmn,normalize)
