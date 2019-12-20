@@ -16,10 +16,11 @@
 #' replicates.
 #' @param abundance Name of the abundance column.
 #' @param groupingvars Variable name or vector of names of the
-#' phenotypes or comparison groups.
-#' @param batch Name of the column representing batches.
+#' phenotypes or comparison groups. Set to NULL if none are present.
+#' @param batch Name of the column representing batches. Set to NULL if no batches present.
 #' @param mz Name of mass-to-charge ratio variable.
 #' @param rt Name of retention time variable.
+#' @param met_id Name of compound name variable.
 #' @param cvmax Decimal value from 0 to 1 representing the acceptable level of coefficient 
 #' of variation between replicates.
 #' @param missing_val Value of missing data in the quantification data file.
@@ -114,6 +115,9 @@ ms_summarize <- function(data,
   # Replace provided variable names with standardized ones
   data <- standardize_dataset(data, subject_id, replicate, abundance,
                               grouping_quo, batch, met_id, mz, rt)
+  
+  # Create ordered vector of column names to later store as object attribute
+  col_order <- colnames(data)[!(colnames(data) %in% c("met_id", "mz", "rt", "abundance", "replicate"))]
 
   # Replace miss val with NAs 
   data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
@@ -146,7 +150,8 @@ ms_summarize <- function(data,
     
     # Order columns
     summary_data  <- select_at(summary_data, 
-                               vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(met_syms), "abundance_summary"))
+                               vars(subject_id, batch, `!!!`(grouping_quo), 
+                                    `!!!`(met_syms), "abundance_summary"))
     
     # Create return object & return
     return(structure(list("data" = summary_data,
@@ -253,6 +258,7 @@ ms_summarize <- function(data,
             groupingvars           = groupingvars,
             batch_var              = batch,
             replicate_var          = replicate,
+            col_order              = col_order,
             stage = "prepared",
             class = "msprep")
 

@@ -6,15 +6,17 @@
 #' - RUV (remove unwanted variation)
 #' - SVA (surrogate variable analysis)
 #' - median 
-#' - CRMN(cross-contribution compensating multiple standard normalization)  
+#' - CRMN(cross-contribution compensating multiple standard normalization)
 #' 
 #' Combat to remove batch effects in raw, quantile, and median normalized data.
 #' Generates data driven controls if none exist.
 #' 
 #' @param msprep_obj Imputed MSPrep object.
-#' @param method Name of normalization method.
+#' @param normalizeMethod Name of normalization method.
 #' - ComBat (only ComBat batch correction)
+#' - quantile (only quantile normalization)
 #' - quantile + ComBat (quantile with ComBat batch correction)
+#' - median (only median normalization)
 #' - median + ComBat (median with ComBat batch correction)
 #' - CRMN
 #' - RUV
@@ -23,6 +25,11 @@
 #' @param controls Vector of control identifiers.  Leave blank for data driven
 #' controls. Vector of column numbers from metafin dataset of that control.
 #' @param n_comp Number of factors to use in CRMN algorithm.
+#' @param k_ruv Number of factors to use in RUV algorithm.
+#' @param transform Select transformation to apply to data prior to normalization.
+#' - log10
+#' - log2
+#' - none
 #' @return controls List of compounds that were used as controls.
 #' @return crmn_adj Log2 CRMN normalized data.
 #' @return log_data Log2 dataset (no normalization)
@@ -69,25 +76,25 @@
 #'   ms_tidy %>%
 #'   ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
 #'   ms_filter(filter_percent = 0.80) %>%
-#'   ms_impute(method = "halfmin")
-#' normalized_data_qC   <- ms_normalize(imputed_data, method = "quantile + ComBat")
-#' normalized_data_C    <- ms_normalize(imputed_data, method = "ComBat")
-#' normalized_data_sva  <- ms_normalize(imputed_data, method = "SVA")
-#' normalized_data_ruv  <- ms_normalize(imputed_data, method = "RUV")
-#' normalized_data_crmn <- ms_normalize(imputed_data, method = "CRMN")
-#' normalized_data_medC <- ms_normalize(imputed_data, method = "median + ComBat")
+#'   ms_impute(imputeMethod = "halfmin")
+#' normalized_data_qC   <- ms_normalize(imputed_data, normalizeMethod = "quantile + ComBat")
+#' normalized_data_C    <- ms_normalize(imputed_data, normalizeMethod = "ComBat")
+#' normalized_data_sva  <- ms_normalize(imputed_data, normalizeMethod = "SVA")
+#' normalized_data_ruv  <- ms_normalize(imputed_data, normalizeMethod = "RUV")
+#' normalized_data_crmn <- ms_normalize(imputed_data, normalizeMethod = "CRMN")
+#' normalized_data_medC <- ms_normalize(imputed_data, normalizeMethod = "median + ComBat")
 #'
 #'
 #' @export
 ms_normalize <- function(msprep_obj,
-                         method = c("ComBat",
-                                    "quantile",
-                                    "quantile + ComBat",
-                                    "median",
-                                    "median + ComBat",
-                                    "CRMN",
-                                    "RUV",
-                                    "SVA"),
+                         normalizeMethod = c("median",
+                                             "ComBat",
+                                             "quantile",
+                                             "quantile + ComBat",
+                                             "median + ComBat",
+                                             "CRMN",
+                                             "RUV",
+                                             "SVA"),
                          n_control = 10,
                          controls  = NULL,
                          n_comp    = 2,
@@ -101,7 +108,7 @@ ms_normalize <- function(msprep_obj,
   # NOTE: check whether all require imputation or if other valid stages
   #         consider checking for 0's and disallow transformation if present
   stopifnot(stage(msprep_obj) %in% c("imputed"))
-  method <- match.arg(method) # requires 1 argument from vec in function arg
+  normalizeMethod <- match.arg(normalizeMethod) # requires 1 argument from vec in function arg
   transform <- match.arg(transform)
 
   # Grab attributes for passing to fns
@@ -112,7 +119,7 @@ ms_normalize <- function(msprep_obj,
 
   # normalize/batch correct data
   data <-
-    switch(method,
+    switch(normalizeMethod,
            "ComBat"            = normalize_combat(data, groupingvars, batch, met_vars, transform),
            "quantile"          = normalize_quantile(data, groupingvars, batch, met_vars, transform),
            "quantile + ComBat" = normalize_quantile_combat(data, groupingvars, batch, met_vars, transform),
@@ -126,7 +133,7 @@ ms_normalize <- function(msprep_obj,
 
   # Prep output object
   msprep_obj$data  <- data
-  attr(msprep_obj, "normalize_method") <- method
+  attr(msprep_obj, "normalize_method") <- normalizeMethod
   stage(msprep_obj) <- "normalized"
 
   # ...and:
@@ -366,12 +373,12 @@ normalize_median_combat <- function(data, groupingvars, batch, met_vars, n_contr
     wide_trans <- wide
   }
   
-  if(transform == "log2" | transform == "log10") {
-    normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "/")
-  }
-  else {
-    normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "-")
-  }
+  #if(transform == "log2" | transform == "log10") {
+   # normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "/")
+  #}
+  #else {
+    normed_med <- sweep(wide_trans, 1, apply(wide_trans, 1, median), "-")
+  #}
   
   normed_med <- wide_matrix_to_data(normed_med, groupingvars, batch, met_vars)
   rtn        <- combat(normed_med, groupingvars, batch, met_vars, transform = "None")
@@ -394,12 +401,12 @@ normalize_median <- function(data, groupingvars, batch, met_vars, transform) {
     wide_trans <- wide
   }
   
-  if(transform == "log2" | transform == "log10") {
-    normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "/")
-  }
-  else {
-    normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "-")
-  }
+  #if(transform == "log2" | transform == "log10") {
+   # normed_med <- sweep(wide_trans, 2, apply(wide_trans, 2, median), "/")
+  #}
+  #else {
+    normed_med <- sweep(wide_trans, 1, apply(wide_trans, 1, median), "-")
+  #}
   
   normed_med <- wide_matrix_to_data(normed_med, groupingvars, batch, met_vars)
   

@@ -49,6 +49,14 @@ met_vars <- function(x) attr(x, "met_vars")
   x
 }
 
+# Functions for assigning and getting col_order
+col_order <- function(x) attr(x, "col_order")
+
+`col_order<-` <- function(x, value) {
+  attr(x, "col_order") <- value
+  x
+}
+
 # Standard arrange for data object used in msprep_obj
 #' @importFrom dplyr arrange
 #' @importFrom rlang syms

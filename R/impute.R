@@ -4,14 +4,17 @@
 #' or grouping variables).
 #'
 #' @param msprep_obj Filtered MSPrep object.
-#' @param method Name of imputation method to use. 
+#' @param imputeMethod Name of imputation method to use. 
 #' Options are:
 #' - halfmin (half the minimum value)
 #' - bpca (Bayesian PCA)
 #' - knn (k-nearest neighbors)
-#' @param k Number of clusters for 'knn' method.
-#' @param nPcs Number of  principle components used for re-estimation for 
+#' @param k_knn Number of clusters for 'knn' method.
+#' @param n_pcs Number of  principle components used for re-estimation for 
 #' 'bpca' method.
+#' @param compoundsAsNeighbors If TRUE, will use compounds as neighbors for KNN imputation
+#' rather than samples. Note, using compounds as neighbors is significantly slower than using
+#' samples as neighbors.
 #' @return An msprep object with missing data imputed.
 #' @details minval Filtered dataset with missing values replaced by 1/2 minimum
 #' observed value for that compound.
@@ -34,19 +37,21 @@
 #'              batch = "batch", 
 #'              groupingvars = "spike") %>% 
 #'   ms_filter(0.80)
-#' imputed_data  <- ms_impute(filtered_data, "halfmin")
+#' imputed_data  <- ms_impute(filtered_data, imputeMethod = "halfmin")
 #'
 #' @importFrom dplyr case_when
 #' @importFrom dplyr mutate_at
 #' @export
 ms_impute <- function(msprep_obj,
-                      method = c("halfmin", "bpca", "knn"),
-                      k = 5, nPcs = 3, compoundsAsNeighbors = FALSE) {
+                      imputeMethod = c("halfmin", "bpca", "knn"),
+                      k_knn = 5, 
+                      n_pcs = 3, 
+                      compoundsAsNeighbors = FALSE) {
 
   # Validate inputs
   stopifnot(class(msprep_obj) == "msprep")
   stopifnot(stage(msprep_obj) %in% c("filtered", "normalized"))
-  method <- match.arg(method) # requires 1 argument from vec in function arg
+  imputeMethod <- match.arg(imputeMethod) # requires 1 argument from vec in function arg
 
   # Prep data - replace 0's with NA's -- for minval and bpca() (all methods?)
   data <- mutate_at(msprep_obj$data, vars("abundance_summary"), 
@@ -57,15 +62,15 @@ ms_impute <- function(msprep_obj,
 
   # Impute data
   data <-
-    switch(method,
+    switch(imputeMethod,
            "halfmin" = impute_halfmin(data, grp, batch, met_vars),
-           "bpca"    = impute_bpca(data, grp, batch, met_vars, nPcs),
-           "knn"     = impute_knn(data, grp, batch, met_vars, k, compoundsAsNeighbors),
+           "bpca"    = impute_bpca(data, grp, batch, met_vars, n_pcs),
+           "knn"     = impute_knn(data, grp, batch, met_vars, k_knn, compoundsAsNeighbors),
            stop("Invalid impute method - you should never see this warning."))
 
   # Prep output object
   msprep_obj$data  <- data
-  attr(msprep_obj, "impute_method") <- method
+  attr(msprep_obj, "impute_method") <- imputeMethod
   stage(msprep_obj) <- "imputed"
 
   # ...and:
@@ -116,11 +121,11 @@ impute_halfmin <- function(data, groupingvars, batch, met_vars) {
 
 #' @importFrom pcaMethods pca
 #' @importFrom pcaMethods completeObs
-impute_bpca <- function(data, groupingvars, batch, met_vars, nPcs = 3) {
+impute_bpca <- function(data, groupingvars, batch, met_vars, n_pcs = 3) {
 
   # 1. Bayesian pca imputation
   data <- data_to_wide_matrix(data, groupingvars, batch, met_vars) 
-  data <- pca(data, nPcs = nPcs, method = "bpca")
+  data <- pca(data, nPcs = n_pcs, method = "bpca")
   data <- completeObs(data) # extract imputed dataset
   data <- wide_matrix_to_data(data, groupingvars, batch, met_vars)
   data <- halfmin_if_any_negative(data, groupingvars, batch, met_vars)
@@ -131,7 +136,7 @@ impute_bpca <- function(data, groupingvars, batch, met_vars, nPcs = 3) {
 
 
 #' @importFrom VIM kNN
-impute_knn <- function(data, groupingvars, batch, met_vars, k = 5, compoundsAsNeighbors) {
+impute_knn <- function(data, groupingvars, batch, met_vars, k_knn = 5, compoundsAsNeighbors) {
   
   data <- data_to_wide_matrix(data, groupingvars, batch, met_vars) 
   rwnm <- rownames(data)
@@ -139,11 +144,11 @@ impute_knn <- function(data, groupingvars, batch, met_vars, k = 5, compoundsAsNe
   
   # Perform kNN imputation using compounds or samples as neighbors
   if (compoundsAsNeighbors == TRUE) {
-    data <- VIM:::kNN(as.data.frame(data), k = k, imp_var = FALSE)
+    data <- VIM:::kNN(as.data.frame(data), k = k_knn, imp_var = FALSE)
   }
   else {
     ### transpose
-    data <- VIM:::kNN(as.data.frame(t(data)), k = k, imp_var = FALSE)
+    data <- VIM:::kNN(as.data.frame(t(data)), k = k_knn, imp_var = FALSE)
     
     ## transpose again (to 'untranspose' basically)
     data <- t(data)
