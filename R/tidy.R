@@ -3,9 +3,10 @@
 #'
 #' Function reads in wide dataset of mass spectrometry quantification data and converts
 #' it to a tidy dataset.  This function assumes that the dataset is in a wide
-#' format, with a column representing the retention time (rt), another
+#' format, with a combination of columns representing the retention time (rt), another
 #' representing the mass-to-charge ratio (mz), and the remaining columns
-#' containing MS quantification data.  
+#' containing MS quantification data. Optionally, the data may also include a column
+#' specifying compound name (met_id) as an addition to or replacement of rt/mz columns. 
 #' 
 #' It also assumes that the column names of quantification data start with some
 #' consistent, informational but unnecessary text (col_extra_txt), and contain
@@ -18,6 +19,7 @@
 #' and \code{tidyr::separate()}.
 #'
 #' @param quantification_data Data frame containing the quantification data.
+#' @param met_id Name of the column containing compound names.
 #' @param mz Name of the column containing mass-to-charge ratios.
 #' @param rt Name of the column containing retention time.
 #' @param col_extra_txt Text to remove from column names when converting column names to

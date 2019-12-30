@@ -134,7 +134,7 @@ ms_prepare <- function(quantification_data,
                     n_pcs = n_pcs, 
                     compoundsAsNeighbors = compoundsAsNeighbors)
  
-  cat("Normalizing")
+  cat("Normalizing\n")
   data <- ms_normalize(data,
                        normalizeMethod = normalizeMethod,
                        n_control = n_control,

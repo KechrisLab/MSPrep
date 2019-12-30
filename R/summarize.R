@@ -73,6 +73,9 @@
 #' @importFrom rlang !!!
 #' @importFrom stats median
 #' @importFrom stats sd
+#' 
+#' @export
+
 ms_summarize <- function(data,
                        abundance     = "abundance",
                        met_id        = NULL,
