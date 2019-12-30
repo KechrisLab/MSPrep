@@ -119,9 +119,9 @@ ms_prepare <- function(quantification_data,
                        replicate     = replicate,
                        batch         = batch,
                        groupingvars = groupingvars,
-                       cvmax         = 0.50,
-                       missing_val   = 1,
-                       min_proportion_present = 1/3)
+                       cvmax         = cvmax,
+                       missing_val   = missing_val,
+                       min_proportion_present = min_proportion_present)
   
   cat("Filtering\n")  
   data <- ms_filter(data,
