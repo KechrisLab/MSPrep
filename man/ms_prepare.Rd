@@ -2,72 +2,104 @@
 % Please edit documentation in R/prepare.R
 \name{ms_prepare}
 \alias{ms_prepare}
-\title{Prepare a mass spec quantification data frame for filtering, imputation,
-and normalization. Also provides summaries of data structure (replicates,
-subjects, groupingvars, etc.)}
+\title{Tidy, summarize, filter, impute, and normalize metabolomics dataset}
 \usage{
-ms_prepare(data, abundance = "abundance", mz = "mz", rt = "rt",
+ms_prepare(quantification_data, met_id = NULL, mz = NULL, rt = NULL,
+  col_extra_txt = NULL, col_names = c("subject_id"),
+  separator = NULL, abundance = "abundance",
   subject_id = "subject_id", replicate = NULL, batch = NULL,
   groupingvars = NULL, cvmax = 0.5, missing_val = 1,
-  min_proportion_present = 1/3)
+  min_proportion_present = 1/3, filter_percent = 0.5,
+  imputeMethod = c("halfmin", "bpca", "knn", "none"), k_knn = 5,
+  n_pcs = 3, compoundsAsNeighbors = FALSE,
+  normalizeMethod = c("ComBat", "quantile", "quantile + ComBat",
+  "median", "median + ComBat", "CRMN", "RUV", "SVA", "none"),
+  n_control = 10, controls = NULL, n_comp = 2, k_ruv = 3,
+  transform = c("log10", "log2", "none"))
 }
 \arguments{
-\item{data}{A tidy dataframe of quantification data.}
+\item{quantification_data}{Data frame containing the quantification data.}
 
-\item{abundance}{Name (string) of the abundance column.}
+\item{met_id}{Name of the column containing compound names.}
 
-\item{mz}{Mass-to-charge ratio variable name.}
+\item{mz}{Name of the column containing mass-to-charge ratios.}
 
-\item{rt}{Retention time variable name.}
+\item{rt}{Name of the column containing retention time.}
 
-\item{subject_id}{Name (string) of the subject ID column.}
+\item{col_extra_txt}{Text to remove from column names when converting column names to
+variables.}
 
-\item{replicate}{Name (string) of the replicate column. Set to NULL if no
-replicates. TODO: test NULL.}
+\item{col_names}{Vector of the ordered ID names to extract from the existing column
+names.}
 
-\item{batch}{Name (string) of the column representing batches.}
+\item{separator}{Character or text separating the variable names sepecified by
+\code{col_names}}
 
-\item{groupingvars}{Variable name (string) or vector of names of the
-phenotypes or comparison groups.}
+\item{abundance}{Name of the abundance column.}
 
-\item{cvmax}{Acceptable level of coefficient of variation between replicates.}
+\item{subject_id}{Name of the subject ID column.}
+
+\item{replicate}{Name of the replicate column. Set to NULL if no
+replicates.}
+
+\item{batch}{Name of the column representing batches. Set to NULL if no batches present.}
+
+\item{groupingvars}{Variable name or vector of names of the
+phenotypes or comparison groups. Set to NULL if none are present.}
+
+\item{cvmax}{Decimal value from 0 to 1 representing the acceptable level of coefficient 
+of variation between replicates.}
 
 \item{missing_val}{Value of missing data in the quantification data file.}
 
-\item{min_proportion_present}{Minimum proportion present to summarize with
-median or mean. Below this the compound will be set to 0.}
-}
-\value{
-An `msprep` object with `stage(rtn) == "prepared"` containing
-summarised quantification data, a dataset of compounds summarised by medians,
-and other related summaries.
+\item{min_proportion_present}{Decimal value from 0 to 1 representing the minimum proportion present 
+to summarize with median or mean. Below this the compound will be set to 0.}
+
+\item{filter_percent}{Decimal value representing to proportion to filter the data.}
+
+\item{imputeMethod}{Name of imputation method to use. 
+Options are:
+- halfmin (half the minimum value)
+- bpca (Bayesian PCA)
+- knn (k-nearest neighbors)}
+
+\item{k_knn}{Number of clusters for 'knn' method.}
+
+\item{n_pcs}{Number of  principle components used for re-estimation for 
+'bpca' method.}
+
+\item{compoundsAsNeighbors}{If TRUE, will use compounds as neighbors for KNN imputation
+rather than samples. Note, using compounds as neighbors is significantly slower than using
+samples as neighbors.}
+
+\item{normalizeMethod}{Name of normalization method.
+- ComBat (only ComBat batch correction)
+- quantile (only quantile normalization)
+- quantile + ComBat (quantile with ComBat batch correction)
+- median (only median normalization)
+- median + ComBat (median with ComBat batch correction)
+- CRMN
+- RUV
+- SVA}
+
+\item{n_control}{Number of controls to estimate/utilize.}
+
+\item{controls}{Vector of control identifiers.  Leave blank for data driven
+controls. Vector of column numbers from metafin dataset of that control.}
+
+\item{n_comp}{Number of factors to use in CRMN algorithm.}
+
+\item{k_ruv}{Number of factors to use in RUV algorithm.}
+
+\item{transform}{Select transformation to apply to data prior to normalization.
+- log10
+- log2
+- none}
 }
 \description{
-Function reads in raw data files and summarizes technical replicates as the
-mean of observations for compounds found in 2 or 3 replicates and with
-coefficient of variation below specified level, or median for those found in
-3 replicates but excess CV.
+Calls ms_tidy, ms_summarize, ms_filter, ms_impute, and ms_normalize
 }
-\examples{
-
-# Read in data file
-data(msquant)
-
-# Convert dataset to tidy format
-tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-prepped_data <- ms_prepare(tidy_data, 
-                           replicate = "replicate", 
-                           batch = "batch",
-                           groupingvars = "spike")
-
-# Or, using tidyverse/magrittr pipes 
-library(magrittr)
-prepped_data <- msquant \%>\% ms_tidy \%>\%
-  ms_prepare(replicate = "replicate",
-             batch = "batch",
-             groupingvars = "spike")
-
-str(prepped_data)
-str(prepped_data$summary_data)
-
+\details{
+Wrapper function for ms_tidy, ms_summarize, ms_filter, ms_impute, and
+ms_normalize.
 }

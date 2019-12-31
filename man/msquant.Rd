@@ -3,7 +3,7 @@
 \docType{data}
 \name{msquant}
 \alias{msquant}
-\title{Example quantification dataset}
+\title{Example mass spectrometry dataset.}
 \format{\code{
 'data.frame':   2654 obs. of  29 variables:
  $ mz                              : num  577 539 724 525 483 ...
@@ -19,14 +19,16 @@
 msquant
 }
 \description{
-Mass spec example dataset with 2 subjects.
+Size: 2644 obs. of 56 variables.
 }
 \details{
+Data contains samples for 2 subjects. First two variables are:
 mz = Mass/Charge ratio
 rt = Retention time
 
-The indicators in the column names are spike-in (e.g. 1x), batch (e.g. 01),
-technical replicate (e.g. A), and subject ID (e.g. 01).
+The other 54 variables are all combinations of spike-in spike-in (1x, 2x, 4x), 
+batch (O1, O2, O3), technical replicate (A, B, C), and subject ID (01, 02). These
+are indicated in the column names, separated by '_'.
 }
 \examples{
   data(msquant)

@@ -2,20 +2,31 @@
 % Please edit documentation in R/impute.R
 \name{ms_impute}
 \alias{ms_impute}
-\title{Imputes dataset}
+\title{Function for imputing on filtered data.}
 \usage{
-ms_impute(msprep_obj, method = c("halfmin", "bpca", "knn"), k = 5)
+ms_impute(msprep_obj, imputeMethod = c("halfmin", "bpca", "knn"),
+  k_knn = 5, n_pcs = 3, compoundsAsNeighbors = FALSE)
 }
 \arguments{
-\item{msprep_obj}{An MSPrep object that has been filtered and normalized}
+\item{msprep_obj}{Filtered MSPrep object.}
 
-\item{method}{Imputation method.  One of half-min (half the minimum value),
-bpca (Bayesian PCA), knn (k-nearest neighbors).}
+\item{imputeMethod}{Name of imputation method to use. 
+Options are:
+- halfmin (half the minimum value)
+- bpca (Bayesian PCA)
+- knn (k-nearest neighbors)}
 
-\item{k}{Number of clusters for 'knn' method.}
+\item{k_knn}{Number of clusters for 'knn' method.}
+
+\item{n_pcs}{Number of  principle components used for re-estimation for 
+'bpca' method.}
+
+\item{compoundsAsNeighbors}{If TRUE, will use compounds as neighbors for KNN imputation
+rather than samples. Note, using compounds as neighbors is significantly slower than using
+samples as neighbors.}
 }
 \value{
-A msprep object with missing data imputed.
+An msprep object with missing data imputed.
 }
 \description{
 Performs data imputation for a given mz_rt value (not separately for batches
@@ -39,7 +50,7 @@ filtered_data <- msquant \%>\% ms_tidy \%>\%
              batch = "batch", 
              groupingvars = "spike") \%>\% 
   ms_filter(0.80)
-imputed_data  <- ms_impute(filtered_data, "halfmin")
+imputed_data  <- ms_impute(filtered_data, imputeMethod = "halfmin")
 
 }
 \references{

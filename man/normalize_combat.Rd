@@ -4,7 +4,7 @@
 \alias{normalize_combat}
 \title{Apply only batch correction via ComBat}
 \usage{
-normalize_combat(data, groupingvars, batch)
+normalize_combat(data, groupingvars, batch, met_vars, transform)
 }
 \arguments{
 \item{data}{The 'data' element from MSPrep object (msprep_obj).}

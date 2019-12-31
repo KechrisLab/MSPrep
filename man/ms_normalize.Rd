@@ -2,18 +2,25 @@
 % Please edit documentation in R/normalize.R
 \name{ms_normalize}
 \alias{ms_normalize}
-\title{Perform normalization and batch corrections}
+\title{Function for performing normalization and batch corrections on imputed data.}
 \usage{
-ms_normalize(msprep_obj, method = c("ComBat", "quantile + ComBat",
-  "median + ComBat", "CRMN", "RUV", "SVA"), n_control = 10,
-  controls = NULL, n_comp = 2)
+ms_normalize(msprep_obj, normalizeMethod = c("median", "ComBat",
+  "quantile", "quantile + ComBat", "median + ComBat", "CRMN", "RUV",
+  "SVA"), n_control = 10, controls = NULL, n_comp = 2, k_ruv = 3,
+  transform = c("log10", "log2", "none"))
 }
 \arguments{
-\item{msprep_obj}{An MSPrep object that has been filtered, normalized, and
-imputed.}
+\item{msprep_obj}{Imputed MSPrep object.}
 
-\item{method}{One of 6 methods.  3 are normalization and 3 are batch
-correction + normalization? TODO: updated this.}
+\item{normalizeMethod}{Name of normalization method.
+- ComBat (only ComBat batch correction)
+- quantile (only quantile normalization)
+- quantile + ComBat (quantile with ComBat batch correction)
+- median (only median normalization)
+- median + ComBat (median with ComBat batch correction)
+- CRMN
+- RUV
+- SVA}
 
 \item{n_control}{Number of controls to estimate/utilize.}
 
@@ -21,38 +28,52 @@ correction + normalization? TODO: updated this.}
 controls. Vector of column numbers from metafin dataset of that control.}
 
 \item{n_comp}{Number of factors to use in CRMN algorithm.}
+
+\item{k_ruv}{Number of factors to use in RUV algorithm.}
+
+\item{transform}{Select transformation to apply to data prior to normalization.
+- log10
+- log2
+- none}
 }
 \value{
-controls List of compounds that were used as controls
+controls List of compounds that were used as controls.
 
-crmn_adj CRMN adjusted dataset (log2)
+crmn_adj Log2 CRMN normalized data.
 
-log_data Log2 data with no adjustment
+log_data Log2 dataset (no normalization)
 
-log_data_combat Log2 data with Combat batch adjustment
+log_data_combat Log2 with ComBat batch effect corrected dataset.
 
-log_quant Log2 Quantile adjusted
+log_quant Log2 quantile normalized dataset.
 
-log_quant_combat Log2 Quantile with Combat data
+log_quant_combat Log2 quantile with ComBat correction normalized dataset.
 
-med_adj Median adjusted dataset
+med_adj Median normalized dataset.
 
-med_combat Median adjusted with Combat
+med_combat Median with ComBat normalized dataset.
 
-ruv_adj RUV adjusted dataset (log2)
+ruv_adj Log2 RUV normalized dataset .
 
 ruv_factors Matrix of factors generated in RUV for use as covariates
 in later analysis.
 
-sva_adj SVA adjusted dataset (log2)
+sva_adj Log2 SVA normalized dataset.
 
 sva_factors Matrix of factors generated in SVA for use as covariates
 in later analysis.
 }
 \description{
 Perform normalization and batch corrections on specified imputation dataset.
-Routines included are quantile, RUV, SVA, median, and CRMN.  Combat to
-remove batch effects in raw, quantile, and median normalized data.
+Routines included are: 
+- quantile
+- RUV (remove unwanted variation)
+- SVA (surrogate variable analysis)
+- median 
+- CRMN(cross-contribution compensating multiple standard normalization)
+}
+\details{
+Combat to remove batch effects in raw, quantile, and median normalized data.
 Generates data driven controls if none exist.
 }
 \examples{
@@ -66,13 +87,13 @@ imputed_data <-
   ms_tidy \%>\%
   ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") \%>\%
   ms_filter(filter_percent = 0.80) \%>\%
-  ms_impute(method = "halfmin")
-normalized_data_qC   <- ms_normalize(imputed_data, method = "quantile + ComBat")
-normalized_data_C    <- ms_normalize(imputed_data, method = "ComBat")
-normalized_data_sva  <- ms_normalize(imputed_data, method = "SVA")
-normalized_data_ruv  <- ms_normalize(imputed_data, method = "RUV")
-normalized_data_crmn <- ms_normalize(imputed_data, method = "CRMN")
-normalized_data_medC <- ms_normalize(imputed_data, method = "median + ComBat")
+  ms_impute(imputeMethod = "halfmin")
+normalized_data_qC   <- ms_normalize(imputed_data, normalizeMethod = "quantile + ComBat")
+normalized_data_C    <- ms_normalize(imputed_data, normalizeMethod = "ComBat")
+normalized_data_sva  <- ms_normalize(imputed_data, normalizeMethod = "SVA")
+normalized_data_ruv  <- ms_normalize(imputed_data, normalizeMethod = "RUV")
+normalized_data_crmn <- ms_normalize(imputed_data, normalizeMethod = "CRMN")
+normalized_data_medC <- ms_normalize(imputed_data, normalizeMethod = "median + ComBat")
 
 
 }
