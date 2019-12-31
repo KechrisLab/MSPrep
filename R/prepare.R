@@ -80,18 +80,22 @@ ms_prepare <- function(quantification_data,
                        missing_val = 1,
                        min_proportion_present = 1/3,
                        filter_percent = .5,
-                       imputeMethod = c("halfmin", "bpca", "knn"),
+                       imputeMethod = c("halfmin",
+                                        "bpca", 
+                                        "knn", 
+                                        "none"),
                        k_knn = 5, 
                        n_pcs = 3, 
                        compoundsAsNeighbors = FALSE,
                        normalizeMethod = c("ComBat",
-                                  "quantile",
-                                  "quantile + ComBat",
-                                  "median",
-                                  "median + ComBat",
-                                  "CRMN",
-                                  "RUV",
-                                  "SVA"),
+                                           "quantile",
+                                           "quantile + ComBat",
+                                           "median",
+                                           "median + ComBat",
+                                           "CRMN",
+                                           "RUV",
+                                           "SVA",
+                                           "none"),
                        n_control = 10,
                        controls  = NULL,
                        n_comp    = 2,
@@ -126,22 +130,26 @@ ms_prepare <- function(quantification_data,
   cat("Filtering\n")  
   data <- ms_filter(data,
                     filter_percent = filter_percent)
- 
-  cat("Imputing\n")
-  data <- ms_impute(data,
-                    imputeMethod = imputeMethod,
-                    k = k_knn, 
-                    n_pcs = n_pcs, 
-                    compoundsAsNeighbors = compoundsAsNeighbors)
- 
-  cat("Normalizing\n")
-  data <- ms_normalize(data,
-                       normalizeMethod = normalizeMethod,
-                       n_control = n_control,
-                       controls  = controls,
-                       n_comp    = n_comp,
-                       k_ruv     = k_ruv,
-                       transform = transform)
+  
+  if(imputeMethod != "none") {
+    cat("Imputing\n")
+    data <- ms_impute(data,
+                      imputeMethod = imputeMethod,
+                      k = k_knn, 
+                      n_pcs = n_pcs, 
+                      compoundsAsNeighbors = compoundsAsNeighbors)
+  }
+  
+  if(normalizeMethod != "none"){
+    cat("Normalizing\n")
+    data <- ms_normalize(data,
+                         normalizeMethod = normalizeMethod,
+                         n_control = n_control,
+                         controls  = controls,
+                         n_comp    = n_comp,
+                         k_ruv     = k_ruv,
+                         transform = transform)
+  }
   
   cat("Returning")
   data <- ms_return(data)
