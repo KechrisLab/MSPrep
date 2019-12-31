@@ -17,7 +17,7 @@ tidy_data    <- ms_tidy(quant, mz = "mz", rt = "rt",
                         col_extra_txt = "Neutral_Operator_Dif_Pos_", 
                         separator = "_", 
                         col_names = c("spike", "batch", "replicate", "subject_id"))
-prepped_data <- tidy_data %>% ms_prepare(mz = "mz",
+prepped_data <- tidy_data %>% ms_summarize(mz = "mz",
                                          rt = "rt",
                                          replicate = "replicate", 
                                          batch = "batch",

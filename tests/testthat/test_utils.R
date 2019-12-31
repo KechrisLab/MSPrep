@@ -7,7 +7,7 @@ tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt",
                            separator = "_", 
                            col_names = c("spike", "batch", "replicate", "subject_id"))
 prepped_data    <- tidy_data %>% 
-  ms_prepare(mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike")
+  ms_summarize(mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike")
 
 test_that("Check dataset transformations give back original dataset.", {
 
