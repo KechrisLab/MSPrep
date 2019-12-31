@@ -134,6 +134,7 @@ ms_normalize <- function(msprep_obj,
   # Prep output object
   msprep_obj$data  <- data
   attr(msprep_obj, "normalize_method") <- normalizeMethod
+  attr(msprep_obj, "transformation") <- transform
   stage(msprep_obj) <- "normalized"
 
   # ...and:

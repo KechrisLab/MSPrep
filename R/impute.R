@@ -59,6 +59,9 @@ ms_impute <- function(msprep_obj,
   grp <- grouping_vars(msprep_obj)
   batch <- batch_var(msprep_obj)
   met_vars <- met_vars(msprep_obj)
+  
+  # Store number of missing values
+  missingCount <- sum(is.na(data$abundance_summary))
 
   # Impute data
   data <-
@@ -71,6 +74,7 @@ ms_impute <- function(msprep_obj,
   # Prep output object
   msprep_obj$data  <- data
   attr(msprep_obj, "impute_method") <- imputeMethod
+  attr(msprep_obj, "missing_count") <- missingCount
   stage(msprep_obj) <- "imputed"
 
   # ...and:

@@ -251,52 +251,101 @@ ms_summarize <- function(data,
   n_compounds    <- nrow(distinct(select(quant_summary, `!!!`(met_syms))))
 
   # Create return object & return
-  structure(list("data" = summary_data,
-                 replicate_info  = replicate_info,
-                 medians         = medians),
-            replicate_count        = replicate_count,
-            cvmax                  = cvmax,
-            min_proportion_present = min_proportion_present,
-            met_vars               = met_vars,
-            groupingvars           = groupingvars,
-            batch_var              = batch,
-            replicate_var          = replicate,
-            col_order              = col_order,
-            stage = "prepared",
-            class = "msprep")
+  rtn <- structure(list("data" = summary_data,
+                           replicate_info  = replicate_info,
+                           medians         = medians),
+                      replicate_count        = replicate_count,
+                      cvmax                  = cvmax,
+                      min_proportion_present = min_proportion_present,
+                      met_vars               = met_vars,
+                      groupingvars           = groupingvars,
+                      batch_var              = batch,
+                      replicate_var          = replicate,
+                      col_order              = col_order,
+                      stage = "prepared",
+                      class = "msprep")
+  
+  attr(rtn, "patient_count") <- length(unique(rtn$data$subject_id))
+  
+  return(rtn)
 
 }
 
+#' Print function for msprep object
+#' 
+#' @param x An msprep object
+#' 
+#' @export
 print.msprep <- function(x) {
 
   stage <- stage(x)
-  if (is.null(batch_var(x)))  {
-    batch_statement <- "" 
-  } else {
-    batch_statement <- paste0("; Batch var: ", batch_var(x))
-  }
 
+  # Print object info
   cat("msprep dataset\n")
   cat(paste("    Stage:", stage, "\n"))
   cat("    Replicate count: ", attr(x, "replicate_count"), "\n")
-  cat("    Patient count: ", length(unique(x$data$subject_id)), "\n")
-  cat("    Grouping vars:", paste(grouping_vars(x), collapse = ", "),
-      batch_statement, "\n")
-  cat("    Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
+  cat("    Patient count: ", attr(x, "patient_count"), "\n")
+  
+  # Print grouping vars (may be NULL)
+  if (!is.null(grouping_vars(x))) {
+    cat("    Grouping vars:", paste(grouping_vars(x), collapse = ", "), "\n")
+  }
+  else {
+    cat("    Grouping vars: none present\n")
+  }
+  
+  # Print batch var (may be NULL)
+  if (!is.null(batch_var(x))) {
+    cat("    Batch var: ", batch_var(x), "\n")
+  }
+  else {
+    cat("    Batch var: none present\n")
+  }
+  
+  # Print met_vars (never NULL)
+  cat("    Met vars: ", paste(attr(x, "met_vars"), collapse = ", "), "\n")
+  
+  # Print median summarized count (may be NULL)
+  if (!is.null(x$medians)) {
+    cat("    Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
+  }
+  else {
+    cat("    Count of patient-compounds summarized by median: 0\n")
+  }
+  
+  # Print summary info
   cat("    Prepare summary: \n")
   cat("        User-defined parameters: \n")
   cat("          cvmax = ", attr(x, "cvmax"), "\n")
-  cat("          min_proportion_present = ", round(attr(x, "min_proportion_present"), digits=3), "\n")
+  cat("          min_proportion_present = ", 
+      round(attr(x, "min_proportion_present"), digits = 3), "\n")
+  
+  # Print filter info
   if (stage %in% msprep_stages()[2:4]) {
     cat("    Filter summary:\n")
-    cat("      User-defined parameters: \n")
-    cat("        filter percent = ", attr(x, "filter_percent"), "\n")
-    cat("      Resulting stats: \n")
-    cat("        Count of compounds present in >= ", 
+    cat("        User-defined parameters: \n")
+    cat("          Filter percent = ", attr(x, "filter_percent"), "\n")
+    cat("        Resulting stats: \n")
+    cat("          Count of compounds present in >= ", 
         round(attr(x, "filter_percent")*100, digits = 3), "% of patients = ", 
-        sum(attr(x, "filter_status")$keep), "\n")
+        sum(attr(x, "filter_status")$keep), "\n", sep = "")
+  }
+  
+  # Print imputation info
+  if (stage %in% msprep_stages()[3:4]) {
+    cat("    Imputation Summary:\n")
+    cat("        Imputation Method: ", attr(x, "impute_method"), "\n")
+    cat("        Number of imputed values: ", attr(x, "missing_count"), "\n")
+  }
+  
+  # Print normalization info
+  if (stage %in% msprep_stages()[4]) {
+    cat("    Normalization Summary:\n")
+    cat("        Normalization Method: ", attr(x, "normalize_method"), "\n")
+    cat("        Transformation: ", attr(x, "transformation"), "\n")
   }
 
+  # Print dataset (head)
   cat("    Dataset:\n")
   print(x$data, n = 6)
 
