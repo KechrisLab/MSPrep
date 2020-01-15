@@ -167,6 +167,7 @@ ms_summarize <- function(data,
               groupingvars           = groupingvars,
               batch_var              = batch,
               replicate_var          = replicate,
+              col_order              = col_order,
               stage = "prepared",
               class = "msprep"))
   
