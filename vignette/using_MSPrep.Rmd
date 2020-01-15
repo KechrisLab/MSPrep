@@ -10,10 +10,10 @@ author:
       email: jacobsons@njhealth.org
       affiliation: National Jewish Hospital
     - name: Harrison Pielke-Lombardo
-      email: harrison.pielke-lombardo@ucdenver.edu
+      email: harrison.pielke-lombardo@cuanschutz.edu
       affiliation: University of Colorado Anschutz Medical Campus
     - name: Katerina Kechris
-      email: katerina.kechris@ucdenver.edu
+      email: katerina.kechris@cuanschutz.edu
       affiliation: University of Colorado Anschutz Medical Campus
 package: MSPrep
 output: 
