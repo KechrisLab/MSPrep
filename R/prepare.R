@@ -62,6 +62,33 @@
 #' @details Wrapper function for ms_tidy, ms_summarize, ms_filter, ms_impute, and
 #' ms_normalize.
 #' 
+#' @examples 
+#' # Load example data
+#' data(msquant)
+#' 
+#' # Call function to tidy, summarize, filter, impute, and normalize data
+#' prepared_data <- ms_prepare(msquant,
+#'                             mz = "mz",
+#'                             rt = "rt",
+#'                             col_extra_txt = "Neutral_Operator_Dif_Pos_",
+#'                             col_names = c("spike", "batch", "replicate", "subject_id"),
+#'                             separator = "_",
+#'                             abundance = "abundance",
+#'                             subject_id = "subject_id",
+#'                             replicate = "replicate",
+#'                             batch = "batch",
+#'                             groupingvars = "spike",
+#'                             cvmax = 0.50,
+#'                             missing_val = 1,
+#'                             min_proportion_present = 1/3,
+#'                             filter_percent = .8,
+#'                             imputeMethod = "halfmin",
+#'                             normalizeMethod = "median")
+#' 
+#' # Print summary
+#' print(prepared_data)
+#' 
+#' 
 #' @export
 
 ms_prepare <- function(quantification_data,
@@ -79,7 +106,7 @@ ms_prepare <- function(quantification_data,
                        cvmax = 0.50,
                        missing_val = 1,
                        min_proportion_present = 1/3,
-                       filter_percent = .5,
+                       filter_percent = .8,
                        imputeMethod = c("halfmin",
                                         "bpca", 
                                         "knn", 
@@ -135,7 +162,7 @@ ms_prepare <- function(quantification_data,
     cat("Imputing\n")
     data <- ms_impute(data,
                       imputeMethod = imputeMethod,
-                      k = k_knn, 
+                      k_knn = k_knn, 
                       n_pcs = n_pcs, 
                       compoundsAsNeighbors = compoundsAsNeighbors)
   }

@@ -54,11 +54,14 @@ and \code{tidyr::separate()}.
 
   # load raw abundance/quantification dataset
   data(msquant)
-
+  
   # print original dataset (using tibble's nice printing)
-  tibble::as_data_frame(msquant) 
-
+  tibble::as_tibble(msquant) 
+  
   # tidy the dataset and print it
-  ms_tidy(msquant, mz = "mz", rt = "rt")
+  ms_tidy(msquant, mz = "mz", rt = "rt", 
+          col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+          separator = "_", 
+          col_names = c("spike", "batch", "replicate", "subject_id"))
 
 }

@@ -6,7 +6,7 @@
 # Three fns for assigning and getting stage attribute (for tracking object
 # progress through pipeline)
 msprep_stages <- function() {
-  c("prepared", "filtered", "imputed", "normalized")
+  c("summarized", "filtered", "imputed", "normalized")
 }
 
 stage <- function(x) attr(x, "stage")

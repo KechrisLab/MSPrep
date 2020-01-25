@@ -5,7 +5,7 @@
 #' and normalization. Also provides summaries of data structure (replicates,
 #' subjects, groupingvars, etc.)
 #'
-#' Function reads in raw data files and summarizes technical replicates as the
+#' Function reads tidied data and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
 #' coefficient of variation below specified level, or median for those found in
 #' 3 replicates but excess CV.
@@ -26,7 +26,7 @@
 #' @param missing_val Value of missing data in the quantification data file.
 #' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
 #' to summarize with median or mean. Below this the compound will be set to 0.
-#' @return An `msprep` object with `stage(rtn) == "prepared"` containing
+#' @return An `msprep` object with `stage(rtn) == "summarized"` containing
 #' summarised quantification data, a dataset of compounds summarised by medians,
 #' and other related summaries.
 #' @examples
@@ -35,21 +35,25 @@
 #' data(msquant)
 #' 
 #' # Convert dataset to tidy format
-#' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-#' prepped_data <- ms_summarize(tidy_data, 
-#'                            replicate = "replicate", 
-#'                            batch = "batch",
-#'                            groupingvars = "spike")
-#'
-#' # Or, using tidyverse/magrittr pipes 
-#' library(magrittr)
-#' prepped_data <- msquant %>% ms_tidy %>%
-#'   ms_summarize(replicate = "replicate",
-#'              batch = "batch",
-#'              groupingvars = "spike")
-#'
-#' str(prepped_data)
-#' str(prepped_data$summary_data)
+#' tidied_data    <- ms_tidy(msquant, mz = "mz", rt = "rt", 
+#'                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+#'                           separator = "_", 
+#'                           col_names = c("spike", "batch", "replicate", "subject_id"))
+#' 
+#' # Summarize technical replicates
+#' summarized_data <- ms_summarize(tidied_data, 
+#'                                 mz = "mz", 
+#'                                 rt = "rt", 
+#'                                 replicate = "replicate", 
+#'                                 batch = "batch", 
+#'                                 groupingvars = "spike", 
+#'                                 subject_id = "subject_id", 
+#'                                 cvmax = 0.50, 
+#'                                 min_proportion_present = 1/3, 
+#'                                 missing_val = 1)
+#' 
+#' # Print output
+#' print(summarized_data)
 #'
 #' @importFrom dplyr rename
 #' @importFrom dplyr select
@@ -168,7 +172,7 @@ ms_summarize <- function(data,
               batch_var              = batch,
               replicate_var          = replicate,
               col_order              = col_order,
-              stage = "prepared",
+              stage = "summarized",
               class = "msprep"))
   
   }
@@ -263,7 +267,7 @@ ms_summarize <- function(data,
                       batch_var              = batch,
                       replicate_var          = replicate,
                       col_order              = col_order,
-                      stage = "prepared",
+                      stage = "summarized",
                       class = "msprep")
   
   attr(rtn, "patient_count") <- length(unique(rtn$data$subject_id))
@@ -277,14 +281,13 @@ ms_summarize <- function(data,
 #' @param x An msprep object
 #' 
 #' @export
-print.msprep <- function(x) {
+print.msprep <- function(x, ...) {
 
   stage <- stage(x)
 
   # Print object info
   cat("msprep dataset\n")
   cat(paste("    Stage:", stage, "\n"))
-  cat("    Replicate count: ", attr(x, "replicate_count"), "\n")
   cat("    Patient count: ", attr(x, "patient_count"), "\n")
   
   # Print grouping vars (may be NULL)
@@ -306,42 +309,43 @@ print.msprep <- function(x) {
   # Print met_vars (never NULL)
   cat("    Met vars: ", paste(attr(x, "met_vars"), collapse = ", "), "\n")
   
-  # Print median summarized count (may be NULL)
-  if (!is.null(x$medians)) {
-    cat("    Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
-  }
-  else {
-    cat("    Count of patient-compounds summarized by median: 0\n")
-  }
-  
   # Print summary info
-  cat("    Prepare summary: \n")
+  cat("    Summarization:\n")
+  cat("        Replicate count: ", attr(x, "replicate_count"), "\n")
   cat("        User-defined parameters: \n")
   cat("          cvmax = ", attr(x, "cvmax"), "\n")
   cat("          min_proportion_present = ", 
       round(attr(x, "min_proportion_present"), digits = 3), "\n")
+  cat("        Resulting stats:\n")
+  # Print median summarized count (may be NULL)
+  if (!is.null(x$medians)) {
+    cat("          Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
+  }
+  else {
+    cat("          Count of patient-compounds summarized by median: 0\n")
+  }
   
   # Print filter info
   if (stage %in% msprep_stages()[2:4]) {
-    cat("    Filter summary:\n")
+    cat("    Filtering:\n")
     cat("        User-defined parameters: \n")
     cat("          Filter percent = ", attr(x, "filter_percent"), "\n")
     cat("        Resulting stats: \n")
     cat("          Count of compounds present in >= ", 
-        round(attr(x, "filter_percent")*100, digits = 3), "% of patients = ", 
+        round(attr(x, "filter_percent")*100, digits = 3), "% of samples = ", 
         sum(attr(x, "filter_status")$keep), "\n", sep = "")
   }
   
   # Print imputation info
   if (stage %in% msprep_stages()[3:4]) {
-    cat("    Imputation Summary:\n")
+    cat("    Imputation:\n")
     cat("        Imputation Method: ", attr(x, "impute_method"), "\n")
     cat("        Number of imputed values: ", attr(x, "missing_count"), "\n")
   }
   
   # Print normalization info
   if (stage %in% msprep_stages()[4]) {
-    cat("    Normalization Summary:\n")
+    cat("    Normalization:\n")
     cat("        Normalization Method: ", attr(x, "normalize_method"), "\n")
     cat("        Transformation: ", attr(x, "transformation"), "\n")
   }

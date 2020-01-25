@@ -3,6 +3,39 @@
 #' @param msprep_obj An object of class `msprep`
 #' 
 #' @importFrom tidyr pivot_wider
+#' 
+#' @examples 
+#' # Load, tidy, summarize, filter, impute, and normalize example dataset
+#' data(msquant)
+#' 
+#' tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
+#'                        col_extra_txt = "Neutral_Operator_Dif_Pos_",
+#'                        separator = "_", 
+#'                        col_names = c("spike", "batch", "replicate", "subject_id"))
+#' 
+#' summarized_data <- ms_summarize(tidied_data, 
+#'                                 mz = "mz", 
+#'                                 rt = "rt", 
+#'                                 replicate = "replicate", 
+#'                                 batch = "batch", 
+#'                                 groupingvars = "spike", 
+#'                                 subject_id = "subject_id", 
+#'                                 cvmax = 0.50, 
+#'                                 min_proportion_present = 1/3, 
+#'                                 missing_val = 1)
+#' 
+#' filtered_data <- ms_filter(summarized_data, 
+#'                            filter_percent =  0.80)
+#' 
+#' imputed_data <- ms_impute(filtered_data, 
+#'                           imputeMethod = "halfmin")
+#' 
+#' normalized_data <- ms_normalize(imputed_data,
+#'                                 normalizeMethod = "median")
+#' 
+#' # Return dataset to original form
+#' returned_data <- ms_return(normalized_data)
+#' 
 #' @export
 
 ms_return <- function(msprep_obj){

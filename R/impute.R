@@ -27,17 +27,37 @@
 #'   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
 #'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 #' @examples
-#' library(magrittr)
-#'
-#' # Load object generated from readdata() function
+#' # Load, tidy, summarize, and filter example dataset
 #' data(msquant)
-#'
-#' filtered_data <- msquant %>% ms_tidy %>% 
-#'   ms_prepare(replicate = "replicate", 
-#'              batch = "batch", 
-#'              groupingvars = "spike") %>% 
-#'   ms_filter(0.80)
-#' imputed_data  <- ms_impute(filtered_data, imputeMethod = "halfmin")
+#' 
+#' tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
+#'                        col_extra_txt = "Neutral_Operator_Dif_Pos_",
+#'                        separator = "_", 
+#'                        col_names = c("spike", "batch", "replicate", "subject_id"))
+#' 
+#' summarized_data <- ms_summarize(tidied_data, 
+#'                                 mz = "mz", 
+#'                                 rt = "rt", 
+#'                                 replicate = "replicate", 
+#'                                 batch = "batch", 
+#'                                 groupingvars = "spike", 
+#'                                 subject_id = "subject_id", 
+#'                                 cvmax = 0.50, 
+#'                                 min_proportion_present = 1/3, 
+#'                                 missing_val = 1)
+#' 
+#' filtered_data <- ms_filter(summarized_data, 
+#'                            filter_percent =  0.80)
+#'                            
+#' # Impute dataset using 3 possible options
+#' imputed_data_hm <- ms_impute(filtered_data, 
+#'                              imputeMethod = "halfmin")
+#' imputed_data_knn <- ms_impute(filtered_data, 
+#'                               imputeMethod = "knn",
+#'                               k_knn = 5)
+#' imputed_data_bpca <- ms_impute(filtered_data,
+#'                                imputeMethod = "bpca",
+#'                               n_pcs = 3)
 #'
 #' @importFrom dplyr case_when
 #' @importFrom dplyr mutate_at
@@ -148,11 +168,11 @@ impute_knn <- function(data, groupingvars, batch, met_vars, k_knn = 5, compounds
   
   # Perform kNN imputation using compounds or samples as neighbors
   if (compoundsAsNeighbors == TRUE) {
-    data <- VIM:::kNN(as.data.frame(data), k = k_knn, imp_var = FALSE)
+    data <- VIM::kNN(as.data.frame(data), k = k_knn, imp_var = FALSE)
   }
   else {
     ### transpose
-    data <- VIM:::kNN(as.data.frame(t(data)), k = k_knn, imp_var = FALSE)
+    data <- VIM::kNN(as.data.frame(t(data)), k = k_knn, imp_var = FALSE)
     
     ## transpose again (to 'untranspose' basically)
     data <- t(data)

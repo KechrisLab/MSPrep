@@ -20,16 +20,30 @@ Filters compounds to those found in specified proportion of subjects.
 }
 \examples{
 
-library(magrittr)
-
-# Load example dataset, tidy it, prepare it, then filter it
 data(msquant)
 
-prepped_data <- msquant \%>\% ms_tidy \%>\%
-  ms_prepare(replicate = "replicate",
-             batch = "batch",
-             groupingvars = "spike")
-filtered_data <- ms_filter(prepped_data, 0.80)
+tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
+                       col_extra_txt = "Neutral_Operator_Dif_Pos_",
+                       separator = "_", 
+                       col_names = c("spike", "batch", "replicate", "subject_id"))
+
+summarized_data <- ms_summarize(tidied_data, 
+                                mz = "mz", 
+                                rt = "rt", 
+                                replicate = "replicate", 
+                                batch = "batch", 
+                                groupingvars = "spike", 
+                                subject_id = "subject_id", 
+                                cvmax = 0.50, 
+                                min_proportion_present = 1/3, 
+                                missing_val = 1)
+
+# Filter the dataset using a 80\% filter rate
+filtered_data <- ms_filter(summarized_data, 
+                          filter_percent =  0.80)
+                          
+# Print results
+print(filtered_data)
 
 }
 \references{

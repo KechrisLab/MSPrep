@@ -70,30 +70,49 @@ Routines included are:
 - RUV (remove unwanted variation)
 - SVA (surrogate variable analysis)
 - median 
-- CRMN(cross-contribution compensating multiple standard normalization)
-}
-\details{
-Combat to remove batch effects in raw, quantile, and median normalized data.
-Generates data driven controls if none exist.
+- CRMN (cross-contribution compensating multiple standard normalization)
+- ComBat to remove batch effects in raw, quantile, and median normalized data.
+ Generates data driven controls if none exist.
 }
 \examples{
-library(magrittr)
-
-# Load object generated from readdata() function
+# Load, tidy, summarize, filter, and impute example dataset
 data(msquant)
 
-imputed_data <-
-  msquant \%>\%
-  ms_tidy \%>\%
-  ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") \%>\%
-  ms_filter(filter_percent = 0.80) \%>\%
-  ms_impute(imputeMethod = "halfmin")
-normalized_data_qC   <- ms_normalize(imputed_data, normalizeMethod = "quantile + ComBat")
-normalized_data_C    <- ms_normalize(imputed_data, normalizeMethod = "ComBat")
-normalized_data_sva  <- ms_normalize(imputed_data, normalizeMethod = "SVA")
-normalized_data_ruv  <- ms_normalize(imputed_data, normalizeMethod = "RUV")
-normalized_data_crmn <- ms_normalize(imputed_data, normalizeMethod = "CRMN")
-normalized_data_medC <- ms_normalize(imputed_data, normalizeMethod = "median + ComBat")
+tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
+                       col_extra_txt = "Neutral_Operator_Dif_Pos_",
+                       separator = "_", 
+                       col_names = c("spike", "batch", "replicate", "subject_id"))
+
+summarized_data <- ms_summarize(tidied_data, 
+                                mz = "mz", 
+                                rt = "rt", 
+                                replicate = "replicate", 
+                                batch = "batch", 
+                                groupingvars = "spike", 
+                                subject_id = "subject_id", 
+                                cvmax = 0.50, 
+                                min_proportion_present = 1/3, 
+                                missing_val = 1)
+
+filtered_data <- ms_filter(summarized_data, 
+                           filter_percent =  0.80)
+
+imputed_data <- ms_impute(filtered_data, 
+                          imputeMethod = "halfmin")
+
+# Normalize dataset using six possible options
+normalized_data_median <- ms_normalize(imputed_data,
+                                       normalizeMethod = "median")
+normalized_data_combat <- ms_normalize(imputed_data,
+                                       normalizeMethod = "ComBat")
+normalized_data_quantile <- ms_normalize(imputed_data,
+                                         normalizeMethod = "quantile")
+normalized_data_crmn <- ms_normalize(imputed_data,
+                                     normalizeMethod = "CRMN")
+normalized_data_ruv <- ms_normalize(imputed_data,
+                                    normalizeMethod = "RUV")
+normalized_data_sva <- ms_normalize(imputed_data,
+                                    normalizeMethod = "SVA")
 
 
 }

@@ -4,7 +4,7 @@
 \alias{print.msprep}
 \title{Print function for msprep object}
 \usage{
-\method{print}{msprep}(x)
+\method{print}{msprep}(x, ...)
 }
 \arguments{
 \item{x}{An msprep object}

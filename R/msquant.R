@@ -29,14 +29,5 @@
 #'   str(msquant)
 "msquant"
 
-#' Example quantification dataset
-#'
-#' Mass spec data example with 1 subject
-#'
-#' mz = Mass/Charge ratio
-#' rt = Retention time
-#' 
-#' The indicators in the column names are spike-in (e.g. 1x), batch (e.g. 01),
-#' technical replicate (e.g. A), and subject ID (e.g. 01).
-#'
+
 

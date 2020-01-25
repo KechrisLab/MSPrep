@@ -40,7 +40,7 @@ of variation between replicates.}
 to summarize with median or mean. Below this the compound will be set to 0.}
 }
 \value{
-An `msprep` object with `stage(rtn) == "prepared"` containing
+An `msprep` object with `stage(rtn) == "summarized"` containing
 summarised quantification data, a dataset of compounds summarised by medians,
 and other related summaries.
 }
@@ -50,7 +50,7 @@ and normalization. Also provides summaries of data structure (replicates,
 subjects, groupingvars, etc.)
 }
 \details{
-Function reads in raw data files and summarizes technical replicates as the
+Function reads tidied data and summarizes technical replicates as the
 mean of observations for compounds found in 2 or 3 replicates and with
 coefficient of variation below specified level, or median for those found in
 3 replicates but excess CV.
@@ -61,20 +61,24 @@ coefficient of variation below specified level, or median for those found in
 data(msquant)
 
 # Convert dataset to tidy format
-tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-prepped_data <- ms_summarize(tidy_data, 
-                           replicate = "replicate", 
-                           batch = "batch",
-                           groupingvars = "spike")
+tidied_data    <- ms_tidy(msquant, mz = "mz", rt = "rt", 
+                          col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+                          separator = "_", 
+                          col_names = c("spike", "batch", "replicate", "subject_id"))
 
-# Or, using tidyverse/magrittr pipes 
-library(magrittr)
-prepped_data <- msquant \%>\% ms_tidy \%>\%
-  ms_summarize(replicate = "replicate",
-             batch = "batch",
-             groupingvars = "spike")
+# Summarize technical replicates
+summarized_data <- ms_summarize(tidied_data, 
+                                mz = "mz", 
+                                rt = "rt", 
+                                replicate = "replicate", 
+                                batch = "batch", 
+                                groupingvars = "spike", 
+                                subject_id = "subject_id", 
+                                cvmax = 0.50, 
+                                min_proportion_present = 1/3, 
+                                missing_val = 1)
 
-str(prepped_data)
-str(prepped_data$summary_data)
+# Print output
+print(summarized_data)
 
 }
