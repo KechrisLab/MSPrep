@@ -1,6 +1,9 @@
 ---
 title: "Using MSPrep"
 author: 
+    - name: Max McGrath
+      email: max.mcgrath@ucdenver.edu
+      affiliation: University of Colorado Anschutz Medical Campus
     - name: Matt Mulvahill
       email: matt.mulvahill@gmail.com
       affiliation: Charter Communications
@@ -43,39 +46,40 @@ vignette: |
 
 # Introduction
 
-MSPrep provides six key functions for preparing metabolomics data for analysis. This vignette will provide
-- an explanation of each functions
-- suggestions for how to select parameters
-- an explanation of how to use the final outputted data
-- code to perform all of the steps in a pipeline
+MSPrep provides six key functions for preparing metabolomics data for analysis. This vignette will provide:
+
+- An explanation of each function provided by MSPrep
+- An explanation of the data format required by MSPrep
+- Two examples for each function demonstrating varying usage
+- Notes on function usage
 
 # Loading libraries
 
 ```{r}
 library(MSPrep)
-library(tidyverse)
 ```
 
 # Expected Format
 
 We first need to format the data. The following format is expected for most types of data generated from mass spectrometry.
 
-Most often, two columns in the data will specify mass-to-charge ratio and retention-time. These columns may have any names (e.g. "mz" and "rt" or "Mass" and "Retention.Time") which should be specified using the `mz` and `rt` parameters of `ms_tidy` and `ms_summarize`.
+Most often, two columns in the data will specify mass-to-charge ratio and retention-time. These columns may have any names (e.g. "mz" and "rt" or "Mass" and "Retention.Time") which should be specified using the `mz` and `rt` parameters of `ms_tidy()` and `ms_summarize()`.
 
-As an addition to or replacement of the mass-to-charge ratio and retention-time columns, a column may be provided which specifies compound names. The name of this column should be specified using the `met_id` parameter of `ms_tidy` and `ms_summarize`.
+As an addition to (or replacement of) the mass-to-charge ratio and retention-time columns, a column may be provided which provides compound names. The name of this column should be specified using the `met_id` parameter of `ms_tidy()` and `ms_summarize()`.
 
-The next columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline (e.g., SampleID). There are three pieces of information which may be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
+The next columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline (e.g. SampleID). There are three pieces of information which may be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
 
-As an example see the provided dataset, msquant.
+As an example see the provided dataset, `msquant`.
 
 ```{r}
 data("msquant")
-strsplit(colnames(msquant)[3], "_")
+colnames(msquant)[3]
 ```
 
-The third column name is `colnames(msquant)[3]`. The first part "Neutral_Operator_Dif_Pos_" will not be used, so we will assign it to col_extra_txt. The next value, "1x", is the spike-in value. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
+Above is the third column name in `msquant`. The first part "Neutral_Operator_Dif_Pos_" will not be used, so we will assign it to `col_extra_txt`. The next value, "1x", is the spike-in value. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
 
-Identifiers in the datasets
+Identifiers in the datasets:
+
 - LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
 - SubjectID   = subject (01-03), concentration  (1x,2x,4x)
 
@@ -83,7 +87,7 @@ With our data in this format, we can start the pipeline.
 
 # Example One
 
-## Tidying the data
+## Tidying
 
 The first step is to extract the information from the column names discussed above, and get it into a tidy data frame. We can do this with the ms_tidy function.
 
@@ -96,9 +100,9 @@ tidied_data <- ms_tidy(msquant,
                        col_names = c("spike", "batch", "replicate", "subject_id"))
 ```
 
-Note, the names chosen for col_names are arbitratry, but we will use them later on.
+Note, the names chosen for col_names are arbitratry and may be altered according to your preference, but they will be used later on.
 
-## Summarizing Replicates
+## Summarizing
 
 This step summarizes the technical replicates if present using the following procedure for each compound in each batch.
 
@@ -107,21 +111,21 @@ This step summarizes the technical replicates if present using the following pro
 2. For three replicates, if the coefficient of variation is above a specified level, use the median value for the compound, to correct for the large dispersion.
 3. Otherwise, use the mean value of the replicates for the compound.
 
-If no replicates are present in the data, exclude the `replicate` argument from `ms_summarize`. In this case, the `replicate_info` and `medians` list items of the `msprep` object returned by `ms_summarize` will be set to `NULL`.
+If no replicates are present in the data, exclude the `replicate` argument from `ms_summarize()`. In this case, the `replicate_info` and `medians` list items of the `msprep` object returned by `ms_summarize()` will be set to `NULL`.
 
-NOTE: In the current build, ms_summarize must be called prior to filtering, imputation, or normalization regardless of the presence of replicates.
+NOTE: In the current build, ms_summarize must be called prior to filtering, imputation, or normalization regardless of the presence or absence of replicates.
 
 ```{r}
-summarized_data = ms_summarize(tidied_data, 
-                               mz = "mz", 
-                               rt = "rt", 
-                               replicate = "replicate", 
-                               batch = "batch", 
-                               groupingvars = "spike", 
-                               subject_id = "subject_id", 
-                               cvmax = 0.50, 
-                               min_proportion_present = 1/3, 
-                               missing_val = 1)
+summarized_data <- ms_summarize(tidied_data, 
+                                mz = "mz", 
+                                rt = "rt", 
+                                replicate = "replicate", 
+                                batch = "batch", 
+                                groupingvars = "spike", 
+                                subject_id = "subject_id", 
+                                cvmax = 0.50, 
+                                min_proportion_present = 1/3, 
+                                missing_val = 1)
 ```
 
 ## Filtering
@@ -130,7 +134,7 @@ This step is straightforward but very important. Simply supply a percentage of t
 
 ```{r}
 filtered_data <- ms_filter(summarized_data, 
-                           filter_percent=0.8)
+                           filter_percent = 0.8)
 ```
 
 ## Imputation
@@ -141,7 +145,7 @@ Next, depending on the downstream analysis, you may need to impute missing data.
 2. bpca (Bayesian PCA), 
 3. knn (k-nearest neighbors)
 
-Half-min is the fastest, but may introduce bias. KNN typically takes the longest. If you choose to use KNN, you can provide a value for k. By default, KNN uses samples as neighbors. By specifiying `compoundsAsNeighbors = TRUE`, compounds will be used as neighbors instead. Note that this is significantly slower than using samples as neighbors and may take several minutes to run.
+Half-min is the fastest, but may introduce bias. KNN typically takes the longest. If you choose to use KNN, you can provide a value for k. By default, KNN uses samples as neighbors. By specifiying `compoundsAsNeighbors = TRUE`, compounds will be used as neighbors instead. Note that this is significantly slower than using samples as neighbors and may take several minutes or more to run depending on the size of your dataset.
 
 ```{r}
 imputed_data <- ms_impute(filtered_data, 
@@ -179,25 +183,23 @@ normalized_data <- ms_normalize(imputed_data,
                                 transform = "log10")
 ```
 
-## Returning the Data
+## Returning
 
 Throughout the above functions, an elongated version of the provided data is used. This long dataset has columns corresponding to metabolite mass-to-charge ratio, retention time, abundance, and sample features like subject, replicates, and spike-ins, and it has rows corresponding to each unique combination of the sample features. 
 
-To return the data to a wide format with metabolites as rows and samples as columns, use the `ms_return` function.
+To return the data to a wide format with metabolites as rows and samples as columns, use the `ms_return()` function.
 
 ```{r}
 returned_data <- ms_return(normalized_data)
 ```
 
-## Final output
+## Pipeline
 
-# Performing all steps as a pipline
-
-Often, you will want to perform the whole pipeline. This can be done in a single statement using the `ms_prepare` function. Simply provide the function the same arguments that you would provide to the individual functions. 
+Usually, you will want to perform the whole pipeline. This can be done in a single statement using the `ms_prepare()` function. Simply provide the function the same arguments that you would provide to the individual functions. 
 
 ```{r}
 
-dat <- ms_prepare(msquant, 
+prepared_data <- ms_prepare(msquant, 
                   mz = "mz",
                   rt = "rt",
                   col_extra_txt = "Neutral_Operator_Dif_Pos_", 
@@ -212,11 +214,20 @@ dat <- ms_prepare(msquant,
                   normalizeMethod = "quantile")
 ```
 
+## Printing
+
+At any point in the pipeline after `ms_summarize()`, the `print()` function provided by `MSPrep` can be called on an `msprep` object. This will print the stage of the pipeline that the object is in, along with information pertaining to each step of the pipeline.
+
+```{r}
+print(prepared_data)
+```
+
+
 # Example Two
 
-Next, we will work with the dataset COPD_131. The raw dataset can be found [here, at Metabolomics Workbench.](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438)
+Next, we will work with the dataset `COPD_131`. The raw dataset can be found [here, at Metabolomics Workbench.](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438) Note that only a portion of the `COPD_131` dataset is included in this package in order to limit file size and improve example performance. Generally, the number of metabolites will be far greater than the number of samples and the functions included in this package will take more time to process the data.
 
-This dataset differs from MSQuant in several ways. First, it has a column `Compound.Name` which specifies compound names, and the mass-to-charge ratio and retention-time columns are named `Mass` and `Retention.Time` respectively. Second, this dataset does not have spike-ins or batches (but it does have technical replicates). Finally, the data has already been normalized, so we will forgo that step of the MSPrep pipeline.
+This dataset differs from `msquant` in several ways. First, it has a column `Compound.Name` which specifies compound names, and the mass-to-charge ratio and retention-time columns are named `Mass` and `Retention.Time` respectively. Second, this dataset does not have spike-ins or batches (but it does have technical replicates). Finally, the data has already been normalized, so we will forgo that step of the MSPrep pipeline.
 
 ## Tidying
 
@@ -225,7 +236,7 @@ data("COPD_131")
 strsplit(colnames(COPD_131)[4], "_")
 ```
 
-As with before, we begin by tidying the data. In this dataset, we have two features present in the column names: subject and replicate number, seperated by '_'. We also have the extra text 'X' appearing before each column name. So, we will run `ms_tidy` as follows:
+As with before, we begin by tidying the data. In this dataset, we have two features present in the column names: subject and replicate number, seperated by '_'. We also have the extra text 'X' appearing before each column name. So, we will run `ms_tidy()` as follows:
 
 ```{r}
 tidied_data_131 <- ms_tidy(COPD_131,
@@ -239,7 +250,7 @@ tidied_data_131 <- ms_tidy(COPD_131,
 
 ## Summarizing
 
-Next, we move on to summarizing technical replicates. This process is largely the same as before, but with different column names specified.
+Next, we move on to summarizing technical replicates. This process is largely the same as before, but with different column names specified. We call `ms_summarize()` as follows:
 
 ```{r}
 summarized_data_131 <- ms_summarize(tidied_data_131,
@@ -255,16 +266,16 @@ summarized_data_131 <- ms_summarize(tidied_data_131,
 
 ## Filtering
 
-Again, this process is largely the same as before, choosing a filter percentage of 0.8.
+Again, this process is largely the same as before, choosing a filter percentage of 0.8. So, we call `ms_filter()` as follows:
 
 ```{r}
 filtered_data_131 <- ms_filter(summarized_data_131, 
-                               filter_percent=0.8)
+                               filter_percent = 0.8)
 ```
 
 ## Imputing
 
-This time we will use Bayesian PCA using three principle components to impute the missing values for the data.
+This time we will use Bayesian PCA using three principle components to impute the missing values for the data, calling `ms_impute()` as follows:
 
 ```{r}
 imputed_data_131 <- ms_impute(filtered_data_131, 
@@ -283,10 +294,10 @@ returned_data_131 <- ms_return(imputed_data_131)
 
 ## Pipeline
 
-As with the previous example, the above steps can be performed in a pipeline using the `ms_prepare` function. To skip the normalization step of the pipeline, set the `normalizeMethod` paramater to "none" (note that the same can be done for imputationMethod).
+As with the previous example, the above steps can be performed in a pipeline using the `ms_prepare()` function. To skip the normalization step of the pipeline, set the `normalizeMethod` paramater to "none" (note that the same can be done for imputationMethod).
 
 ```{r}
-dat <- ms_prepare(COPD_131,
+prepared_data_131 <- ms_prepare(COPD_131,
                   met_id = "Compound.Name",
                   mz = "Mass", 
                   rt = "Retention.Time",
@@ -302,5 +313,13 @@ dat <- ms_prepare(COPD_131,
                   imputeMethod ="bpca", 
                   n_pcs = 3,
                   normalizeMethod = "none")
+```
+
+## Printing
+
+As with before, the prepared COPD_131 `msprep` object may be passed to the `print()` function provided to print its status in the pipeline, along with information pertaining to each step of the pipeline.
+
+```{r}
+print(prepared_data_131)
 ```
 
