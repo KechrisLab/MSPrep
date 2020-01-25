@@ -3,9 +3,12 @@ Title:
   Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics Data
 Version: 0.0.2
 Authors@R:
-  c(person("Matt", "Mulvahill",
-           email = "matthew.mulvahill@ucdenver.edu",
+  c(person("Max", "McGrath",
+           email = "max.mcgrath@ucdenver.edu",
            role = c("aut", "cre")),
+    person("Matt", "Mulvahill",
+           email = "matthew.mulvahill@ucdenver.edu",
+           role = c("aut")),
     person("Grant", "Hughes",
            email = "",
            role = c("aut")),
@@ -20,8 +23,8 @@ Authors@R:
            role = c("aut", "cph", "ths")))
 Description:
   Package performs summarization of replicates, filtering by frequency, three
-  different options for missing data, and five options for normalizing dataset.
-  Also generates diagnostic plots of imputations and normalizations.
+  different options for missing data, and a variety of options for normalizing 
+  dataset.
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
