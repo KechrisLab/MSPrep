@@ -1,25 +1,20 @@
 #' Function for performing normalization and batch corrections on imputed data.
 #' 
 #' Perform normalization and batch corrections on specified imputation dataset.
-#' Routines included are: 
-#' - quantile
-#' - RUV (remove unwanted variation)
-#' - SVA (surrogate variable analysis)
-#' - median 
-#' - CRMN (cross-contribution compensating multiple standard normalization)
-#' - ComBat to remove batch effects in raw, quantile, and median normalized data.
-#'  Generates data driven controls if none exist.
+#' Routines included are quantile, RUV (remove unwanted variation), SVA 
+#' (surrogate variable analysis), median, CRMN (cross-contribution 
+#' compensating multiple standard normalization), ComBat to remove batch 
+#' effects in raw, quantile, and median normalized data. Generates data 
+#' driven controls if none exist.
 #' 
 #' @param msprep_obj Imputed MSPrep object.
 #' @param normalizeMethod Name of normalization method.
-#' - ComBat (only ComBat batch correction)
-#' - quantile (only quantile normalization)
-#' - quantile + ComBat (quantile with ComBat batch correction)
-#' - median (only median normalization)
-#' - median + ComBat (median with ComBat batch correction)
-#' - CRMN
-#' - RUV
-#' - SVA
+#' ComBat" (only ComBat batch correction), "quantile" (only quantile 
+#' normalization), "quantile + ComBat" (quantile with ComBat batch correction),
+#' "median" (only median normalization), "median + ComBat" (median with ComBat
+#' batch correction), "CRMN" (cross-contribution compensating multiple 
+#' standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
+#' variable analysis)
 #' @param n_control Number of controls to estimate/utilize.
 #' @param controls Vector of control identifiers.  Leave blank for data driven
 #' controls. Vector of column numbers from metafin dataset of that control.
@@ -554,7 +549,6 @@ combat <- function(data, groupingvars, batch, met_vars, transform) {
 
 }
 
-
 #' @importFrom dplyr mutate_if
 #' @importFrom dplyr select
 #' @importFrom tibble rownames_to_column
@@ -661,7 +655,6 @@ control_summary <- function(data, met_vars) {
   return(rtn)
 
 }
-
 
 # Utility functions for ms_normalize()
 log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)

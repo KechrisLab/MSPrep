@@ -276,10 +276,6 @@ ms_summarize <- function(data,
 
 }
 
-#' Print function for msprep object
-#' 
-#' @param x An msprep object
-#' 
 #' @export
 print.msprep <- function(x, ...) {
 

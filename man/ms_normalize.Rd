@@ -13,14 +13,12 @@ ms_normalize(msprep_obj, normalizeMethod = c("median", "ComBat",
 \item{msprep_obj}{Imputed MSPrep object.}
 
 \item{normalizeMethod}{Name of normalization method.
-- ComBat (only ComBat batch correction)
-- quantile (only quantile normalization)
-- quantile + ComBat (quantile with ComBat batch correction)
-- median (only median normalization)
-- median + ComBat (median with ComBat batch correction)
-- CRMN
-- RUV
-- SVA}
+ComBat" (only ComBat batch correction), "quantile" (only quantile 
+normalization), "quantile + ComBat" (quantile with ComBat batch correction),
+"median" (only median normalization), "median + ComBat" (median with ComBat
+batch correction), "CRMN" (cross-contribution compensating multiple 
+standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
+variable analysis)}
 
 \item{n_control}{Number of controls to estimate/utilize.}
 
@@ -65,14 +63,11 @@ in later analysis.
 }
 \description{
 Perform normalization and batch corrections on specified imputation dataset.
-Routines included are: 
-- quantile
-- RUV (remove unwanted variation)
-- SVA (surrogate variable analysis)
-- median 
-- CRMN (cross-contribution compensating multiple standard normalization)
-- ComBat to remove batch effects in raw, quantile, and median normalized data.
- Generates data driven controls if none exist.
+Routines included are quantile, RUV (remove unwanted variation), SVA 
+(surrogate variable analysis), median, CRMN (cross-contribution 
+compensating multiple standard normalization), ComBat to remove batch 
+effects in raw, quantile, and median normalized data. Generates data 
+driven controls if none exist.
 }
 \examples{
 # Load, tidy, summarize, filter, and impute example dataset

@@ -4,18 +4,20 @@
 #' three different options for handling/imputing missing data, and five options for normalizing
 #' data. 
 #'
-#' @author Grant Hughes
+#' @author Max McGrath
 #' @author Matt Mulvahill
+#' @author Grant Hughes
 #' @author Sean Jacobson
-#' @author Katerina Kechris
 #' @author Harrison Pielke-Lombardo
+#' @author Katerina Kechris
 #' @docType package
 #' @name MSPrep 
 #' @details
-#' Package for processing of mass spectrometry quantification data. Five functions are provided
+#' Package for processing of mass spectrometry quantification data. Six functions are provided
 #' and are intended to be used in sequence (as a pipeline) to produce cleaned and normalized data.
-#' These are ms_tidy, ms_prepare, ms_filter, ms_impute, and ms_normalize.
-#' 
+#' These are ms_tidy, ms_summarize, ms_filter, ms_impute, ms_normalize, and ms_return.
+#' The function ms_prepare is also provided as a wrapper function combining the six previously
+#' mentioned functions.
 #' 
 #' @references
 #' Bolstad, B.M.et al.(2003) A comparison of normalization methods for high
@@ -49,70 +51,28 @@
 #' 4818-4826.
 #' 
 #' @examples
-#'    #  #library(crmn)
-#'    #  #library(preprocessCore)
-#'    #  #library(sva)
-#'    #  #library(psych)
-#'    #  #library(Hmisc)
-#'    #  #library(limma)
-#'    #  #library(pcaMethods)
-#'    #  #library(multcomp)
-#'    #  
-#'    #  
-#'    #  ### Specify primary directory for input dataset
-#'    #  #my_dir <- c("<my_dir>")
-#'    #  #data(test2)
-#'    #  
-#'    #  ### Specify location of data files
-#'    #  #clinicalfile       <- c("Clinical.csv")
-#'    #  #quantificationfile <- c("Quantification.csv")
-#'    #  #linkfile           <- c("SubjectLinks.csv")
-#'    #  
-#'    #  ### Set variables for program
-#'    #  cvmax   <- 0.5
-#'    #  missing <- 1
-#'    #  linktxt <- "LCMS_Run_ID"
-#'    #  
-#'    #  test <- readdata(directory, clinicalfile, quantificationfile, linkfile,
-#'    #                   cvmax = 0.50, missing = 1, linktxt)
-#'    #  
-#'    #  test2 <- filterft(test$sum_data1, 0.80)
-#'    #  
-#'    #  directory <- "/home/grant/"
-#'    #  minval    <- test2$minval
-#'    #  withzero  <- test2$withzero
-#'    #  bpca      <- test2$bpca
-#'    #  
-#'    #  graphimputations(directory, minval, withzero, bpca, meanval1 = 0,
-#'    #                   meanval2 = 200000, xmax1 = 400000, ymax1 = 800, 
-#'    #                   xmax2 = 20, ymax2 = 600, xmax3 = 20, ymax3 = 175, 
-#'    #                   nbreaks = 200)
-#'    #  
-#'    #  metafin  <- test2$bpca
-#'    #  clindat  <- test$clinical
-#'    #  link1    <- "SubjectID"
-#'    #  pheno    <- "Spike"
-#'    #  batch    <- "Operator"
-#'    #  ncont    <- 10
-#'    #  controls <- c()
-#'    #  ncomp    <- 2
-#'    #  
-#'    #  test3 <- normdata(metafin, clindat, link1, pheno, batch, ncont = 10,
-#'    #                    controls, ncomp)
-#'    #  
-#'    #  testobj   <- test3
-#'    #  clindat   <- test$clinical
-#'    #  link1     <- "SubjectID"
-#'    #  pheno     <- "Spike"
-#'    #  batch     <- "Operator"
-#'    #  directory <- "/home/grant/"
-#'    #  ylim2     <- c(10,28)
-#'    #  ### For median
-#'    #  ylim1     <- c(-15,15)
-#'    #  ### for crmn
-#'    #  ylim3     <- c(18,37)
-#'    #  
-#'    #  diagnosticgen(testobj, clindat, link1, batch, pheno, directory, ylim1,
-#'    #                ylim2, ylim3)
+#' library(MSPrep)
+#' 
+#' # Load example data
+#' data(msquant)
+#' 
+#' # Call function to tidy, summarize, filter, impute, and normalize data
+#' prepared_data <- ms_prepare(msquant,
+#'                             mz = "mz",
+#'                             rt = "rt",
+#'                             col_extra_txt = "Neutral_Operator_Dif_Pos_",
+#'                             col_names = c("spike", "batch", "replicate", "subject_id"),
+#'                             separator = "_",
+#'                             abundance = "abundance",
+#'                             subject_id = "subject_id",
+#'                             replicate = "replicate",
+#'                             batch = "batch",
+#'                             groupingvars = "spike",
+#'                             cvmax = 0.50,
+#'                             missing_val = 1,
+#'                             min_proportion_present = 1/3,
+#'                             filter_percent = .8,
+#'                             imputeMethod = "halfmin",
+#'                             normalizeMethod = "median")
 #' 
 NULL

@@ -4,18 +4,29 @@
 \name{COPD_131}
 \alias{COPD_131}
 \title{Example mass spectrometry dataset}
-\format{An object of class \code{data.frame} with 662 rows and 396 columns.}
+\format{Data frame containing 662 observations of 396 variables.
+\describe{
+  \item{Mass}{Mass-to-charge ratio}
+  \item{Retention.Time}{Retention-time}
+  \item{Compound.Name}{Compound name for each mass/retention time combination}
+  \item{X10062C_1}{The remaning columns indicate metabolite abundances found
+  in each Subject/Replicate combination. Each column begins with an 'X',
+  followed by the subject ID, and then the replicate (1, 2, or 3), seperated by
+  '_'.}
+}}
+\source{
+\url{https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438}
+}
 \usage{
 COPD_131
 }
 \description{
-Size: 662 obs. of 396 variables
-}
-\details{
-Data contains samples for 131 subjects with 3 technical replicates per
-subject. Additionally, the first three variables are "Mass" which
+Data contains LC-MS analysis for samples from 131 subjects with 3 technical 
+replicates per subject. The first three columns indicate "Mass" which
 is the mass-to-charge ratio for each metabolite, "Retention.Time", and
-"Compound.Name".
+"Compound.Name". The remaining columns indicate abundance for
+each of the 662 mass/retention-time combination for each subject/replicate
+combination.
 }
 \examples{
 data(COPD_131)
