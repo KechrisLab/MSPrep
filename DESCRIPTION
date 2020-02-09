@@ -28,7 +28,7 @@ Description:
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
-  R (>= 3.4)
+  R (>= 3.6)
 Imports:
   pcaMethods (>= 1.24.0),
   VIM,
@@ -40,6 +40,7 @@ Imports:
   tibble (>= 1.2),
   magrittr,
   rlang,
+  stats,
   stringr,
 Suggests:
   BiocStyle,
@@ -50,6 +51,8 @@ VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: no
 License: GPL-3
-biocViews: TBD
+biocViews: Metabolomics,
+  MassSpectrometry,
+  Preprocessing
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
