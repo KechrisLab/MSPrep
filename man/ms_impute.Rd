@@ -4,8 +4,13 @@
 \alias{ms_impute}
 \title{Function for imputing on filtered data.}
 \usage{
-ms_impute(msprep_obj, imputeMethod = c("halfmin", "bpca", "knn"),
-  k_knn = 5, n_pcs = 3, compoundsAsNeighbors = FALSE)
+ms_impute(
+  msprep_obj,
+  imputeMethod = c("halfmin", "bpca", "knn"),
+  k_knn = 5,
+  n_pcs = 3,
+  compoundsAsNeighbors = FALSE
+)
 }
 \arguments{
 \item{msprep_obj}{Filtered MSPrep object.}

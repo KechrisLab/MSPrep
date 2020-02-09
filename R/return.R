@@ -36,6 +36,9 @@
 #' # Return dataset to original form
 #' returned_data <- ms_return(normalized_data)
 #' 
+#' @return An msprep object with data formatted with metabolites as rows and
+#' and samples as columns
+#' 
 #' @export
 
 ms_return <- function(msprep_obj){

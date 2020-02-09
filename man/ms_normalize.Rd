@@ -4,10 +4,16 @@
 \alias{ms_normalize}
 \title{Function for performing normalization and batch corrections on imputed data.}
 \usage{
-ms_normalize(msprep_obj, normalizeMethod = c("median", "ComBat",
-  "quantile", "quantile + ComBat", "median + ComBat", "CRMN", "RUV",
-  "SVA"), n_control = 10, controls = NULL, n_comp = 2, k_ruv = 3,
-  transform = c("log10", "log2", "none"))
+ms_normalize(
+  msprep_obj,
+  normalizeMethod = c("median", "ComBat", "quantile", "quantile + ComBat",
+    "median + ComBat", "CRMN", "RUV", "SVA"),
+  n_control = 10,
+  controls = NULL,
+  n_comp = 2,
+  k_ruv = 3,
+  transform = c("log10", "log2", "none")
+)
 }
 \arguments{
 \item{msprep_obj}{Imputed MSPrep object.}

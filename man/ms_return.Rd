@@ -9,6 +9,10 @@ ms_return(msprep_obj)
 \arguments{
 \item{msprep_obj}{An object of class `msprep`}
 }
+\value{
+An msprep object with data formatted with metabolites as rows and
+and samples as columns
+}
 \description{
 Function to return data prepared by MSPrep pipeline to compound by sample format
 }

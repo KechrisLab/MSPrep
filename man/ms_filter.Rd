@@ -9,10 +9,11 @@ ms_filter(msprep_obj, filter_percent = 0.5)
 \arguments{
 \item{msprep_obj}{Prepared MSPrep object.}
 
-\item{filter_percent}{Decimal value representing to proportion to filter the data.}
+\item{filter_percent}{Decimal value representing to proportion to filter 
+the data.}
 }
 \value{
-An `msprep` object with `stage(rtn) == "filtered"` containing
+An `msprep` object with `stage(rtn) == 'filtered'` containing
 filtered quantification data.
 }
 \description{
@@ -22,18 +23,19 @@ Filters compounds to those found in specified proportion of subjects.
 
 data(msquant)
 
-tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
-                       col_extra_txt = "Neutral_Operator_Dif_Pos_",
-                       separator = "_", 
-                       col_names = c("spike", "batch", "replicate", "subject_id"))
+tidied_data <- ms_tidy(msquant, mz = 'mz', rt = 'rt',
+                       col_extra_txt = 'Neutral_Operator_Dif_Pos_',
+                       separator = '_', 
+                       col_names = c('spike', 'batch', 'replicate', 
+                       'subject_id'))
 
 summarized_data <- ms_summarize(tidied_data, 
-                                mz = "mz", 
-                                rt = "rt", 
-                                replicate = "replicate", 
-                                batch = "batch", 
-                                groupingvars = "spike", 
-                                subject_id = "subject_id", 
+                                mz = 'mz', 
+                                rt = 'rt', 
+                                replicate = 'replicate', 
+                                batch = 'batch', 
+                                groupingvars = 'spike', 
+                                subject_id = 'subject_id', 
                                 cvmax = 0.50, 
                                 min_proportion_present = 1/3, 
                                 missing_val = 1)

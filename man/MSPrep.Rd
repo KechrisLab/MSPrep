@@ -3,23 +3,21 @@
 \docType{package}
 \name{MSPrep}
 \alias{MSPrep}
-\alias{MSPrep-package}
 \title{Package for summarizing, filtering, imputing, and normalizing metabolomics data.}
 \description{
 This package performs summarization of replicates, filtering by frequency,
-three different options for handling/imputing missing data, and five options for normalizing
-data.
+three different options for handling/imputing missing data, and five options 
+for normalizing data.
 }
 \details{
-Package for processing of mass spectrometry quantification data. Six functions are provided
-and are intended to be used in sequence (as a pipeline) to produce cleaned and normalized data.
-These are ms_tidy, ms_summarize, ms_filter, ms_impute, ms_normalize, and ms_return.
-The function ms_prepare is also provided as a wrapper function combining the six previously
-mentioned functions.
+Package for processing of mass spectrometry quantification data. Six 
+functions are provided and are intended to be used in sequence (as a 
+pipeline) to produce cleaned and normalized data. These are ms_tidy, 
+ms_summarize, ms_filter, ms_impute, ms_normalize, and ms_return. The 
+function ms_prepare is also provided as a wrapper function combining the six 
+previously mentioned functions.
 }
 \examples{
-library(MSPrep)
-
 # Load example data
 data(msquant)
 
@@ -28,7 +26,8 @@ prepared_data <- ms_prepare(msquant,
                             mz = "mz",
                             rt = "rt",
                             col_extra_txt = "Neutral_Operator_Dif_Pos_",
-                            col_names = c("spike", "batch", "replicate", "subject_id"),
+                            col_names = c("spike", "batch", "replicate", 
+                                          "subject_id"),
                             separator = "_",
                             abundance = "abundance",
                             subject_id = "subject_id",

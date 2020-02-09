@@ -88,7 +88,7 @@
 #' # Print summary
 #' print(prepared_data)
 #' 
-#' 
+#' @return A summarized, filtered, imputed, and normalized msprep object
 #' @export
 
 ms_prepare <- function(quantification_data,

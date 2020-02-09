@@ -7,7 +7,7 @@
 ############################################################
 
 normdata.new_multpheno <- function (metafin, clindat, link1, pheno, batch, ncont = 10, 
-                                    controls = c(), ncomp = 2, combat_log = F, do_crmn = F) 
+                                    controls = c(), ncomp = 2, combat_log = FALSE, do_crmn = FALSE) 
 {
   # if(length(pheno) == 1) stop("if pheno is only 1 element, use normdata.new_kk")
   if(length(pheno) > 1){

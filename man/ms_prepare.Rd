@@ -4,18 +4,35 @@
 \alias{ms_prepare}
 \title{Tidy, summarize, filter, impute, and normalize metabolomics dataset}
 \usage{
-ms_prepare(quantification_data, met_id = NULL, mz = NULL, rt = NULL,
-  col_extra_txt = NULL, col_names = c("subject_id"),
-  separator = NULL, abundance = "abundance",
-  subject_id = "subject_id", replicate = NULL, batch = NULL,
-  groupingvars = NULL, cvmax = 0.5, missing_val = 1,
-  min_proportion_present = 1/3, filter_percent = 0.8,
-  imputeMethod = c("halfmin", "bpca", "knn", "none"), k_knn = 5,
-  n_pcs = 3, compoundsAsNeighbors = FALSE,
-  normalizeMethod = c("ComBat", "quantile", "quantile + ComBat",
-  "median", "median + ComBat", "CRMN", "RUV", "SVA", "none"),
-  n_control = 10, controls = NULL, n_comp = 2, k_ruv = 3,
-  transform = c("log10", "log2", "none"))
+ms_prepare(
+  quantification_data,
+  met_id = NULL,
+  mz = NULL,
+  rt = NULL,
+  col_extra_txt = NULL,
+  col_names = c("subject_id"),
+  separator = NULL,
+  abundance = "abundance",
+  subject_id = "subject_id",
+  replicate = NULL,
+  batch = NULL,
+  groupingvars = NULL,
+  cvmax = 0.5,
+  missing_val = 1,
+  min_proportion_present = 1/3,
+  filter_percent = 0.8,
+  imputeMethod = c("halfmin", "bpca", "knn", "none"),
+  k_knn = 5,
+  n_pcs = 3,
+  compoundsAsNeighbors = FALSE,
+  normalizeMethod = c("ComBat", "quantile", "quantile + ComBat", "median",
+    "median + ComBat", "CRMN", "RUV", "SVA", "none"),
+  n_control = 10,
+  controls = NULL,
+  n_comp = 2,
+  k_ruv = 3,
+  transform = c("log10", "log2", "none")
+)
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}
@@ -96,6 +113,9 @@ controls. Vector of column numbers from metafin dataset of that control.}
 - log2
 - none}
 }
+\value{
+A summarized, filtered, imputed, and normalized msprep object
+}
 \description{
 Calls ms_tidy, ms_summarize, ms_filter, ms_impute, and ms_normalize
 }
@@ -128,6 +148,5 @@ prepared_data <- ms_prepare(msquant,
 
 # Print summary
 print(prepared_data)
-
 
 }

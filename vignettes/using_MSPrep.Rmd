@@ -323,3 +323,9 @@ As with before, the prepared COPD_131 `msprep` object may be passed to the `prin
 print(prepared_data_131)
 ```
 
+# Session Info
+
+```{r}
+sessionInfo()
+```
+

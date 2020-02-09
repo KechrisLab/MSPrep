@@ -203,9 +203,9 @@ ms_summarize <- function(data,
   quant_summary <- summarise(quant_summary,
                              n_present        = sum(!is.na(.data$abundance)),
                              prop_present     = UQ(sym("n_present")) / replicate_count,
-                             mean_abundance   = mean(.data$abundance, na.rm = T),
-                             sd_abundance     = sd(.data$abundance, na.rm = T),
-                             median_abundance = median(.data$abundance, na.rm = T))
+                             mean_abundance   = mean(.data$abundance, na.rm = TRUE),
+                             sd_abundance     = sd(.data$abundance, na.rm = TRUE),
+                             median_abundance = median(.data$abundance, na.rm = TRUE))
   quant_summary <- mutate(quant_summary, cv_abundance = .data$sd_abundance / .data$mean_abundance)
   quant_summary <- ungroup(quant_summary)
 

@@ -204,18 +204,5 @@ halfmin_if_any_negative <-  function(data, groupingvars, batch, met_vars) {
 
 }
 
-
 truncate_negative_vals   <- function(var) ifelse(var < 0, 0, var)
 setmissing_negative_vals <- function(var) ifelse(var < 0, NA, var)
-
-# OTHER METHODS
-# 4. zero imputation -- 0 becomes 0.0001 (for normalization methods)
-# 5. median imputation
-# 6. mean imputation
-
-
-
-
-
-
-

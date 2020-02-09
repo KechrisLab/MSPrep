@@ -5,10 +5,20 @@
 \title{Function for summarizing tidied dataset and preparing for filtering, imputation, 
 and normalization.}
 \usage{
-ms_summarize(data, abundance = "abundance", met_id = NULL, mz = NULL,
-  rt = NULL, subject_id = "subject_id", replicate = NULL,
-  batch = NULL, groupingvars = NULL, cvmax = 0.5, missing_val = 1,
-  min_proportion_present = 1/3)
+ms_summarize(
+  data,
+  abundance = "abundance",
+  met_id = NULL,
+  mz = NULL,
+  rt = NULL,
+  subject_id = "subject_id",
+  replicate = NULL,
+  batch = NULL,
+  groupingvars = NULL,
+  cvmax = 0.5,
+  missing_val = 1,
+  min_proportion_present = 1/3
+)
 }
 \arguments{
 \item{data}{Tidied dataset.}

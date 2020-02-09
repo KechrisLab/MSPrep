@@ -5,9 +5,15 @@
 \title{Function for converting wide mass spectrometry quantification data into a tidy data
 frame.}
 \usage{
-ms_tidy(quantification_data, met_id = NULL, mz = NULL, rt = NULL,
-  col_extra_txt = NULL, col_names = c("subject_id"),
-  separator = NULL)
+ms_tidy(
+  quantification_data,
+  met_id = NULL,
+  mz = NULL,
+  rt = NULL,
+  col_extra_txt = NULL,
+  col_names = c("subject_id"),
+  separator = NULL
+)
 }
 \arguments{
 \item{quantification_data}{Data frame containing the quantification data.}

@@ -4,7 +4,7 @@
 \name{msquant}
 \alias{msquant}
 \title{Example mass spectrometry dataset.}
-\format{A data frame with 2644 observations of 29 variables
+\format{Data frame containing 2644 observations of 56 variables
 \describe{
   \item{mz}{Mass-to-charge ratio}
   \item{rt}{Retention-time}
@@ -28,6 +28,12 @@ batch/replicate combination.
 }
 \examples{
   data(msquant)
-  str(msquant)
+}
+\references{
+Hughes, G., Cruickshank-Quinn, C., Reisdorph, R., Lutz, S., Petrache, I., 
+    Reisdorph, N., … Kechris, K. (2014). MSPrep--summarization, normalization 
+    and diagnostics for processing of mass spectrometry-based metabolomic data. 
+    Bioinformatics (Oxford, England), 30(1), 133–134. 
+    doi:10.1093/bioinformatics/btt589
 }
 \keyword{datasets}
