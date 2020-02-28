@@ -1,6 +1,8 @@
 #' Tidy, summarize, filter, impute, and normalize metabolomics dataset
 #' 
-#' Calls ms_tidy, ms_summarize, ms_filter, ms_impute, and ms_normalize
+#' Wrapper function for the entire MSPrep pre-analytics pipeline. Calls 
+#' ms_tidy(), ms_summarize(), ms_filter, ms_impute(), ms_normalize(), 
+#' and ms_return()
 #' 
 #' @param quantification_data Data frame containing the quantification data.
 #' @param met_id Name of the column containing compound names.
@@ -25,9 +27,7 @@
 #' @param missing_val Value of missing data in the quantification data file.
 #' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
 #' to summarize with median or mean. Below this the compound will be set to 0.
-#' 
 #' @param filter_percent Decimal value representing to proportion to filter the data.
-#' 
 #' @param imputeMethod Name of imputation method to use. 
 #' Options are:
 #' - halfmin (half the minimum value)
@@ -39,7 +39,6 @@
 #' @param compoundsAsNeighbors If TRUE, will use compounds as neighbors for KNN imputation
 #' rather than samples. Note, using compounds as neighbors is significantly slower than using
 #' samples as neighbors.
-#' 
 #' @param normalizeMethod Name of normalization method.
 #' - ComBat (only ComBat batch correction)
 #' - quantile (only quantile normalization)
@@ -58,10 +57,6 @@
 #' - log10
 #' - log2
 #' - none
-#' 
-#' @details Wrapper function for ms_tidy, ms_summarize, ms_filter, ms_impute, and
-#' ms_normalize.
-#' 
 #' @examples 
 #' # Load example data
 #' data(msquant)
@@ -88,7 +83,7 @@
 #' # Print summary
 #' print(prepared_data)
 #' 
-#' @return A summarized, filtered, imputed, and normalized msprep object
+#' @return A summarized, filtered, imputed, and normalized `msprep` object
 #' @export
 
 ms_prepare <- function(quantification_data,

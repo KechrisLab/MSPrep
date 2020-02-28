@@ -13,11 +13,11 @@
 #' @docType package
 #' @name MSPrep 
 #' @details
-#' Package for processing of mass spectrometry quantification data. Six 
+#' Package for pre-analytic processing of mass spectrometry quantification data. Six 
 #' functions are provided and are intended to be used in sequence (as a 
-#' pipeline) to produce cleaned and normalized data. These are ms_tidy, 
-#' ms_summarize, ms_filter, ms_impute, ms_normalize, and ms_return. The 
-#' function ms_prepare is also provided as a wrapper function combining the six 
+#' pipeline) to produce cleaned and normalized data. These are ms_tidy(), 
+#' ms_summarize(), ms_filter(), ms_impute(), ms_normalize(), and ms_return(). 
+#' The function ms_prepare() is also provided as a wrapper function combining the six 
 #' previously mentioned functions.
 #' 
 #' @references

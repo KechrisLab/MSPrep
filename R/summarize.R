@@ -1,14 +1,10 @@
-#' Function for summarizing tidied dataset and preparing for filtering, imputation, 
-#' and normalization.
+#' Function for summarizing technical replicates.
 #'
-#' Prepares a mass spec quantification data frame for filtering, imputation,
-#' and normalization. Also provides summaries of data structure (replicates,
-#' subjects, groupingvars, etc.)
-#'
-#' Function reads tidied data and summarizes technical replicates as the
+#' Reads tidied data and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
 #' coefficient of variation below specified level, or median for those found in
-#' 3 replicates but excess CV.
+#' 3 replicates but excessive coefficient of variation (CV). Compounds found in
+#' only 1 replicate are assigned as missing.
 #'
 #' @param data Tidied dataset.
 #' @param subject_id Name of the subject ID column.
@@ -26,9 +22,9 @@
 #' @param missing_val Value of missing data in the quantification data file.
 #' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
 #' to summarize with median or mean. Below this the compound will be set to 0.
-#' @return An `msprep` object with `stage(rtn) == "summarized"` containing
-#' summarised quantification data, a dataset of compounds summarised by medians,
-#' and other related summaries.
+#' @return An `msprep` containing quantification data with summarized technical
+#' replicates, a dataset of compounds summarised by medians, and other related
+#' summaries.
 #' @examples
 #'
 #' # Read in data file

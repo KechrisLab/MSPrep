@@ -2,11 +2,11 @@
 #'
 #' Filters compounds to those found in specified proportion of subjects.
 #'
-#' @param msprep_obj Prepared MSPrep object.
-#' @param filter_percent Decimal value representing to proportion to filter 
-#' the data.
-#' @return An `msprep` object with `stage(rtn) == 'filtered'` containing
-#' filtered quantification data.
+#' @param msprep_obj Summarized MSPrep object.
+#' @param filter_percent Decimal value indicating filtration threshold. 
+#' Metabolites which are present in fewer samples than the specified proportion 
+#' will be removed. 
+#' @return An `msprep` object with containing filtered quantification data.
 #' @references 
 #'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
 #'   expression profile data. Bioinformatics, 19, 2088-2096
@@ -15,7 +15,7 @@
 #'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 #' @examples
 #'
-# Load example dataset, tidy it, and summarize it
+#' # Load example dataset, tidy it, and summarize it
 #' data(msquant)
 #' 
 #' tidied_data <- ms_tidy(msquant, mz = 'mz', rt = 'rt',
@@ -56,7 +56,7 @@
 #' @importFrom rlang !!!
 #' @importFrom magrittr %>%
 #' @export
-ms_filter <- function(msprep_obj, filter_percent = 0.5) {
+ms_filter <- function(msprep_obj, filter_percent = 0.8) {
   
   stopifnot(class(msprep_obj) == "msprep")
   stopifnot(stage(msprep_obj) == "summarized")
@@ -73,7 +73,7 @@ ms_filter <- function(msprep_obj, filter_percent = 0.5) {
                                                     `!!!`(met_syms), 
                                                     .data$keep), 
                                                     by = met_vars) %>% 
-    filter(.data$keep) %>% 
+  filter(.data$keep) %>% 
     select(-.data$keep)
   
   msprep_obj$data <- filtereddata

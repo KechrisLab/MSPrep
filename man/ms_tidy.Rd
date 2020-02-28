@@ -46,6 +46,13 @@ containing MS quantification data. Optionally, the data may also include a colum
 specifying compound name (met_id) as an addition to or replacement of rt/mz columns.
 }
 \details{
+Function reads in wide dataset of mass spectrometry quantification data and converts
+it to a tidy dataset.  This function assumes that the dataset is in a wide
+format, with a combination of columns representing the retention time (rt), another
+representing the mass-to-charge ratio (mz), and the remaining columns
+containing MS quantification data. Optionally, the data may also include a column
+specifying compound name (met_id) as an addition to or replacement of rt/mz columns.
+
 It also assumes that the column names of quantification data start with some
 consistent, informational but unnecessary text (col_extra_txt), and contain
 the spike, subject ID, and replicate ID in a consistent position, all

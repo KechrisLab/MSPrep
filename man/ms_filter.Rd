@@ -4,23 +4,24 @@
 \alias{ms_filter}
 \title{Function for filtering prepared dataset.}
 \usage{
-ms_filter(msprep_obj, filter_percent = 0.5)
+ms_filter(msprep_obj, filter_percent = 0.8)
 }
 \arguments{
-\item{msprep_obj}{Prepared MSPrep object.}
+\item{msprep_obj}{Summarized MSPrep object.}
 
-\item{filter_percent}{Decimal value representing to proportion to filter 
-the data.}
+\item{filter_percent}{Decimal value indicating filtration threshold. 
+Metabolites which are present in fewer samples than the specified proportion 
+will be removed.}
 }
 \value{
-An `msprep` object with `stage(rtn) == 'filtered'` containing
-filtered quantification data.
+An `msprep` object with containing filtered quantification data.
 }
 \description{
 Filters compounds to those found in specified proportion of subjects.
 }
 \examples{
 
+# Load example dataset, tidy it, and summarize it
 data(msquant)
 
 tidied_data <- ms_tidy(msquant, mz = 'mz', rt = 'rt',

@@ -114,14 +114,12 @@ controls. Vector of column numbers from metafin dataset of that control.}
 - none}
 }
 \value{
-A summarized, filtered, imputed, and normalized msprep object
+A summarized, filtered, imputed, and normalized `msprep` object
 }
 \description{
-Calls ms_tidy, ms_summarize, ms_filter, ms_impute, and ms_normalize
-}
-\details{
-Wrapper function for ms_tidy, ms_summarize, ms_filter, ms_impute, and
-ms_normalize.
+Wrapper function for the entire MSPrep pre-analytics pipeline. Calls 
+ms_tidy(), ms_summarize(), ms_filter, ms_impute(), ms_normalize(), 
+and ms_return()
 }
 \examples{
 # Load example data

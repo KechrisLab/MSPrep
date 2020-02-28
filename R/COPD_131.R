@@ -1,11 +1,11 @@
 #' Example mass spectrometry dataset
 #' 
-#' Data contains LC-MS analysis for samples from 131 subjects with 3 technical 
-#' replicates per subject. The first three columns indicate "Mass" which
-#' is the mass-to-charge ratio for each metabolite, "Retention.Time", and
-#' "Compound.Name". The remaining columns indicate abundance for
-#' each of the 662 mass/retention-time combination for each subject/replicate
-#' combination.
+#' Data contains LC-MS metabolite analysis for samples from 131 subjects 
+#' with 3 technical replicates per subject. The first three columns indicate 
+#' "Mass" indicating the mass-to-charge ratio, 
+#' "Retention.Time", and "Compound.Name" for each present metabolite. The 
+#' remaining columns indicate abundance for each of the 662 
+#' mass/retention-time combination for each subject/replicate combination.
 #' 
 #' @docType data
 #' @format Data frame containing 662 observations of 396 variables.
@@ -17,7 +17,7 @@
 #'   \item{X10062C_1}{The remaining columns indicate metabolite abundances 
 #'   found in each Subject/Replicate combination. Each column begins with an 
 #'   'X', followed by the subject ID, and then the replicate (1, 2, or 3), 
-#'   seperated by '_'.}
+#'   each seperated by '_'.}
 #' }
 #' @source \url{https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438}
 #' @references 

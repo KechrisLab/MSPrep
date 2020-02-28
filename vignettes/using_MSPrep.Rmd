@@ -46,28 +46,30 @@ vignette: |
 
 # Introduction
 
-MSPrep provides six key functions for preparing metabolomics data for analysis. This vignette will provide:
+`MSPrep` provides a convenient set of functionalities used in the pre-analytic processing pipeline for mass spectrometry based metabolomics data. Functions are included for the following processes commonly performed prior to analysis of such data:
 
-- An explanation of each function provided by MSPrep
-- An explanation of the data format required by MSPrep
-- Two examples for each function demonstrating varying usage
-- Notes on function usage
+1. Summarization of technical replicates (if available)
+2. Filtering of metabolites
+3. Imputation of missing values
+4. Transformation, normalization, and batch correction
 
-# Loading libraries
+The sections which follow provide an explanation of each function contained in `MSPrep`, those functions' respective options, and examples of the pre-analysis pipeline using two datasets provided in the `MSPrep` package, `MSQuant` and `COPD_131`.
 
-```{r}
+For further information, please see *MSPrep—Summarization, normalization and diagnostics for processing of mass spectrometry–based metabolomic data* (Hughes et al., 2014) and *Pre-analytic Considerations for Mass Spectrometry-Based Untargeted Metabolomics Data* (Reinhold et al., 2019).
+
+```{r, echo=FALSE}
 library(MSPrep)
 ```
 
-# Expected Format
+# Expected Data Format
 
-We first need to format the data. The following format is expected for most types of data generated from mass spectrometry.
+The following format is expected prior to using `MSPrep` pipeline.
 
 Most often, two columns in the data will specify mass-to-charge ratio and retention-time. These columns may have any names (e.g. "mz" and "rt" or "Mass" and "Retention.Time") which should be specified using the `mz` and `rt` parameters of `ms_tidy()` and `ms_summarize()`.
 
 As an addition to (or replacement of) the mass-to-charge ratio and retention-time columns, a column may be provided which provides compound names. The name of this column should be specified using the `met_id` parameter of `ms_tidy()` and `ms_summarize()`.
 
-The next columns are for the other sample variables. These columns should have names that contain information about their contents which will be used later in the pipeline (e.g. SampleID). There are three pieces of information which may be present at the end of each column name, separated by a consistent separator. These are the spike, batch, and replicate ID.
+The next columns are for the other sample variables. These columns should have names that contain information about their contents and sample features which will be used later in the pipeline (e.g. Sample ID and batch number). There are three pieces of information which may be present at the end of each column name, spike, batch, and replicate ID. Each piece of information contained in the column names must be seperated by a consistent character not present anywhere else in the column name.
 
 As an example see the provided dataset, `msquant`.
 
@@ -76,7 +78,7 @@ data("msquant")
 colnames(msquant)[3]
 ```
 
-Above is the third column name in `msquant`. The first part "Neutral_Operator_Dif_Pos_" will not be used, so we will assign it to `col_extra_txt`. The next value, "1x", is the spike-in value. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
+Above is the third column name in `msquant`. The first part "Neutral_Operator_Dif_Pos_" will not be used in this analysis, so we will assign it to `col_extra_txt`. The next value, "1x", is the spike-in value. The following value, "O1", is the batch. The remaining values, "A" and "01", are the replicate and subject IDs.
 
 Identifiers in the datasets:
 
@@ -87,9 +89,11 @@ With our data in this format, we can start the pipeline.
 
 # Example One
 
+Using the `msquant` dataset provided by the `MSPrep` package, the full pre-analytic processing pipeline will be demonstrated.
+
 ## Tidying
 
-The first step is to extract the information from the column names discussed above, and get it into a tidy data frame. We can do this with the ms_tidy function.
+First, it is necessary to extract the information from the column names discussed above and reformat the data into a tidy data frame. This is done using the `ms_tidy()` function.
 
 ```{r}
 tidied_data <- ms_tidy(msquant, 
@@ -97,23 +101,26 @@ tidied_data <- ms_tidy(msquant,
                        rt = "rt", 
                        col_extra_txt = "Neutral_Operator_Dif_Pos_", 
                        separator = "_", 
-                       col_names = c("spike", "batch", "replicate", "subject_id"))
+                       col_names = c("spike", "batch", "replicate", 
+                                     "subject_id"))
 ```
 
-Note, the names chosen for col_names are arbitratry and may be altered according to your preference, but they will be used later on.
+Note, the names chosen for col_names are arbitratry and may be altered according to your preference, but the chosen names will be used in the next step of the pipeline.
 
 ## Summarizing
 
-This step summarizes the technical replicates if present using the following procedure for each compound in each batch.
+This step summarizes the technical replicates, if present, using the following procedure for each compound in each batch.
 
 1. If there are less than a minimum proportion of the values found among the replicates (usually one or zero), leave the value empty. Otherwise proceed.
 1. Calculate the coefficient of variation between the replicates using $c_v = \frac{\sigma}{\mu}$, where $\mu$ is the mean and $\sigma$ is the standard deviation.
 2. For three replicates, if the coefficient of variation is above a specified level, use the median value for the compound, to correct for the large dispersion.
 3. Otherwise, use the mean value of the replicates for the compound.
 
-If no replicates are present in the data, exclude the `replicate` argument from `ms_summarize()`. In this case, the `replicate_info` and `medians` list items of the `msprep` object returned by `ms_summarize()` will be set to `NULL`.
+If no replicates are present in the data, exclude the `replicate` argument from `ms_summarize()` (or set it equal to `NULL`). In this case, the `replicate_info` and `medians` list items of the `msprep` object returned by `ms_summarize()` will be set to `NULL`.
 
-NOTE: In the current build, ms_summarize must be called prior to filtering, imputation, or normalization regardless of the presence or absence of replicates.
+NOTE: In the current version of `MSPrep`, `ms_summarize()` must be called prior to filtering, imputation, or normalization regardless of the presence or absence of replicates.
+
+The technical replicates in `MSQuant` are summarized below using a CV maximum of .50 and a minimum proportion present of 1 out of 3 replicates. Note that in the `MSQuant` dataset, missing values are represented as '1', which is specified in the `missing_val` argument below. `ms_summarize` will replace these missing values with '0' in all instances where the summarization algorithm determines the values to be truly missing.
 
 ```{r}
 summarized_data <- ms_summarize(tidied_data, 
@@ -130,7 +137,7 @@ summarized_data <- ms_summarize(tidied_data,
 
 ## Filtering
 
-This step is straightforward but very important. Simply supply a percentage of the number of samples for which a compound needs to have data present in order to be retained in the next steps.
+Following the summarization of technical replicates, the data needs to be filtered to only contain compounds present in a specified proportion of samples. To do so, the `ms_filter()` function is provided. By default, `ms_filter()` uses the '80%` rule and removes compounds which are are not present in 80% of the samples.
 
 ```{r}
 filtered_data <- ms_filter(summarized_data, 
@@ -139,13 +146,13 @@ filtered_data <- ms_filter(summarized_data,
 
 ## Imputation
 
-Next, depending on the downstream analysis, you may need to impute missing data. We provide three imputation methods:
+Next, depending on the downstream analysis, you may need to impute missing data. Three imputation methods are provided:
 
 1. half-min (half the minimum value)
 2. bpca (Bayesian PCA), 
 3. knn (k-nearest neighbors)
 
-Half-min is the fastest, but may introduce bias. KNN typically takes the longest. If you choose to use KNN, you can provide a value for k. By default, KNN uses samples as neighbors. By specifiying `compoundsAsNeighbors = TRUE`, compounds will be used as neighbors instead. Note that this is significantly slower than using samples as neighbors and may take several minutes or more to run depending on the size of your dataset.
+Half-min performs faster than other methods, but may introduce bias. BPCA imputes the data using a number of principle components specified by the user with the `n_pcs` arugment. KNN typically takes the longest. Users may provide their preferred value of k using the `k_knn` argument. Further, by default, KNN uses samples as neighbors. By specifiying `compoundsAsNeighbors = TRUE`, compounds will be used as neighbors instead. Note that this is significantly slower than using samples as neighbors and may take several minutes or more to run depending on the size of your dataset.
 
 ```{r}
 imputed_data <- ms_impute(filtered_data, 
@@ -155,7 +162,7 @@ imputed_data <- ms_impute(filtered_data,
 
 ## Normalization
 
-In order to make comparisons between samples, the data may need to be normalized and transformed. This step performs one of eight normalization strategies. 
+In order to make comparisons between samples, the data may need to be transformed and normalized This step performs one of eight normalization strategies. 
 
 1. Median
 2. ComBat
@@ -168,7 +175,7 @@ In order to make comparisons between samples, the data may need to be normalized
 
 Note that all methods involving ComBat may only be used on data that contains batches. Similarly, SVA and CRMN normalization may only be used on data sets that use spike-ins (internal standards). 
 
-Additionally, the argument `transform` enables the transformation of data prior to normalization using a log base 10 ("log10") or base 2 ("log2") transformation. Specify "none" to bypass transformation. 
+The argument `transform` enables the transformation of data prior to normalization using a log base 10 ("log10") or base 2 ("log2") transformation. Specify "none" to bypass transformation. 
 
 For experiments which have control compounds, a list of the column numbers containing them should be provided in the controls variable. Otherwise, simply leave the controls parameter blank or NULL. 
 
@@ -195,23 +202,26 @@ returned_data <- ms_return(normalized_data)
 
 ## Pipeline
 
-Usually, you will want to perform the whole pipeline. This can be done in a single statement using the `ms_prepare()` function. Simply provide the function the same arguments that you would provide to the individual functions. 
+Often, all the above steps will need to be conducted. This can be done in a single statement using the `ms_prepare()` function. Simply provide the function the same arguments that you would provide to the individual functions. 
 
 ```{r}
 
 prepared_data <- ms_prepare(msquant, 
-                  mz = "mz",
-                  rt = "rt",
-                  col_extra_txt = "Neutral_Operator_Dif_Pos_", 
-                  separator = "_", 
-                  col_names = c("spike", "batch", "replicate", "subject_id"),
-                  replicate = "replicate",
-                  batch = "batch",
-                  subject_id = "subject_id",
-                  groupingvars = "spike",
-                  filter_percent = .8,
-                  imputeMethod = "halfmin",
-                  normalizeMethod = "quantile")
+                            mz = "mz",
+                            rt = "rt",
+                            col_extra_txt = "Neutral_Operator_Dif_Pos_", 
+                            separator = "_", 
+                            col_names = c("spike", 
+                                          "batch", 
+                                          "replicate", 
+                                          "subject_id"),
+                            replicate = "replicate",
+                            batch = "batch",
+                            subject_id = "subject_id",
+                            groupingvars = "spike",
+                            filter_percent = .8,
+                            imputeMethod = "halfmin",
+                            normalizeMethod = "quantile")
 ```
 
 ## Printing
@@ -225,9 +235,9 @@ print(prepared_data)
 
 # Example Two
 
-Next, we will work with the dataset `COPD_131`. The raw dataset can be found [here, at Metabolomics Workbench.](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438) Note that only a portion of the `COPD_131` dataset is included in this package in order to limit file size and improve example performance. Generally, the number of metabolites will be far greater than the number of samples and the functions included in this package will take more time to process the data.
+Next, the functionality of `MSPrep` will be demonstrated using the included data `COPD_131`. The raw dataset can be found [here, at Metabolomics Workbench.](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438) Note that only a portion of the `COPD_131` dataset is included in this package in order to limit file size and improve example performance. Generally, the number of metabolites will be far greater than the number of samples and the functions included in this package will take more time to process the data.
 
-This dataset differs from `msquant` in several ways. First, it has a column `Compound.Name` which specifies compound names, and the mass-to-charge ratio and retention-time columns are named `Mass` and `Retention.Time` respectively. Second, this dataset does not have spike-ins or batches (but it does have technical replicates). Finally, the data has already been normalized, so we will forgo that step of the MSPrep pipeline.
+This dataset differs from `msquant` in several ways. First, it has a column `Compound.Name` which specifies compound names, and the mass-to-charge ratio and retention-time columns are named `Mass` and `Retention.Time` respectively. Second, this dataset does not have spike-ins or batches (but it does have technical replicates). Finally, the data has already been normalized so that step of the pipeline will be excluded.
 
 ## Tidying
 
@@ -236,7 +246,7 @@ data("COPD_131")
 strsplit(colnames(COPD_131)[4], "_")
 ```
 
-As with before, we begin by tidying the data. In this dataset, we have two features present in the column names: subject and replicate number, seperated by '_'. We also have the extra text 'X' appearing before each column name. So, we will run `ms_tidy()` as follows:
+As with before, the data must first be reformated into a tidy dataframe. In this dataset, there are two features present in the column names: subject and replicate number, seperated by '_'. Also, the extra text 'X' appears before each column name. So, `ms_tidy()` is run as follows:
 
 ```{r}
 tidied_data_131 <- ms_tidy(COPD_131,
@@ -250,7 +260,7 @@ tidied_data_131 <- ms_tidy(COPD_131,
 
 ## Summarizing
 
-Next, we move on to summarizing technical replicates. This process is largely the same as before, but with different column names specified. We call `ms_summarize()` as follows:
+Next, the technical replicates in `COPD_131` need to be summarized. This process is largely the same as before, but with different column names specified, so `ms_summarize()` is called as follows:
 
 ```{r}
 summarized_data_131 <- ms_summarize(tidied_data_131,
@@ -275,7 +285,7 @@ filtered_data_131 <- ms_filter(summarized_data_131,
 
 ## Imputing
 
-This time we will use Bayesian PCA using three principle components to impute the missing values for the data, calling `ms_impute()` as follows:
+For this example, `ms_impute()` will be called using Bayesian PCA using three principle components to impute the missing values for the data.
 
 ```{r}
 imputed_data_131 <- ms_impute(filtered_data_131, 
@@ -285,7 +295,7 @@ imputed_data_131 <- ms_impute(filtered_data_131,
 
 ## Returning
 
-Now, we want our data returned to the format in which is was provided, so we call the return function provided by MSPrep.
+As previously mentioned, throughout the `MSPrep` pipeline data is stored in a long format `Data Frame`. As it may be preferable to return the data to a typical format with compounds as rows and samples as columns, the function `ms_return()` is provided to do so.
 
 ```{r}
 returned_data_131 <- ms_return(imputed_data_131)

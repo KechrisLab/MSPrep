@@ -9,7 +9,7 @@
 #' 
 #' @param msprep_obj Imputed MSPrep object.
 #' @param normalizeMethod Name of normalization method.
-#' ComBat" (only ComBat batch correction), "quantile" (only quantile 
+#' "ComBat" (only ComBat batch correction), "quantile" (only quantile 
 #' normalization), "quantile + ComBat" (quantile with ComBat batch correction),
 #' "median" (only median normalization), "median + ComBat" (median with ComBat
 #' batch correction), "CRMN" (cross-contribution compensating multiple 

@@ -7,16 +7,6 @@
 #' representing the mass-to-charge ratio (mz), and the remaining columns
 #' containing MS quantification data. Optionally, the data may also include a column
 #' specifying compound name (met_id) as an addition to or replacement of rt/mz columns. 
-#' 
-#' It also assumes that the column names of quantification data start with some
-#' consistent, informational but unnecessary text (col_extra_txt), and contain
-#' the spike, subject ID, and replicate ID in a consistent position, all
-#' separated by a consistent separator.
-#'
-#' See \code{data(quantification)} for an example.  If your data doesn't fit
-#' this format, view the function code for hints on tidying your data.  The core
-#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
-#' and \code{tidyr::separate()}.
 #'
 #' @param quantification_data Data frame containing the quantification data.
 #' @param met_id Name of the column containing compound names.
@@ -28,6 +18,24 @@
 #' names.
 #' @param separator Character or text separating spike, subject, and replicate
 #' ids in column names.
+#' 
+#' @details 
+#' Function reads in wide dataset of mass spectrometry quantification data and converts
+#' it to a tidy dataset.  This function assumes that the dataset is in a wide
+#' format, with a combination of columns representing the retention time (rt), another
+#' representing the mass-to-charge ratio (mz), and the remaining columns
+#' containing MS quantification data. Optionally, the data may also include a column
+#' specifying compound name (met_id) as an addition to or replacement of rt/mz columns.
+#' 
+#' It also assumes that the column names of quantification data start with some
+#' consistent, informational but unnecessary text (col_extra_txt), and contain
+#' the spike, subject ID, and replicate ID in a consistent position, all
+#' separated by a consistent separator.
+#'
+#' See \code{data(quantification)} for an example.  If your data doesn't fit
+#' this format, view the function code for hints on tidying your data.  The core
+#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
+#' and \code{tidyr::separate()}.
 #'
 #' @return A tidy data frame of quant data, with columns mz, rt,
 #' replicate, and abundance.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/impute.R
 \name{ms_impute}
 \alias{ms_impute}
-\title{Function for imputing on filtered data.}
+\title{Function for imputing missing values in data.}
 \usage{
 ms_impute(
   msprep_obj,
@@ -15,34 +15,25 @@ ms_impute(
 \arguments{
 \item{msprep_obj}{Filtered MSPrep object.}
 
-\item{imputeMethod}{Name of imputation method to use. 
-Options are:
-- halfmin (half the minimum value)
-- bpca (Bayesian PCA)
-- knn (k-nearest neighbors)}
+\item{imputeMethod}{String specifying imputation method choice. 
+Options are "halfmin" (half the minimum value), "bpca" (Bayesian PCA), 
+and "knn" (k-nearest neighbors)}
 
 \item{k_knn}{Number of clusters for 'knn' method.}
 
 \item{n_pcs}{Number of  principle components used for re-estimation for 
 'bpca' method.}
 
-\item{compoundsAsNeighbors}{If TRUE, will use compounds as neighbors for KNN imputation
-rather than samples. Note, using compounds as neighbors is significantly slower than using
-samples as neighbors.}
+\item{compoundsAsNeighbors}{For KNN imputation. If TRUE, compounds will be 
+used as neighbors rather than samples. Note that using compounds as 
+neighbors is significantly slower than using samples.}
 }
 \value{
-An msprep object with missing data imputed.
+An `msprep` object with missing data imputed.
 }
 \description{
-Performs data imputation for a given mz_rt value (not separately for batches
-or grouping variables).
-}
-\details{
-minval Filtered dataset with missing values replaced by 1/2 minimum
-observed value for that compound.
-
-bpca Filtered dataset with missing values imputed by a Bayesian PCA
-from PCAMethods package.
+Replaces missing values with non-zero estimates calculated using a
+selected method.
 }
 \examples{
 # Load, tidy, summarize, and filter example dataset
@@ -51,7 +42,8 @@ data(msquant)
 tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
                        col_extra_txt = "Neutral_Operator_Dif_Pos_",
                        separator = "_", 
-                       col_names = c("spike", "batch", "replicate", "subject_id"))
+                       col_names = c("spike", "batch", "replicate", 
+                                     "subject_id"))
 
 summarized_data <- ms_summarize(tidied_data, 
                                 mz = "mz", 
@@ -75,7 +67,7 @@ imputed_data_knn <- ms_impute(filtered_data,
                               k_knn = 5)
 imputed_data_bpca <- ms_impute(filtered_data,
                                imputeMethod = "bpca",
-                              n_pcs = 3)
+                               n_pcs = 3)
 
 }
 \references{

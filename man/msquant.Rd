@@ -10,7 +10,7 @@
   \item{rt}{Retention-time}
   \item{Neutral_Operator_Dif_Pos_1x_O1_A_01}{The remaining columns specify
   metabolite abundances found in each subject/spike-in/batch/replicate 
-  combinations. Each columns begins with
+  combination. Each columns begins with
   'Neutral_Operator_Dif_Pos' followed by the spike-in (1x, 2x, or 4x), then
   the batch (01, 02, or 03), the replicate (A, B, or C), and finally the
   subject ID (01 or 02), each seperated by '_'.}

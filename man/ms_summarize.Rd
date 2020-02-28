@@ -2,8 +2,7 @@
 % Please edit documentation in R/summarize.R
 \name{ms_summarize}
 \alias{ms_summarize}
-\title{Function for summarizing tidied dataset and preparing for filtering, imputation, 
-and normalization.}
+\title{Function for summarizing technical replicates.}
 \usage{
 ms_summarize(
   data,
@@ -50,20 +49,16 @@ of variation between replicates.}
 to summarize with median or mean. Below this the compound will be set to 0.}
 }
 \value{
-An `msprep` object with `stage(rtn) == "summarized"` containing
-summarised quantification data, a dataset of compounds summarised by medians,
-and other related summaries.
+An `msprep` containing quantification data with summarized technical
+replicates, a dataset of compounds summarised by medians, and other related
+summaries.
 }
 \description{
-Prepares a mass spec quantification data frame for filtering, imputation,
-and normalization. Also provides summaries of data structure (replicates,
-subjects, groupingvars, etc.)
-}
-\details{
-Function reads tidied data and summarizes technical replicates as the
+Reads tidied data and summarizes technical replicates as the
 mean of observations for compounds found in 2 or 3 replicates and with
 coefficient of variation below specified level, or median for those found in
-3 replicates but excess CV.
+3 replicates but excessive coefficient of variation (CV). Compounds found in
+only 1 replicate are assigned as missing.
 }
 \examples{
 
