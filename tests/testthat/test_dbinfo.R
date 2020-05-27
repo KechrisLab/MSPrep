@@ -5,7 +5,7 @@ context("ms_prepare() related functions")
 
 ### Read in data files
 # pathclinical <- system.file("data-raw", "Clinical.csv", package = "MSPrep")
-pathquant    <- system.file("extdata", "Quantification.csv", package = "MSPrep")
+#pathquant    <- system.file("extdata", "Quantification.csv", package = "MSPrep")
 # pathlink     <- system.file("data-raw", "SubjectLinks.csv", package = "MSPrep")
 path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
 data(msquant_subject1)

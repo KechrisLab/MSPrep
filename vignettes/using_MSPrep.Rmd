@@ -83,7 +83,7 @@ Above is the third column name in `msquant`. The first part "Neutral_Operator_Di
 Identifiers in the datasets:
 
 - LCMS_Run_ID = operator/replicate (A-C), subject (01-03), concentration  (1x,2x,4x)
-- SubjectID   = subject (01-03), concentration  (1x,2x,4x)
+- SubjectID   = subject (01-02), concentration  (1x,2x,4x)
 
 With our data in this format, we can start the pipeline.
 

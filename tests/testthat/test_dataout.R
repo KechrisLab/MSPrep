@@ -2,14 +2,20 @@
 context("ms_impute()")
 
 set.seed(9999)
-data(msquant_subject1)
-tidy_data       <- ms_tidy(msquant_subject1, mz = "mz", rt = "rt",
-                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
-                           separator = "_", 
-                           col_names = c("spike", "batch", "replicate", "subject_id"))
-prepped_data    <- tidy_data %>% 
-  ms_summarize(mz = "mz", rt = "rt", replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-  ms_filter(0.8)
+data(msquant)
+tidy_data <- msTidy(msquant_subject1, 
+                     mz = "mz", 
+                     rt = "rt",
+                     col_extra_txt = "Neutral_Operator_Dif_Pos_",
+                     separator = "_",
+                     col_names = c("spike", "batch", "replicate", "subject_id"))
+prepped_data <- tidy_data %>% 
+    ms_summarize(mz = "mz", 
+                 rt = "rt", 
+                 replicate = "replicate",
+                 batch = "batch", 
+                 groupingvars = "spike") %>%
+    ms_filter(0.8)
 
 # impute_methods <- c("halfmin", "knn", "bpcs")
 # imputed_lst <- impute_methods %>%
@@ -24,7 +30,7 @@ knn_imputed     <- prepped_data %>% ms_impute("knn")
 bpca_imputed    <- prepped_data %>% ms_impute("bpca")
 
 test_that("Check dataset columns", {
-
+    
     halfmin_colnames <- sort(colnames(halfmin_imputed$data))
     knn_colnames     <- sort(colnames(knn_imputed$data))
     bpca_colnames    <- sort(colnames(bpca_imputed$data))

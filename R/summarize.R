@@ -13,14 +13,17 @@
 #' @param abundance Name of the abundance column.
 #' @param groupingvars Variable name or vector of names of the
 #' phenotypes or comparison groups. Set to NULL if none are present.
-#' @param batch Name of the column representing batches. Set to NULL if no batches present.
+#' @param batch Name of the column representing batches. Set to NULL if no 
+#' batches present.
 #' @param mz Name of mass-to-charge ratio variable.
 #' @param rt Name of retention time variable.
 #' @param met_id Name of compound name variable.
-#' @param cvmax Decimal value from 0 to 1 representing the acceptable level of coefficient 
+#' @param cvmax Decimal value from 0 to 1 representing the acceptable level of 
+#' coefficient 
 #' of variation between replicates.
 #' @param missing_val Value of missing data in the quantification data file.
-#' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
+#' @param min_proportion_present  Decimal value from 0 to 1 representing the 
+#' minimum proportion present 
 #' to summarize with median or mean. Below this the compound will be set to 0.
 #' @return An `msprep` containing quantification data with summarized technical
 #' replicates, a dataset of compounds summarised by medians, and other related
@@ -34,7 +37,8 @@
 #' tidied_data    <- ms_tidy(msquant, mz = "mz", rt = "rt", 
 #'                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
 #'                           separator = "_", 
-#'                           col_names = c("spike", "batch", "replicate", "subject_id"))
+#'                           col_names = c("spike", "batch", "replicate", 
+#'                           "subject_id"))
 #' 
 #' # Summarize technical replicates
 #' summarized_data <- ms_summarize(tidied_data, 
@@ -77,133 +81,133 @@
 #' @export
 
 ms_summarize <- function(data,
-                       abundance     = "abundance",
-                       met_id        = NULL,
-                       mz            = NULL,
-                       rt            = NULL,
-                       subject_id    = "subject_id",
-                       replicate     = NULL,
-                       batch         = NULL,
-                       groupingvars = NULL,
-                       cvmax         = 0.50,
-                       missing_val   = 1,
-                       min_proportion_present = 1/3) {
+                         abundance     = "abundance",
+                         met_id        = NULL,
+                         mz            = NULL,
+                         rt            = NULL,
+                         subject_id    = "subject_id",
+                         replicate     = NULL,
+                         batch         = NULL,
+                         groupingvars  = NULL,
+                         cvmax         = 0.50,
+                         missing_val   = 1,
+                         min_proportion_present = 1/3) {
 
-  # Check args
-  stopifnot(is.data.frame(data))
-  # my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
-  stopifnot(is.null(batch) | length(batch) == 1)
-  stopifnot(is.null(replicate) | length(replicate) == 1)
+    ## Check args
+    stopifnot(is.data.frame(data))
+    ## my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
+    stopifnot(is.null(batch) | length(batch) == 1)
+    stopifnot(is.null(replicate) | length(replicate) == 1)
   
-  if(is.null(met_id) & (is.null(mz) | is.null(rt))){
-    stop("Must include 'met_id' or both 'mz' and 'rt'")
-  }
-  
-  # create vector of metabolite id column names
-  met_vars <- c()
-  if (!is.null(mz) & !is.null(rt)){
-    met_vars <- c(met_vars, "mz", "rt")
-  }
-  if (!is.null(met_id)){
-    met_vars <- c(met_vars, "met_id")
-  }
-  
-  # rlang magic 
-  grouping_quo = syms(groupingvars)
-  met_syms <- syms(met_vars)
-
-  # Convert to tibble data frame
-  data <- as_tibble(data)
-
-  # Replace provided variable names with standardized ones
-  data <- standardize_dataset(data, subject_id, replicate, abundance,
-                              grouping_quo, batch, met_id, mz, rt)
-  
-  # Create ordered vector of column names to later store as object attribute
-  col_order <- colnames(data)[!(colnames(data) %in% c("met_id", "mz", "rt", "abundance", "replicate"))]
-
-  # Replace miss val with NAs 
-  data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
-
-  # Check/error on datatypes
-  #stopifnot(is.numeric(data[rt], data[mz]))
-
-  # Get replicate count for each mz/rt/grouping_quo/subject combo
-  replicate_count <- length(unique(data[["replicate"]]))
-
-  # Roughly check if all compounds are present in each replicate
-  stopifnot(replicate_count == 0 | nrow(data) %% replicate_count == 0)
-  
-  # Skips all summarization for data sets with no replicates
-  if(is.null(replicate)){
-    
-    if(!is.null(groupingvars)){
-      summary_data <- ms_arrange(data, batch, groupingvars)
+    if (is.null(met_id) & (is.null(mz) | is.null(rt))) {
+        stop("Must include 'met_id' or both 'mz' and 'rt'")
     }
-    else{
-      summary_data <- ms_arrange(data)
+  
+    ## Create vector of metabolite id column names
+    met_vars <- c()
+    if (!is.null(mz) & !is.null(rt)) {
+        met_vars <- c(met_vars, "mz", "rt")
     }
-    
-    # Rename "abundance" to "abundance_summary" to comply with remainder of
-    # package
-    summary_data <- summary_data %>% rename("abundance_summary" = "abundance")
-    
-    # Replace NAs w/ 0
-    summary_data$abundance_summary <- replace_na(summary_data$abundance_summary, 0)
-    
-    # Order columns
-    summary_data  <- select_at(summary_data, 
-                               vars(subject_id, batch, `!!!`(grouping_quo), 
-                                    `!!!`(met_syms), "abundance_summary"))
-    
-    # Create return object & return
-    return(structure(list("data" = summary_data,
-                   replicate_info  = NULL,
-                   medians         = NULL),
-              replicate_count        = NULL,
-              cvmax                  = cvmax,
-              min_proportion_present = min_proportion_present,
-              met_vars               = met_vars,
-              groupingvars           = groupingvars,
-              batch_var              = batch,
-              replicate_var          = replicate,
-              col_order              = col_order,
-              stage = "summarized",
-              class = "msprep"))
+    if (!is.null(met_id)) {
+        met_vars <- c(met_vars, "met_id")
+    }
   
-  }
-  
-  # Arrange and group data according to present function args
-  if(is.null(batch) & is.null(groupingvars)){
-    quant_summary <- ms_arrange(data, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, `!!!`(met_syms))
-  }
-  else if(is.null(batch)){
-    quant_summary <- ms_arrange(data, groupingvars, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, `!!!`(met_syms), 
-                              `!!!`(grouping_quo))
-  }
-  else if(is.null(groupingvars)){
-    quant_summary <- ms_arrange(data, batch, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, batch, 
-                              `!!!`(met_syms))
-  }
-  else
-  {
-    quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
-    quant_summary <- group_by(quant_summary, subject_id, batch, `!!!`(met_syms), 
-                              `!!!`(grouping_quo))
-  }
+    ## rlang magic 
+    grouping_quo = syms(groupingvars)
+    met_syms <- syms(met_vars)
 
-  # Calculate remaining summary measures
-  quant_summary <- summarise(quant_summary,
-                             n_present        = sum(!is.na(.data$abundance)),
-                             prop_present     = UQ(sym("n_present")) / replicate_count,
-                             mean_abundance   = mean(.data$abundance, na.rm = TRUE),
-                             sd_abundance     = sd(.data$abundance, na.rm = TRUE),
-                             median_abundance = median(.data$abundance, na.rm = TRUE))
-  quant_summary <- mutate(quant_summary, cv_abundance = .data$sd_abundance / .data$mean_abundance)
-  quant_summary <- ungroup(quant_summary)
+    ## Convert to tibble
+    data <- as_tibble(data)
+
+    ## Replace provided variable names with standardized ones
+    data <- standardize_dataset(data, subject_id, replicate, abundance,
+                                grouping_quo, batch, met_id, mz, rt)
+  
+    ## Create ordered vector of column names to later store as object attribute
+    col_order <- colnames(data)[!(colnames(data) %in% c("met_id", "mz", "rt",
+                                                        "abundance",
+                                                        "replicate"))]
+
+    ## Replace miss val with NAs 
+    data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
+
+    ## Get replicate count for each mz/rt/grouping_quo/subject combo
+    replicate_count <- length(unique(data[["replicate"]]))
+
+    ## Roughly check if all compounds are present in each replicate
+    stopifnot(replicate_count == 0 | nrow(data) %% replicate_count == 0)
+  
+    ## Skips all summarization for data sets with no replicates
+    if (is.null(replicate)) {
+        
+        if (!is.null(groupingvars)) {
+            summary_data <- ms_arrange(data, batch, groupingvars)
+    }
+        else {
+            summary_data <- ms_arrange(data)
+        }
+    
+        ## Rename "abundance" to "abundance_summary" to comply with remainder of
+        ## package
+        summary_data <- summary_data %>% 
+            rename("abundance_summary" = "abundance")
+        
+        ## Replace NAs w/ 0
+        summary_data$abundance_summary <- replace_na(summary_data$abundance_summary, 0)
+        
+        ## Order columns
+        summary_data  <- select_at(summary_data,
+                                   vars(subject_id, batch, `!!!`(grouping_quo),
+                                        `!!!`(met_syms), "abundance_summary"))
+    
+        ## Create return object & return
+        return(structure(list("data" = summary_data,
+                              replicate_info  = NULL,
+                              medians         = NULL),
+                         replicate_count        = NULL,
+                         cvmax                  = cvmax,
+                         min_proportion_present = min_proportion_present,
+                         met_vars               = met_vars,
+                         groupingvars           = groupingvars,
+                         batch_var              = batch,
+                         replicate_var          = replicate,
+                         col_order              = col_order,
+                         stage = "summarized",
+                         class = "msprep"))
+    }
+  
+    ## Arrange and group data according to present function args
+    if (is.null(batch) & is.null(groupingvars)) {
+        quant_summary <- ms_arrange(data, replicate)
+        quant_summary <- group_by(quant_summary, subject_id, `!!!`(met_syms))
+    } else if(is.null(batch)) {
+        quant_summary <- ms_arrange(data, groupingvars, replicate)
+        quant_summary <- group_by(quant_summary, subject_id, `!!!`(met_syms),
+                                  `!!!`(grouping_quo))
+    } else if (is.null(groupingvars)) {
+        quant_summary <- ms_arrange(data, batch, replicate)
+        quant_summary <- group_by(quant_summary, subject_id, batch,
+                                  `!!!`(met_syms))
+    } else {
+        quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
+        quant_summary <- group_by(quant_summary, subject_id, batch, `!!!`(met_syms),
+                                  `!!!`(grouping_quo))
+    }
+
+    # Calculate remaining summary measures
+    quant_summary <- summarise(quant_summary,
+                               n_present = sum(!is.na(.data$abundance)),
+                               prop_present = UQ(sym("n_present")) / 
+                                   replicate_count,
+                               mean_abundance = mean(.data$abundance,
+                                                     na.rm = TRUE),
+                               sd_abundance = sd(.data$abundance, na.rm = TRUE),
+                               median_abundance = median(.data$abundance, 
+                                                         na.rm = TRUE))
+    quant_summary <- mutate(quant_summary, 
+                            cv_abundance = .data$sd_abundance / 
+                                .data$mean_abundance)
+    quant_summary <- ungroup(quant_summary)
 
   # Identify and select summary measure -- TODO: decompose this to get rid of 'no
   #                                              visible binding error'

@@ -77,6 +77,10 @@ ms_arrange <- function(data, ...) {
   return(rtn)
 }
 
+.msArrange <- function(data, ...) {
+    
+}
+
 
 valid_cols <- function(extra_vars)  {
   extra_vars <- as.character(extra_vars)
@@ -97,7 +101,8 @@ replace_missing <- function(abundance, missing_val) {
 #' @importFrom tidyr unite
 #' @importFrom tidyr spread
 #' @importFrom magrittr %>%
-data_to_wide_matrix <- function(data, groupingvars, batch, met_vars, asmatrix = TRUE) {
+data_to_wide_matrix <- function(data, groupingvars, batch, met_vars, 
+                                asmatrix = TRUE) {
 
   internal_id <- internal_id_order(groupingvars, batch)
 
@@ -139,7 +144,7 @@ wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
 
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id)
+  rtn <- rtn %>% separate("rwnm", sep = "%", into = internal_id)
   rtn <- rtn %>% as_tibble
   if(!is.null(groupingvars) & !is.null(batch)){
     rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
@@ -150,6 +155,7 @@ wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
                           -"subject_id")
   rtn <- rtn %>% separate("mz_rt", sep = "%", into = met_vars)
   rtn <- standardize_datatypes(rtn, groupingvars = groupingvars, batch = batch)
+  
   if(!is.null(groupingvars) & !is.null(batch)){
     rtn <- ms_arrange(rtn, batch, groupingvars)
   }
@@ -161,5 +167,6 @@ wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
 
 }
 
-
+# Define %notin% function (negates %in%)
+#`%notin%` <- Negate(`%in%`)
 

@@ -2,19 +2,21 @@
 % Please edit documentation in R/return.R
 \name{ms_return}
 \alias{ms_return}
-\title{Function to return data prepared by MSPrep pipeline to compound by sample format}
+\title{Function to return data prepared by MSPrep pipeline to compound by matrix
+data frame or to a SummarizedExperiment}
 \usage{
-ms_return(msprep_obj)
+ms_return(msprepObject, returnToSE = FALSE)
 }
 \arguments{
 \item{msprep_obj}{An object of class `msprep`}
 }
 \value{
 An msprep object with data formatted with metabolites as rows and
-and samples as columns
+and samples as columns, or with data as a SummarizedExperiment
 }
 \description{
-Function to return data prepared by MSPrep pipeline to compound by sample format
+Function to return data prepared by MSPrep pipeline to compound by matrix
+data frame or to a SummarizedExperiment
 }
 \examples{
 # Load, tidy, summarize, filter, impute, and normalize example dataset

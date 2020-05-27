@@ -35,17 +35,20 @@ ms_summarize(
 \item{replicate}{Name of the replicate column. Set to NULL if no
 replicates.}
 
-\item{batch}{Name of the column representing batches. Set to NULL if no batches present.}
+\item{batch}{Name of the column representing batches. Set to NULL if no 
+batches present.}
 
 \item{groupingvars}{Variable name or vector of names of the
 phenotypes or comparison groups. Set to NULL if none are present.}
 
-\item{cvmax}{Decimal value from 0 to 1 representing the acceptable level of coefficient 
+\item{cvmax}{Decimal value from 0 to 1 representing the acceptable level of 
+coefficient 
 of variation between replicates.}
 
 \item{missing_val}{Value of missing data in the quantification data file.}
 
-\item{min_proportion_present}{Decimal value from 0 to 1 representing the minimum proportion present 
+\item{min_proportion_present}{Decimal value from 0 to 1 representing the 
+minimum proportion present 
 to summarize with median or mean. Below this the compound will be set to 0.}
 }
 \value{
@@ -69,7 +72,8 @@ data(msquant)
 tidied_data    <- ms_tidy(msquant, mz = "mz", rt = "rt", 
                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
                           separator = "_", 
-                          col_names = c("spike", "batch", "replicate", "subject_id"))
+                          col_names = c("spike", "batch", "replicate", 
+                          "subject_id"))
 
 # Summarize technical replicates
 summarized_data <- ms_summarize(tidied_data, 

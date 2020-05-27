@@ -1,4 +1,5 @@
-#' Function to return data prepared by MSPrep pipeline to compound by sample format
+#' Function to return data prepared by MSPrep pipeline to compound by matrix
+#' data frame or to a SummarizedExperiment
 #' 
 #' @param msprep_obj An object of class `msprep`
 #' 
@@ -37,26 +38,52 @@
 #' returned_data <- ms_return(normalized_data)
 #' 
 #' @return An msprep object with data formatted with metabolites as rows and
-#' and samples as columns
+#' and samples as columns, or with data as a SummarizedExperiment
 #' 
 #' @export
+ms_return <- function(msprepObject, returnToSE = FALSE){
 
-ms_return <- function(msprep_obj){
+    # Validate inputs
+    stopifnot(class(msprepObject) == "msprep")
+    
+    # Return data to wide format data frame
+    msprepObject$data <- msprepObject$data %>%
+        pivot_wider(id_cols = met_vars(msprepObject),
+                    names_from = col_order(msprepObject),
+                    values_from = "abundance_summary")
+
+    # If selected, convert data to SummarizedExperiment
+    if(returnToSE) {
+        msprepObject$data <- .msprepToSE(msprepObject)
+    }
   
-  # Validate inputs
-  stopifnot(class(msprep_obj) == "msprep")
-  #stopifnot(stage(msprep_obj) %in% c("normalized"))
-  
-  # Get column order from object attribute
-  col_order <- col_order(msprep_obj)
-  
-  # Get met_id columns from object attribute
-  met_vars <- met_vars(msprep_obj)
-  
-  # Return data to wide format
-  msprep_obj$data <- msprep_obj$data %>% pivot_wider(id_cols = met_vars, 
-                                                        names_from = col_order,
-                                                        values_from = "abundance_summary")
-  
-  return(msprep_obj)
+    return(msprepObject)
+}
+
+
+#' Function to convert MSPrep object to SE
+#' 
+#' @importFrom dplyr select
+#' @importFrom tidyr separate
+#' @importFrom tibble tibble
+#' @import SummarizedExperiment
+.msprepToSE <- function(msprepObject) {
+    
+    # Get row data
+    seRowData <- msprepObject$data %>%
+        select(met_vars(msprepObject))
+    
+    # Get assay data
+    seAssay <- msprepObject$data %>%
+        select(-met_vars(msprepObject)) %>%
+        as.matrix()
+    
+    # Get column data
+    seColumnData <- tibble("samples" = colnames(seAssay)) %>%
+        separate(col = "samples", into = col_order(msprepObject), sep = "_")
+    
+    # Build SummarizedExperiment
+    rtn <- SummarizedExperiment(assays = list(abundance = seAssay), 
+                                colData = seColumnData, 
+                                rowData = seRowData)
 }
