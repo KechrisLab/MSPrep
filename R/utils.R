@@ -144,7 +144,7 @@ wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
 
   rtn <- wide %>% as.data.frame
   rtn <- rtn %>% rownames_to_column(var = "rwnm")
-  rtn <- rtn %>% separate("rwnm", sep = "%", into = internal_id)
+  rtn <- rtn %>% separate("rwnm", sep = "_", into = internal_id)
   rtn <- rtn %>% as_tibble
   if(!is.null(groupingvars) & !is.null(batch)){
     rtn <- rtn %>% gather(key = "mz_rt", value = "abundance_summary",
