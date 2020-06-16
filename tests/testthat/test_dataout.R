@@ -2,13 +2,13 @@
 context("ms_impute()")
 
 set.seed(9999)
-data(msquant)
-tidy_data <- msTidy(msquant_subject1, 
-                     mz = "mz", 
-                     rt = "rt",
-                     col_extra_txt = "Neutral_Operator_Dif_Pos_",
-                     separator = "_",
-                     col_names = c("spike", "batch", "replicate", "subject_id"))
+data(msquant_subject1)
+tidy_data <- ms_tidy(msquant_subject1,
+                    mz = "mz",
+                    rt = "rt",
+                    col_extra_txt = "Neutral_Operator_Dif_Pos_",
+                    separator = "_",
+                    col_names = c("spike", "batch", "replicate", "subject_id"))
 prepped_data <- tidy_data %>% 
     ms_summarize(mz = "mz", 
                  rt = "rt", 

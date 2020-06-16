@@ -1,6 +1,6 @@
 
 
-context("ms_prepare() related functions")
+context("ms_summarize() related functions")
 
 
 ### Read in data files
