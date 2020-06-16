@@ -12,7 +12,8 @@
 #' tidied_data <- ms_tidy(msquant, mz = "mz", rt = "rt",
 #'                        col_extra_txt = "Neutral_Operator_Dif_Pos_",
 #'                        separator = "_", 
-#'                        col_names = c("spike", "batch", "replicate", "subject_id"))
+#'                        col_names = c("spike", "batch", "replicate", 
+#'                                      "subject_id"))
 #' 
 #' summarized_data <- ms_summarize(tidied_data, 
 #'                                 mz = "mz", 

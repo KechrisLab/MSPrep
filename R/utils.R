@@ -77,10 +77,6 @@ ms_arrange <- function(data, ...) {
   return(rtn)
 }
 
-.msArrange <- function(data, ...) {
-    
-}
-
 
 valid_cols <- function(extra_vars)  {
   extra_vars <- as.character(extra_vars)
@@ -168,5 +164,5 @@ wide_matrix_to_data <- function(wide, groupingvars, batch, met_vars) {
 }
 
 # Define %notin% function (negates %in%)
-#`%notin%` <- Negate(`%in%`)
+`%notin%` <- Negate(`%in%`)
 

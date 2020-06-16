@@ -153,7 +153,8 @@ ms_summarize <- function(data,
             rename("abundance_summary" = "abundance")
         
         ## Replace NAs w/ 0
-        summary_data$abundance_summary <- replace_na(summary_data$abundance_summary, 0)
+        summary_data$abundance_summary <- 
+          replace_na(summary_data$abundance_summary, 0)
         
         ## Order columns
         summary_data  <- select_at(summary_data,
@@ -190,7 +191,8 @@ ms_summarize <- function(data,
                                   `!!!`(met_syms))
     } else {
         quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
-        quant_summary <- group_by(quant_summary, subject_id, batch, `!!!`(met_syms),
+        quant_summary <- group_by(quant_summary, subject_id, batch, 
+                                  `!!!`(met_syms),
                                   `!!!`(grouping_quo))
     }
 
@@ -209,26 +211,30 @@ ms_summarize <- function(data,
                                 .data$mean_abundance)
     quant_summary <- ungroup(quant_summary)
 
-  # Identify and select summary measure -- TODO: decompose this to get rid of 'no
-  #                                              visible binding error'
+  ## Identify and select summary measure
   quant_summary <-
     mutate(quant_summary,
            summary_measure = 
-             select_summary_measure(.data$n_present, .data$cv_abundance, replicate_count,
+             select_summary_measure(.data$n_present, .data$cv_abundance, 
+                                    replicate_count,
                                     min_proportion_present, cvmax))
   quant_summary <-
     mutate(quant_summary,
            abundance_summary = 
-             case_when(.data$summary_measure == "median" ~ .data$median_abundance,
-                       .data$summary_measure == "mean"   ~ .data$mean_abundance,
+             case_when(.data$summary_measure == "median" ~ 
+                         .data$median_abundance,
+                       .data$summary_measure == "mean"   ~ 
+                         .data$mean_abundance,
                        TRUE                              ~ 0))
   quant_summary <- mutate_at(quant_summary,
-                             vars(subject_id, "summary_measure", batch, `!!!`(grouping_quo)),
+                             vars(subject_id, "summary_measure", batch, 
+                                  `!!!`(grouping_quo)),
                              factor)
 
   # Extract summarized dataset
   summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(met_syms), "abundance_summary"))
+                             vars(subject_id, batch, `!!!`(grouping_quo), 
+                                  `!!!`(met_syms), "abundance_summary"))
   if(!is.null(batch) & !is.null(groupingvars)){
     summary_data <- ms_arrange(summary_data, batch, groupingvars)
   }
@@ -239,12 +245,15 @@ ms_summarize <- function(data,
 
   # Additional info extracted in summarizing replicates
   replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(met_syms), "n_present",
+                              vars(subject_id, batch, `!!!`(grouping_quo), 
+                                   `!!!`(met_syms), "n_present",
                                    "cv_abundance", "summary_measure"))
 
   # Summaries that used medians
   medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), `!!!`(met_syms),
+  medians        <- select_at(medians, vars(subject_id, batch, 
+                                            `!!!`(grouping_quo), 
+                                            `!!!`(met_syms),
                                             "abundance_summary"))
   
   # Replace medians with NULL if no medians used
@@ -315,7 +324,8 @@ print.msprep <- function(x, ...) {
   cat("        Resulting stats:\n")
   # Print median summarized count (may be NULL)
   if (!is.null(x$medians)) {
-    cat("          Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
+    cat("          Count of patient-compounds summarized by median: ", 
+        nrow(x$medians), "\n")
   }
   else {
     cat("          Count of patient-compounds summarized by median: 0\n")
