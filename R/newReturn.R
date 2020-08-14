@@ -1,9 +1,9 @@
-.msReturn <- function(tidyData, compVars, techVars, metaData = NULL, toSE) {
+.msReturn <- function(tidyData, compVars, sampleVars, metaData = NULL, toSE) {
     
     ## Return data to wide format data frame
     rtn <- tidyData %>%
         pivot_wider(id_cols = compVars,
-                    names_from = techVars,
+                    names_from = sampleVars,
                     values_from = "abundance")
     
     ## If selected, convert data to SummarizedExperiment
@@ -17,7 +17,7 @@
 
         # Get column data
         seColumnData <- tibble("samples" = colnames(seAssay)) %>%
-            separate(col = "samples", into = techVars, sep = "_")
+            separate(col = "samples", into = sampleVars, sep = "_")
 
         # Build SummarizedExperiment
         rtn <- SummarizedExperiment(assays = list(abundance = seAssay),

@@ -70,7 +70,7 @@
 #' @import SummarizedExperiment
 msTidy <- function(data,
                    compVars = c("mz", "rt"),
-                   techVars = c("subject_id"),
+                   sampleVars = c("subject_id"),
                    colExtraText = NULL,
                    separator = NULL,
                    missingValue = NA) {
@@ -85,7 +85,7 @@ msTidy <- function(data,
         rtn <- .dfTidy(data,
                        compVars = compVars,
                        colExtraText = colExtraText,
-                       techVars = techVars,
+                       sampleVars = sampleVars,
                        separator = separator)
     } else {
         
@@ -94,11 +94,8 @@ msTidy <- function(data,
     }
     
     ## Replace miss val with NAs (if not already)
-    if (!is.na(missingValue)) {
-        rtn <- mutate_at(rtn, vars("abundance"), .replaceMissing, missingValue)
-    }
+    rtn <- mutate_at(rtn, vars("abundance"), .replaceMissing, missingValue)
     
-    rtn
 }
 
 
@@ -117,7 +114,7 @@ msTidy <- function(data,
         ## Get row data, compound variables, and technical variables
         rowDat <- as_tibble(rowData(SE))
         compVars <- colnames(rowDat)
-        techVars <- colnames(colData(SE))
+        sampleVars <- colnames(colData(SE))
 
         ## Extract abundances, join with row data
         rtn <- SummarizedExperiment::assay(SE) %>%
@@ -135,13 +132,13 @@ msTidy <- function(data,
         rtn <- left_join(rtn, coldat, by = "column_name")
         
         ## Reorder columns for cleaner appearance
-        rtn <- select(rtn, c(column_name, techVars, compVars, abundance))
+        rtn <- select(rtn, c(column_name, sampleVars, compVars, abundance))
         
         return(rtn)
 }
 
 ## Function to convert matrix to tidy data frame
-.dfTidy <- function(data, compVars, colExtraText, techVars,
+.dfTidy <- function(data, compVars, colExtraText, sampleVars,
                     separator) {
     
     # ## Check that at either compID or both mz and rt are included
@@ -172,19 +169,23 @@ msTidy <- function(data,
     
     ## If only one column name, rename id_col appropriately. Otherwise split
     ##  'id_col' into new variable columns designated by colNames 
-    if (length(techVars) == 1) { 
-        colnames(rtn)[colnames(rtn) == "id_col"] <- techVars[1]
+    if (length(sampleVars) == 1) { 
+        colnames(rtn)[colnames(rtn) == "id_col"] <- sampleVars[1]
     } else if (!is.null(separator)) {
-        rtn <- separate(rtn, .data$id_col, sep = separator, into = techVars)
+        rtn <- separate(rtn, .data$id_col, sep = separator, into = sampleVars)
     } else {
-        stop("Must include 'separator' if multiple 'techVars'")
+        stop("Must include 'separator' if multiple 'sampleVars'")
     }
     
     ## Reorder columns for cleaner appearance
-    rtn <- select(rtn, c(column_name, techVars, !!!compVars, abundance))
+    rtn <- select(rtn, c(column_name, sampleVars, !!!compVars, abundance))
 }
 
 ## Replace missing values with NA
 .replaceMissing <- function(abundance, missingValue) {
-    ifelse(abundance == missingValue, NA, abundance)
+    if (is.na(missingValue)) {
+        return(abundance)
+    } else {
+        ifelse(abundance == missingValue, NA, abundance)
+    }
 }
