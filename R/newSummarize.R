@@ -15,60 +15,46 @@
 #' @param replicate Name of sample variable specifying replicate. Must match an
 #' element in `sampleVars` or a column in the column data of a 
 #' `SummarizedExperiment`.
-#' @param compVars Vector of the columns which identify compounds. If a
+#' @param compVars Vector of the columns which identify compounds. If a 
 #' `SummarizedExperiment` is used for `data`, row variables will be used.
 #' @param sampleVars Vector of the ordered sample variables found in each sample 
 #' column.
 #' @param colExtraText Any extra text to ignore at the beginning of the sample 
-#' columns names.
-#' Unused for `SummarizedExperiments`.
+#' columns names. Unused for `SummarizedExperiments`.
 #' @param separator Character or text separating each sample variable in sample
 #' columns. Unused for `SummarizedExperiment`.
-#' @param missingValue The abundance value which specifies missing data. May be 
-#' a number or `NA`.
-#' @param returnSummaryDetails Boolean specifying whether to return
+#' @param missingValue Specifies the abundance value which indicates missing 
+#' data. May be a numeric or `NA`.
+#' @param returnSummaryDetails Logical value specifying whether to return
 #' details of replicate summarization.
-#' @param returnToSE Boolean specifying whether to return to 
+#' @param returnToSE Logical value specifying whether to return as 
 #' `SummarizedExperiment`
-#' @param returnToDF Boolean specifying whether to return to data frame.
-#' @return An data frame or `SummarizedExperiment` containing abundance data 
-#' with summarized technical replicates. Default return is set to match the data
-#' input but may be altered with the `returnToSE` or `returnToDF` arguments. If 
-#' `returnSummaryDetails` is selected, a list will be returned containing the
-#' summarized data and a separate tidy data frame with summarization details
-#' included for each compound/sample pair.
+#' @param returnToDF Logical value specifying whether to return as data frame.
+#' 
+#' @return A data frame or `SummarizedExperiment` containing abundance data 
+#' with summarized technical replicates. Default return type is set to match the
+#' data nput but may be altered with the `returnToSE` or `returnToDF` 
+#' arguments. If `returnSummaryDetails` is selected, a list will be returned 
+#' containing the summarized data and a separate tidy data frame with 
+#' summarization details included for each compound/sample pair.
 #' 
 #' @examples
 #' # Read in data file
 #' data(msquant)
 #' 
-#' # Convert dataset to tidy format
-#' tidied_data    <- ms_tidy(msquant, mz = "mz", rt = "rt", 
-#'                           col_extra_txt = "Neutral_Operator_Dif_Pos_", 
-#'                           separator = "_", 
-#'                           col_names = c("spike", "batch", "replicate", 
-#'                           "subject_id"))
-#' 
 #' # Summarize technical replicates
-#' summarized_data <- ms_summarize(tidied_data, 
-#'                                 mz = "mz", 
-#'                                 rt = "rt", 
-#'                                 replicate = "replicate", 
-#'                                 batch = "batch", 
-#'                                 groupingvars = "spike", 
-#'                                 subject_id = "subject_id", 
-#'                                 cvmax = 0.50, 
-#'                                 min_proportion_present = 1/3, 
-#'                                 missing_val = 1)
+#' summarizedDF <- msSummarize(msquant,
+#'                             compVars = c("mz", "rt"),
+#'                             sampleVars = c("spike", "batch", "replicate", 
+#'                             "subject_id"),
+#'                             cvMax = 0.50,
+#'                             minPropPresent = 1/3,
+#'                             colExtraText = "Neutral_Operator_Dif_Pos_",
+#'                             separator = "_",
+#'                             missingValue = 1)
+#'                             
+#' @importFrom methods is
 #' 
-#' # Print output
-#' print(summarized_data)
-#'
-#' @importFrom dplyr rename
-#' @importFrom dplyr select
-#' @importFrom dplyr select_at
-#' 
-
 #' 
 #' @export
 msSummarize <- function(data,
@@ -115,7 +101,7 @@ msSummarize <- function(data,
     sampleVars <- sampleVars[sampleVars != replicate]
     
     ## Tidy Data
-    tidyData <- msTidy(data = SE, missingValue = missingValue)
+    tidyData <- msTidy(data = SE, missingValue = missingValue, setMissing = NA)
     
     ## Summarize Replicates
     summarizedData <- .tidySummarize(tidyData = tidyData, compVars = compVars,
@@ -138,7 +124,7 @@ msSummarize <- function(data,
                          returnSummaryDetails, returnToSE) {
     
     tidyData <- msTidy(data, compVars, sampleVars, colExtraText, separator,
-                       missingValue) 
+                       missingValue, setMissing = NA) 
     
     sampleVars <- sampleVars[sampleVars != replicate]
     
@@ -186,7 +172,7 @@ msSummarize <- function(data,
         tidyData <- group_by(tidyData, `!!!`(sampleVars), `!!!`(compVars))
     }
     
-    ## Determine approprate summary measure, apply summary
+    ## Determine appropriate summary measure, apply summary
     tidyData <- summarise(tidyData,
                           nPresent = sum(!is.na(.data$abundance)),
                           propPresent = UQ(sym("nPresent")) / replicateCount,
@@ -238,24 +224,26 @@ msSummarize <- function(data,
               TRUE ~ "mean")
 }
 
-#' Internal function to return data in right format and with requested metadata
+# Internal function to return data in right format and with requested metadata
 .returnSummarized <- function(data, compVars, sampleVars, metaData, 
                               returnSummaryDetail, toSE) {
     if (returnSummaryDetail & toSE) {
-        returnSE <- .msReturn(tidyData = data$data, compVars = compVars, 
-                              metaData = metaData, sampleVars = sampleVars, 
-                              toSE = toSE)
+        returnSE <- .tidyReturn(tidyData = data$data, compVars = compVars,
+                                metaData = metaData, sampleVars = sampleVars,
+                                toSE = toSE)
         
         metadata(returnSE)$summaryDetails <- data$summaryDetails
         return(returnSE)
     } else if (returnSummaryDetail) {
-        summaryData <- .msReturn(tidyData = data$data, compVars = compVars, 
-                                 sampleVars = sampleVars, toSE = toSE)
+        summaryData <- .tidyReturn(tidyData = data$data, compVars = compVars, 
+                                   sampleVars = sampleVars, toSE = toSE)
         summaryDetails <- data$summaryDetails
         return(list("data" = summaryData, "summaryDetails" = summaryDetails))
     } else {
-        summaryData <- .msReturn(tidyData = data, compVars = compVars,  
-                                 sampleVars = sampleVars, toSE = toSE)
+        summaryData <- .tidyReturn(tidyData = data, compVars = compVars,
+                                   sampleVars = sampleVars, toSE = toSE)
         return(summaryData)
     }
 }
+
+`%notin%` <- Negate(`%in%`)

@@ -1,3 +1,101 @@
+#' Function for performing normalization and batch corrections on imputed data.
+#' 
+#' Perform normalization and batch corrections on specified imputation dataset.
+#' Routines included are quantile, RUV (remove unwanted variation), SVA 
+#' (surrogate variable analysis), median, CRMN (cross-contribution 
+#' compensating multiple standard normalization), ComBat to remove batch 
+#' effects in raw, quantile, and median normalized data. Generates data 
+#' driven controls if none exist.
+#' 
+#' @param data Data set as either a data frame or `SummarizedExperiement`.
+#' @param normalizeMethod  Name of normalization method.
+#' "ComBat" (only ComBat batch correction), "quantile" (only quantile 
+#' normalization), "quantile + ComBat" (quantile with ComBat batch correction),
+#' "median" (only median normalization), "median + ComBat" (median with ComBat
+#' batch correction), "CRMN" (cross-contribution compensating multiple 
+#' standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
+#' variable analysis)
+#' @param nControl Number of controls to estimate/utilize.
+#' @param controls Vector of control identifiers.  Leave blank for data driven
+#' controls. Vector of column numbers from metafin dataset of that control.
+#' @param nComp Number of factors to use in CRMN algorithm. 
+#' @param kRUV Number of factors to use in RUV algorithm.
+#' @param batch Name of the sample variable identifying batch.
+#' @param covariatesOfInterest Sample variables used as covariates in
+#' normalization algorithms.
+#' @param transform  Select transformation to apply to data prior to 
+#' normalization. Options are "log10", "log2", and "none".
+#' @param compVars Vector of the columns which identify compounds. If a 
+#' `SummarizedExperiment` is used for `data`, row variables will be used.
+#' @param sampleVars Vector of the ordered sample variables found in each sample 
+#' column.
+#' @param colExtraText Any extra text to ignore at the beginning of the sample 
+#' columns names. Unused for `SummarizedExperiments`.
+#' @param separator Character or text separating each sample variable in sample
+#' columns. Unused for `SummarizedExperiment`.
+#' @param returnToSE Logical value indicating whether to return as 
+#' `SummarizedExperiment`
+#' @param returnToDF Logical value indicating whether to return as data frame.
+#' 
+#' @return  A data frame or `SummarizedExperiment` with transformed and
+#' normalized data. Default return type is set to match the data input but may 
+#' be altered with the `returnToSE` or `returnToDF` arguments.
+#' 
+#' @references 
+#' Bolstad, B.M.et al.(2003) A comparison of normalization methods for high
+#' density oligonucleotide array data based on variance and bias.
+#' Bioinformatics, 19, 185-193
+#' 
+#' DeLivera, A.M.et al.(2012) Normalizing and Integrating Metabolomic Data.
+#' Anal. Chem, 84, 10768-10776.
+#' 
+#' Gagnon-Bartsh, J.A.et al.(2012) Using control genes to correct for unwanted
+#' variation in microarray data. Biostatistics, 13, 539-552.
+#' 
+#' Johnson, W.E.et al.(2007) Adjusting batch effects in microarray expression
+#' data using Empirical Bayes methods. Biostatistics, 8, 118-127.
+#' 
+#' Leek, J.T.et al.(2007) Capturing Heterogeneity in Gene Expression Studies by
+#' Surrogate Variable Analysis. PLoS Genetics, 3(9), e161
+#' 
+#' Wang, W.et al.(2003) Quantification of Proteins and Metabolites by Mass
+#' Spectrometry without Isotopic Labeling or Spiked Standards. Anal. Chem., 75,
+#' 4818-4826.
+#' 
+#' @examples
+#' # Load, tidy, summarize, filter, and impute example dataset
+#' data(msquant)
+#' 
+#' summarizedDF <- msSummarize(msquant,
+#'                             compVars = c("mz", "rt"),
+#'                             sampleVars = c("spike", "batch", "replicate", 
+#'                             "subject_id"),
+#'                             cvMax = 0.50,
+#'                             minPropPresent = 1/3,
+#'                             colExtraText = "Neutral_Operator_Dif_Pos_",
+#'                             separator = "_",
+#'                             missingValue = 1)
+#'                             
+#' filteredDF <- msFilter(summarizedDF,
+#'                        filterPercent = 0.8,
+#'                        compVars = c("mz", "rt"),
+#'                        sampleVars = c("spike", "batch", "subject_id"),
+#'                        separator = "_")
+#' 
+#' hmImputedDF <- msImpute(filteredDF, imputeMethod = "halfmin",
+#'                         compVars = c("mz", "rt"),
+#'                         sampleVars = c("spike", "batch", "subject_id"),
+#'                         separator = "_",
+#'                         missingValue = 0)
+#' 
+#' # Normalize data set
+#' medianNormalizedDF <- msNormalize(hmImputedDF, normalizeMethod = "median",
+#'                                   compVars = c("mz", "rt"),
+#'                                   sampleVars = c("spike", "batch", 
+#'                                   "subject_id"),
+#'                                   separator = "_")
+#'
+#' @export
 msNormalize <- function(data, 
                         normalizeMethod = c("median", "ComBat", "quantile",
                                             "quantile + ComBat", 
@@ -10,30 +108,37 @@ msNormalize <- function(data,
                         sampleVars = c("subject_id"),
                         colExtraText = NULL,
                         separator = NULL,
-                        missingValue = NA,
                         returnToSE = FALSE,
                         returnToDF = FALSE) {
     
     normalizeMethod <- match.arg(normalizeMethod)
     transform <- match.arg(transform)
     
-
-    
     if (is(data, "SummarizedExperiment")) {
-        return <- .seNormalize( )
+        return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp, 
+                               kRUV, batch, transform, covariatesOfInterest)
+        if (returnToDF) {
+            return <- .seToDF(SE)
+        }
     } else if (is(data, "data.frame")) {
         return <- .dfNormalize(data, normalizeMethod, nControl, controls, nComp, 
                                kRUV, batch, transform, compVars, 
-                               sampleVars, colExtraText, separator, 
-                               missingValue, returnToSE, covariatesOfInterest)
+                               sampleVars, colExtraText, separator, returnToSE, 
+                               covariatesOfInterest)
+        if (returnToSE) {
+            return <- .dfToSE(return, compVars, sampleVars, separator,
+                              colExtraText)
+        }
     } else {
         stop("'data' must be a data frame or SummarizedExperiment")
     }
+    
+    return(return)
 }
 
 .dfNormalize <- function(data, normalizeMethod, nControl, controls, nComp, kRUV, 
                          batch, transform, compVars, sampleVars, 
-                         colExtraText, separator, missingValue, returnToSE, 
+                         colExtraText, separator, returnToSE, 
                          covariatesOfInterest) {
     
     ## Get abundance and compound columns, transform data
@@ -83,20 +188,8 @@ msNormalize <- function(data,
     return(normalizedData)
 }
 
-.seNormalize <- function(data, normalizeMethod, nControl, controls, nComp, kRUV,
-                         transform, returnToDF) {
-    return(0)
-}
-
 .normalizeSVA <- function(data, sampleVars, colExtraText, separator, 
                           covariatesOfInterest) {
-    # if (is.null(spike) & "spike" %in% sampleVars) {
-    #     spike <- "spike"
-    # } 
-    # 
-    # if (is.null(spike)) {
-    #     stop("'spike' must be included for SVA normalization")
-    # }
     
     svaFactors <- .svaFactors(data, sampleVars, colExtraText, separator, 
                               covariatesOfInterest)
@@ -104,6 +197,9 @@ msNormalize <- function(data,
     normalizedData <- .genAdj(data, svaFactors)
 }
 
+#' @importFrom stats model.matrix
+#' @importFrom sva sva
+#' @importFrom tidyr separate
 .svaFactors <- function(data, sampleVars, colExtraText, separator, 
                         covariatesOfInterest) {
     
@@ -118,6 +214,7 @@ msNormalize <- function(data,
     svaFactors <- svaFactors$sv
 }
 
+#' @importFrom stats lm
 .genAdj <- function(data, factors) {
     matData <- as.matrix(data)
     normalizedData <- sapply(seq_len(nrow(matData)),
@@ -136,6 +233,8 @@ msNormalize <- function(data,
     as.data.frame(normalizedData)
 }
 
+#' @importFrom sva ComBat
+#' @importFrom dplyr mutate_if
 .dfNormalizeCombat <- function(data, batch, sampleVars, colExtraText, separator,
                                covariatesOfInterest) {
     
@@ -208,8 +307,6 @@ msNormalize <- function(data,
                            separator, covariatesOfInterest, nComp, nControl, 
                            controls) {
     
-    
-    
     crmnInputs <- .createCRMNInputs(abCols, compCols, compVars, sampleVars, 
                                     colExtraText, separator, 
                                     covariatesOfInterest, nComp, nControl, 
@@ -221,7 +318,9 @@ msNormalize <- function(data,
                                  standards = crmnInputs$ISVec,
                                  lg = FALSE)
     
-    as.data.frame(crmnNormalized)
+    compCols <- compCols[!crmnInputs$ISVec, ]
+    
+    cbind(compCols, as.data.frame(crmnNormalized))
     
 }
 

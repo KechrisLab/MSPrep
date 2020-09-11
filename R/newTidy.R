@@ -1,59 +1,3 @@
-#' Function for converting wide mass spectrometry abundance data into a tidy data
-#' frame.
-#'
-#' Function reads in wide dataset of mass spectrometry abundance data and converts
-#' it to a tidy dataset.  This function assumes that the dataset is in a wide
-#' format, with a combination of columns representing the retention time (rt), another
-#' representing the mass-to-charge ratio (mz), and the remaining columns
-#' containing MS abundance data. Optionally, the data may also include a column
-#' specifying compound name (compID) as an addition to or replacement of rt/mz columns. 
-#'
-#' @param data Data frame or SummarizedExperiment containing the abundance data.
-#' @param compID Name of the column containing compound names.
-#' @param mz Name of the column containing mass-to-charge ratios.
-#' @param rt Name of the column containing retention time.
-#' @param colExtraText Text to remove from column names when converting column names to
-#'   variables.
-#' @param colNames Vector of the ordered ID names to extract from the variable
-#' names.
-#' @param separator Character or text separating spike, subject, and replicate
-#' ids in column names.
-#' 
-#' @details 
-#' Function reads in wide dataset of mass spectrometry abundance data and converts
-#' it to a tidy dataset.  This function assumes that the dataset is in a wide
-#' format, with a combination of columns representing the retention time (rt), another
-#' representing the mass-to-charge ratio (mz), and the remaining columns
-#' containing MS abundance data. Optionally, the data may also include a column
-#' specifying compound name (compID) as an addition to or replacement of rt/mz columns.
-#' 
-#' It also assumes that the column names of abundance data start with some
-#' consistent, informational but unnecessary text (colExtraText), and contain
-#' the spike, subject ID, and replicate ID in a consistent position, all
-#' separated by a consistent separator.
-#'
-#' See \code{data(abundance)} for an example.  If your data doesn't fit
-#' this format, view the function code for hints on tidying your data.  The core
-#' of this function consists of \code{tidyr::gather()}, \code{dplyr::mutate()},
-#' and \code{tidyr::separate()}.
-#'
-#' @return A tidy data frame of quant data, with columns mz, rt,
-#' replicate, and abundance.
-#'
-#' @examples
-#'
-#'   # load raw abundance/abundance dataset
-#'   data(msquant)
-#'   
-#'   # print original dataset (using tibble's nice printing)
-#'   tibble::as_tibble(msquant) 
-#'   
-#'   # tidy the dataset and print it
-#'   ms_tidy(msquant, mz = "mz", rt = "rt", 
-#'           colExtraText = "Neutral_Operator_Dif_Pos_", 
-#'           separator = "_", 
-#'           colNames = c("spike", "batch", "replicate", "subject_id"))
-#'
 #' @importFrom tibble as_data_frame
 #' @importFrom tibble data_frame
 #' @importFrom tibble as_tibble
@@ -73,7 +17,8 @@ msTidy <- function(data,
                    sampleVars = c("subject_id"),
                    colExtraText = NULL,
                    separator = NULL,
-                   missingValue = NA) {
+                   missingValue = NA,
+                   setMissing = 0) {
     
     ## Check data structure
     if (is(data, "SummarizedExperiment")) {
@@ -94,13 +39,12 @@ msTidy <- function(data,
     }
     
     ## Replace miss val with NAs (if not already)
-    rtn <- mutate_at(rtn, vars("abundance"), .replaceMissing, missingValue)
+    rtn <- mutate_at(rtn, vars("abundance"), .replaceMissing, missingValue,
+                     setMissing)
     
 }
 
 
-#' Reformats SummarizedExperiments into tidy data frames
-#' 
 #' @importFrom SummarizedExperiment assay
 #' @importFrom dplyr as_tibble
 #' @importFrom dplyr bind_cols
@@ -181,11 +125,12 @@ msTidy <- function(data,
     rtn <- select(rtn, c(column_name, sampleVars, !!!compVars, abundance))
 }
 
-## Replace missing values with NA
-.replaceMissing <- function(abundance, missingValue) {
+## Replace missing values with setMissing
+.replaceMissing <- function(abundance, missingValue, setMissing) {
     if (is.na(missingValue)) {
-        return(abundance)
+        #return(abundance)
+        ifelse(is.na(abundance), setMissing, abundance)
     } else {
-        ifelse(abundance == missingValue, NA, abundance)
+        ifelse(abundance == missingValue, setMissing, abundance)
     }
 }
