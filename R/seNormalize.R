@@ -185,11 +185,11 @@
     Z   <- matrix(rep(1, ncol(Y)))
     RZY <- Y - Y %*% Z %*% solve(t(Z) %*% Z) %*% t(Z)
     W   <- svd(RZY[ctl, ])$v
-    W   <- W[, 1:kRUV]
+    W   <- W[, seq_len(kRUV)]
     
     # Format output
     rtn <- as.matrix(W, ncol = kRUV)
-    colnames(rtn) <- paste0("f", 1:ncol(rtn))
+    colnames(rtn) <- paste0("f", seq_len(ncol(rtn)))
     
     return(rtn)
 }

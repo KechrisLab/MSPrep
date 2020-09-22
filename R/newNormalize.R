@@ -218,12 +218,13 @@ msNormalize <- function(data,
 #' @importFrom stats lm
 .genAdj <- function(data, factors) {
     matData <- as.matrix(data)
-    normalizedData <- sapply(seq_len(nrow(matData)),
+    normalizedData <- vapply(seq_len(nrow(matData)),
                             function(j) {
                                 fit <- lm(matData[j, ] ~
                                               as.matrix(factors, ncol = 1))
                                 fit$fitted.values
-                                })
+                                },
+                            numeric(ncol(data)))
     # for(j in 1:nrow(matData)) {
     #     fit <- lm(matData[j, ] ~ as.matrix(factors, ncol = 1))
     #     matData[j, ] <- fit$fitted.values
@@ -361,7 +362,7 @@ msNormalize <- function(data,
     j <- 1
     ISvec <- rep(FALSE, nComp)
     
-    for (i in 1:nComp) {
+    for (i in seq_len(nComp)) {
         if (j <= 10) {
             if (ctlo[j] == i) {
                 ISvec[i] <- TRUE
@@ -388,7 +389,7 @@ msNormalize <- function(data,
         summarise(mean = mean(.data$abundance), sd = sd(.data$abundance),
                      counteq0 = counteq0(.data$abundance))
     rtn <- ungroup(rtn)
-    rtn <- mutate(rtn, cv = sd / mean, number = 1:n())
+    rtn <- mutate(rtn, cv = sd / mean, number = seq_len(n()))
     rtn <- select(rtn, `!!!`(compVars), .data$number, .data$mean, .data$sd,
                   .data$cv, .data$counteq0)
     
@@ -401,7 +402,7 @@ msNormalize <- function(data,
         dat <- controls 
     } else {
         dat <- arrange(data, .data$counteq0, .data$cv)
-        dat <- dat[1:nControl, "number"]
+        dat <- dat[seq_len(nControl), "number"]
         dat <- dat[["number"]]
     }
     
@@ -441,11 +442,11 @@ msNormalize <- function(data,
     Z   <- matrix(rep(1, ncol(Y)))
     RZY <- Y - Y %*% Z %*% solve(t(Z) %*% Z) %*% t(Z)
     W   <- svd(RZY[ctl, ])$v
-    W   <- W[, 1:kRUV]
+    W   <- W[, seq_len(kRUV)]
     
     # Format output
     rtn <- as.matrix(W, ncol = kRUV)
-    colnames(rtn) <- paste0("f", 1:ncol(rtn))
+    colnames(rtn) <- paste0("f", seq_len(ncol(rtn)))
     
     return(rtn)
 }

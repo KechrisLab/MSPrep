@@ -2,13 +2,13 @@ Package: MSPrep
 Title:
   Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics 
   Data
-Version: 0.0.2
+Version: 0.99.0
 Authors@R:
   c(person("Max", "McGrath",
            email = "max.mcgrath@ucdenver.edu",
            role = c("aut", "cre")),
     person("Matt", "Mulvahill",
-           email = "matthew.mulvahill@ucdenver.edu",
+           email = "matt.mulvahill@gmail.com",
            role = c("aut")),
     person("Grant", "Hughes",
            email = "",
@@ -17,10 +17,10 @@ Authors@R:
            email = "jacobsonseanr@gmail.com",
            role = c("aut")),
     person("Harrison", "Pielke-lombardo",
-           email = "harrison.pielke-lombardo@ucdenver.edu",
+           email = "harrison.pielke-lombardo@cuanschutz.edu",
            role = c("aut")),
     person("Katerina", "Kechris",
-           email = "Katerina.Kechris@ucdenver.edu",
+           email = "Katerina.Kechris@cuanschutz.edu",
            role = c("aut", "cph", "ths")))
 Description:
   Package performs summarization of replicates, filtering by frequency, three
@@ -29,7 +29,7 @@ Description:
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
-  R (>= 3.6)
+  R (>= 4.0)
 Imports:
   SummarizedExperiment,
   S4Vectors,
