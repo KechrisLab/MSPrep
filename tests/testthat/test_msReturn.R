@@ -24,24 +24,24 @@ abundanceMatrix <- as.matrix(msquant[3:56])
 rownames(abundanceMatrix) <- c()
 metaData <- data.frame(test = c(1, 2, 3), test2 = c(2, 3, 4))
 
-se <- SummarizedExperiment(abundanceMatrix, colData = colnamesDF, 
+SE <- SummarizedExperiment(abundanceMatrix, colData = colnamesDF, 
                            rowData = rownamesDF, 
                            metadata = metaData)
 
-tidySE <- msTidy(se, missingValue = 1)
-returnedSE <- .msReturn(tidySE,
+tidySE <- msTidy(SE, missingValue = 1, setMissing = 1)
+
+returnedSE <- .tidyReturn(tidySE,
                         compVars = c("mz", "rt"),
-                        techVars = c("spike", "batch", "replicate", 
+                        sampleVars = c("spike", "batch", "replicate", 
                                      "subject_id"),
-                        metaData = S4Vectors::metadata(se),
+                        metaData = metadata(SE),
                         toSE = TRUE)
 
 test_that("check equality before and after tidy/return", {
-    expect_true(all(assay(se) == assay(returnedSE) | is.na(assay(se) == 
-                                                        assay(returnedSE))))
-    
-    expect_true(identical(rowData(se), rowData(returnedSE)))
-    expect_true(identical(colData(se)@listData, colData(returnedSE)@listData))
-    expect_true(identical(S4Vectors::metadata(se), 
-                          S4Vectors::metadata(returnedSE)))
+    expect_true(all(assay(SE) == assay(returnedSE)))
+    expect_true(identical(rowData(SE), rowData(returnedSE)))
+    expect_true(identical(colData(SE)@listData, colData(returnedSE)@listData))  
+    expect_true(identical(metadata(SE), 
+                          metadata(returnedSE)))
     })
+
