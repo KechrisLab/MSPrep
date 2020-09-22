@@ -4,7 +4,8 @@
 \name{COPD_131}
 \alias{COPD_131}
 \title{Example mass spectrometry dataset}
-\format{Data frame containing 662 observations of 396 variables.
+\format{
+Data frame containing 662 observations of 396 variables.
 \describe{
   \item{Mass}{Mass-to-charge ratio}
   \item{Retention.Time}{Retention-time}
@@ -14,7 +15,8 @@
   found in each Subject/Replicate combination. Each column begins with an 
   'X', followed by the subject ID, and then the replicate (1, 2, or 3), 
   each seperated by '_'.}
-}}
+}
+}
 \source{
 \url{https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438}
 }

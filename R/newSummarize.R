@@ -199,10 +199,10 @@ msSummarize <- function(data,
                                              .data$summaryMeasure == "mean" ~
                                                  .data$meanAbundance,
                                              TRUE ~ 0)) %>%
-        mutate_at(vars(subject_id, "summaryMeasure", `!!!`(sampleVars)), factor)
+        mutate_at(vars("summaryMeasure", `!!!`(sampleVars)), factor)
     
     summaryData <- tidyData
-    tidyData <- select(tidyData, c(!!!sampleVars, !!!compVars, abundance))
+    tidyData <- select(tidyData, c(!!!sampleVars, !!!compVars), .data$abundance)
 
     ifelse(returnSummaryDetails, 
            return(list("data" = tidyData, "summaryDetails" = summaryData)), 

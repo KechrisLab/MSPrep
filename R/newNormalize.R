@@ -118,7 +118,7 @@ msNormalize <- function(data,
         return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp, 
                                kRUV, batch, transform, covariatesOfInterest)
         if (returnToDF) {
-            return <- .seToDF(SE)
+            return <- .seToDF(return)
         }
     } else if (is(data, "data.frame")) {
         return <- .dfNormalize(data, normalizeMethod, nControl, controls, nComp, 
@@ -200,6 +200,7 @@ msNormalize <- function(data,
 #' @importFrom stats model.matrix
 #' @importFrom sva sva
 #' @importFrom tidyr separate
+#' @importFrom ddpcr quiet
 .svaFactors <- function(data, sampleVars, colExtraText, separator, 
                         covariatesOfInterest) {
     

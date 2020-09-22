@@ -66,7 +66,7 @@ msTidy <- function(data,
             bind_cols(rowDat)
         
         ## Make long data frame
-        rtn <- gather(rtn, column_name, abundance, colnames(SE))
+        rtn <- gather(rtn, "column_name", "abundance", colnames(SE))
         
         ## Extract column data
         coldat <- as.data.frame(colData(SE), optional = TRUE) %>%
@@ -76,7 +76,8 @@ msTidy <- function(data,
         rtn <- left_join(rtn, coldat, by = "column_name")
         
         ## Reorder columns for cleaner appearance
-        rtn <- select(rtn, c(column_name, sampleVars, compVars, abundance))
+        rtn <- select(rtn, .data$column_name, c(sampleVars, compVars),
+                      .data$abundance)
         
         return(rtn)
 }
@@ -122,7 +123,8 @@ msTidy <- function(data,
     }
     
     ## Reorder columns for cleaner appearance
-    rtn <- select(rtn, c(column_name, sampleVars, !!!compVars, abundance))
+    rtn <- select(rtn, .data$column_name, c(sampleVars, !!!compVars),
+                  .data$abundance)
 }
 
 ## Replace missing values with setMissing

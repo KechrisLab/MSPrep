@@ -3,43 +3,39 @@
 \docType{package}
 \name{MSPrep}
 \alias{MSPrep}
-\title{Package for summarizing, filtering, imputing, and normalizing metabolomics data.}
+\title{Package for summarizing, filtering, imputing, and normalizing metabolomics 
+data.}
 \description{
 This package performs summarization of replicates, filtering by frequency,
 three different options for handling/imputing missing data, and five options 
 for normalizing data.
 }
 \details{
-Package for pre-analytic processing of mass spectrometry quantification data. Six 
-functions are provided and are intended to be used in sequence (as a 
+Package for pre-analytic processing of mass spectrometry quantification data.
+Six functions are provided and are intended to be used in sequence (as a 
 pipeline) to produce cleaned and normalized data. These are ms_tidy(), 
 ms_summarize(), ms_filter(), ms_impute(), ms_normalize(), and ms_return(). 
-The function ms_prepare() is also provided as a wrapper function combining the six 
-previously mentioned functions.
+The function ms_prepare() is also provided as a wrapper function combining 
+the six previously mentioned functions.
 }
 \examples{
 # Load example data
 data(msquant)
 
 # Call function to tidy, summarize, filter, impute, and normalize data
-prepared_data <- ms_prepare(msquant,
-                            mz = "mz",
-                            rt = "rt",
-                            col_extra_txt = "Neutral_Operator_Dif_Pos_",
-                            col_names = c("spike", "batch", "replicate", 
-                                          "subject_id"),
-                            separator = "_",
-                            abundance = "abundance",
-                            subject_id = "subject_id",
-                            replicate = "replicate",
-                            batch = "batch",
-                            groupingvars = "spike",
-                            cvmax = 0.50,
-                            missing_val = 1,
-                            min_proportion_present = 1/3,
-                            filter_percent = .8,
-                            imputeMethod = "halfmin",
-                            normalizeMethod = "median")
+preparedDF <- msPrepare(msquant,
+                        minPropPresent = 1/3,
+                        missingValue = 1,
+                        filterPercent = 0.8,
+                        imputeMethod = "knn",
+                        normalizeMethod = "quantile + ComBat",
+                        transform = "log10",
+                        covariatesOfInterest = c("spike"),
+                        compVars = c("mz", "rt"),
+                        sampleVars = c("spike", "batch", "replicate", 
+                                       "subject_id"),
+                        colExtraText = "Neutral_Operator_Dif_Pos_",
+                        separator = "_")
 
 }
 \references{

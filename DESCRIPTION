@@ -1,6 +1,7 @@
 Package: MSPrep
 Title:
-  Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics Data
+  Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics 
+  Data
 Version: 0.0.2
 Authors@R:
   c(person("Max", "McGrath",
@@ -30,6 +31,8 @@ BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
   R (>= 3.6)
 Imports:
+  SummarizedExperiment,
+  S4Vectors,
   pcaMethods (>= 1.24.0),
   VIM,
   crmn,
@@ -42,11 +45,13 @@ Imports:
   rlang,
   stats,
   stringr,
+  methods,
+  ddpcr
 Suggests:
   BiocStyle,
   knitr,
   rmarkdown,
-  testthat (>= 1.0.2),
+  testthat (>= 1.0.2)
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: no
@@ -55,4 +60,4 @@ biocViews: Metabolomics,
   MassSpectrometry,
   Preprocessing
 Encoding: UTF-8
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
