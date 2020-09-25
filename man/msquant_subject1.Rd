@@ -4,7 +4,8 @@
 \name{msquant_subject1}
 \alias{msquant_subject1}
 \title{Example mass spectrometry dataset.}
-\format{Data frame containing 2644 observations of 56 variables
+\format{
+Data frame containing 2644 observations of 56 variables
 \describe{
   \item{mz}{Mass-to-charge ratio}
   \item{rt}{Retention-time}
@@ -14,7 +15,8 @@
   'Neutral_Operator_Dif_Pos' followed by the spike-in (1x, 2x, or 4x), then
   the batch (01, 02, or 03), the replicate (A, B, or C), and finally the
   subject ID (01 or 02), each seperated by '_'.}
-}}
+}
+}
 \usage{
 msquant_subject1
 }
