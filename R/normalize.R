@@ -27,7 +27,7 @@
 #' normalization. Options are "log10", "log2", and "none".
 #' @param compVars Vector of the columns which identify compounds. If a 
 #' `SummarizedExperiment` is used for `data`, row variables will be used.
-#' @param sampleVars Vector of the ordered sample variables found in each sample 
+#' @param sampleVars Vector of the ordered sample variables found in each sample
 #' column.
 #' @param colExtraText Any extra text to ignore at the beginning of the sample 
 #' columns names. Unused for `SummarizedExperiments`.
@@ -115,13 +115,13 @@ msNormalize <- function(data,
     transform <- match.arg(transform)
     
     if (is(data, "SummarizedExperiment")) {
-        return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp, 
+        return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp,
                                kRUV, batch, transform, covariatesOfInterest)
         if (returnToDF) {
             return <- .seToDF(return)
         }
     } else if (is(data, "data.frame")) {
-        return <- .dfNormalize(data, normalizeMethod, nControl, controls, nComp, 
+        return <- .dfNormalize(data, normalizeMethod, nControl, controls, nComp,
                                kRUV, batch, transform, compVars, 
                                sampleVars, colExtraText, separator, returnToSE, 
                                covariatesOfInterest)
@@ -136,7 +136,7 @@ msNormalize <- function(data,
     return(return)
 }
 
-.dfNormalize <- function(data, normalizeMethod, nControl, controls, nComp, kRUV, 
+.dfNormalize <- function(data, normalizeMethod, nControl, controls, nComp, kRUV,
                          batch, transform, compVars, sampleVars, 
                          colExtraText, separator, returnToSE, 
                          covariatesOfInterest) {
@@ -278,7 +278,7 @@ msNormalize <- function(data,
 .dfNormalizeQuantileCombat <- function(data, batch, sampleVars, colExtraText, 
                                        separator, covariatesOfInterest) {
     quantNormalized <- .normalizeQuantile(data)
-    quantCombNormalize <- .dfNormalizeCombat(quantNormalized, batch, sampleVars, 
+    quantCombNormalize <- .dfNormalizeCombat(quantNormalized, batch, sampleVars,
                                              colExtraText, separator,
                                              covariatesOfInterest)
     return(quantCombNormalize)
@@ -305,7 +305,7 @@ msNormalize <- function(data,
 }
 
 #' @importFrom crmn normalize
-.normalizeCRMN <- function(abCols, compCols, compVars, sampleVars, colExtraText, 
+.normalizeCRMN <- function(abCols, compCols, compVars, sampleVars, colExtraText,
                            separator, covariatesOfInterest, nComp, nControl, 
                            controls) {
     

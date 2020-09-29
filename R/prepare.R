@@ -43,7 +43,7 @@
 #' `SummarizedExperiment`.
 #' @param compVars Vector of the columns which identify compounds. If a 
 #' `SummarizedExperiment` is used for `data`, row variables will be used.
-#' @param sampleVars Vector of the ordered sample variables found in each sample 
+#' @param sampleVars Vector of the ordered sample variables found in each sample
 #' column.
 #' @param colExtraText Any extra text to ignore at the beginning of the sample 
 #' columns names. Unused for `SummarizedExperiments`.
