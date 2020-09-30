@@ -36,7 +36,7 @@ element in `sampleVars` or a column in the column data of a
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}
 
-\item{sampleVars}{Vector of the ordered sample variables found in each sample 
+\item{sampleVars}{Vector of the ordered sample variables found in each sample
 column.}
 
 \item{colExtraText}{Any extra text to ignore at the beginning of the sample 
@@ -68,8 +68,8 @@ summarization details included for each compound/sample pair.
 Reads data and summarizes technical replicates as the
 mean of observations for compounds found in 2 or 3 replicates and with
 coefficient of variation below specified level, or median for those found in
-3 replicates but excessive coefficient of variation (CV). Compounds found in
-only 1 replicate are assigned as missing.
+3 replicates but with excessive coefficient of variation (CV). Compounds 
+found in only 1 replicate are assigned as missing.
 }
 \examples{
 # Read in data file

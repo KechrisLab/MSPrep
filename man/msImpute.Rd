@@ -38,7 +38,7 @@ neighbors is significantly slower than using samples.}
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}
 
-\item{sampleVars}{Vector of the ordered sample variables found in each sample 
+\item{sampleVars}{Vector of the ordered sample variables found in each sample
 column.}
 
 \item{colExtraText}{Any extra text to ignore at the beginning of the sample 
@@ -93,16 +93,18 @@ hmImputedDF <- msImpute(filteredDF, imputeMethod = "halfmin",
                         missingValue = 0)
 
 bpcaImputedDF <- msImpute(filteredDF, imputeMethod = "bpca",
+                          nPcs = 3,
                           compVars = c("mz", "rt"),
                           sampleVars = c("spike", "batch", "subject_id"),
                           separator = "_",
                           missingValue = 0)
 
 knnImputedDF <- msImpute(filteredDF, imputeMethod = "knn",
+                         kKnn = 5,
                          compVars = c("mz", "rt"),
                          sampleVars = c("spike", "batch", "subject_id"),
                          separator = "_",
-                        missingValue = 0)                                
+                         missingValue = 0)                                
 
 }
 \references{
@@ -111,4 +113,7 @@ Oba, S.et al.(2003) A Bayesian missing value estimation for gene
 
   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
+  
+  A. Kowarik, M. Templ (2016) Imputation with R package VIM. Journal of 
+  Statistical Software, 74(7), 1-16.
 }

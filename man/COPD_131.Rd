@@ -14,7 +14,7 @@ Data frame containing 662 observations of 396 variables.
   \item{X10062C_1}{The remaining columns indicate metabolite abundances 
   found in each Subject/Replicate combination. Each column begins with an 
   'X', followed by the subject ID, and then the replicate (1, 2, or 3), 
-  each seperated by '_'.}
+  each separated by '_'.}
 }
 }
 \source{
@@ -27,8 +27,8 @@ COPD_131
 Data contains LC-MS metabolite analysis for samples from 131 subjects 
 with 3 technical replicates per subject. The first three columns indicate 
 "Mass" indicating the mass-to-charge ratio, 
-"Retention.Time", and "Compound.Name" for each present metabolite. The 
-remaining columns indicate abundance for each of the 662 
+"Retention.Time", and "Compound.Name" for each metabolite present in the data
+set. The remaining columns indicate abundance for each of the 662 
 mass/retention-time combination for each subject/replicate combination.
 }
 \examples{
@@ -40,8 +40,8 @@ COPD plasma, HILIC & C18, metabolomics_workbench, V1.
 
 This data is available at the NIH Common Fund's National Metabolomics Data 
 Repository (NMDR) website, the Metabolomics Workbench, 
-https://www.metabolomicsworkbench.org, where it has been assigned Project 
-ID PR000438. The data can be accessed directly via it's Project DOI: 
-10.21228/M8FC7C This work is supported by NIH grant, U2C- DK119886.
+\url{https://www.metabolomicsworkbench.org}, where it has been assigned 
+Project ID PR000438. The data can be accessed directly via its Project DOI: 
+10.21228/M8FC7C. This work is supported by NIH grant, U2C-DK119886.
 }
 \keyword{datasets}

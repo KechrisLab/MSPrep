@@ -14,7 +14,7 @@ msNormalize(
   kRUV = 3,
   batch = NULL,
   covariatesOfInterest = NULL,
-  transform = c("log10", "log2", "none"),
+  transform = c("log10", "log2", "ln", "none"),
   compVars = c("mz", "rt"),
   sampleVars = c("subject_id"),
   colExtraText = NULL,
@@ -54,7 +54,7 @@ normalization. Options are "log10", "log2", and "none".}
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}
 
-\item{sampleVars}{Vector of the ordered sample variables found in each sample 
+\item{sampleVars}{Vector of the ordered sample variables found in each sample
 column.}
 
 \item{colExtraText}{Any extra text to ignore at the beginning of the sample 
@@ -74,10 +74,10 @@ normalized data. Default return type is set to match the data input but may
 be altered with the `returnToSE` or `returnToDF` arguments.
 }
 \description{
-Perform normalization and batch corrections on specified imputation dataset.
+Perform normalization and batch corrections on specified imputed dataset.
 Routines included are quantile, RUV (remove unwanted variation), SVA 
 (surrogate variable analysis), median, CRMN (cross-contribution 
-compensating multiple standard normalization), ComBat to remove batch 
+compensating multiple standard normalization), and ComBat to remove batch 
 effects in raw, quantile, and median normalized data. Generates data 
 driven controls if none exist.
 }

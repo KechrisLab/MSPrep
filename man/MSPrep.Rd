@@ -6,17 +6,17 @@
 \title{Package for summarizing, filtering, imputing, and normalizing metabolomics 
 data.}
 \description{
-This package performs summarization of replicates, filtering by frequency,
-three different options for handling/imputing missing data, and five options 
-for normalizing data.
+Package performs summarization of replicates, filtering by frequency, several
+different options for imputing missing data, and a variety of options for 
+transforming, batch correcting, and normalizing data
 }
 \details{
 Package for pre-analytic processing of mass spectrometry quantification data.
-Six functions are provided and are intended to be used in sequence (as a 
-pipeline) to produce cleaned and normalized data. These are ms_tidy(), 
-ms_summarize(), ms_filter(), ms_impute(), ms_normalize(), and ms_return(). 
-The function ms_prepare() is also provided as a wrapper function combining 
-the six previously mentioned functions.
+Four functions are provided and are intended to be used in sequence (as a 
+pipeline) to produce processed and normalized data. These are  
+msSummarize(), msFilter(), msImpute(), and msNormalize(). 
+The function msPrepare() is also provided as a wrapper function combining 
+the four previously mentioned functions.
 }
 \examples{
 # Load example data
@@ -48,6 +48,12 @@ Anal. Chem, 84, 10768-10776.
 
 Gagnon-Bartsh, J.A.et al.(2012) Using control genes to correct for unwanted
 variation in microarray data. Biostatistics, 13, 539-552.
+
+Hughes G, Cruickshank-Quinn C, Reisdorph R, Lutz S, Petrache I, Reisdorph N, 
+Bowler R, Kechris K. MSPrep--Summarization, normalization and diagnostics for
+ processing of mass spectrometry-based metabolomic data. Bioinformatics. 
+ 2014;30(1):133-4. Epub 2013/11/01. doi: 10.1093/bioinformatics/btt589. 
+ PubMed PMID: 24174567; PMCID: PMC3866554.
 
 Johnson, W.E.et al.(2007) Adjusting batch effects in microarray expression
 data using Empirical Bayes methods. Biostatistics, 8, 118-127.

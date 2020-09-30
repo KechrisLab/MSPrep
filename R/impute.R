@@ -38,6 +38,9 @@
 #'   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
 #'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 #'   
+#'   A. Kowarik, M. Templ (2016) Imputation with R package VIM. Journal of 
+#'   Statistical Software, 74(7), 1-16.
+#'   
 #' @examples
 #' # Load, tidy, summarize, and filter example dataset
 #' data(msquant)
@@ -67,16 +70,18 @@
 #'                         missingValue = 0)
 #' 
 #' bpcaImputedDF <- msImpute(filteredDF, imputeMethod = "bpca",
+#'                           nPcs = 3,
 #'                           compVars = c("mz", "rt"),
 #'                           sampleVars = c("spike", "batch", "subject_id"),
 #'                           separator = "_",
 #'                           missingValue = 0)
 #' 
 #' knnImputedDF <- msImpute(filteredDF, imputeMethod = "knn",
+#'                          kKnn = 5,
 #'                          compVars = c("mz", "rt"),
 #'                          sampleVars = c("spike", "batch", "subject_id"),
 #'                          separator = "_",
-#'                         missingValue = 0)                                
+#'                          missingValue = 0)                                
 #'
 #' @export
 msImpute <- function(data,

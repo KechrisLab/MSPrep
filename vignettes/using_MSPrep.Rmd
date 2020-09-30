@@ -167,7 +167,7 @@ summarizedDF <- msSummarize(msquant,
 ```
 
 ```{r, echo = FALSE}
-head(summarizedDF)
+summarizedDF[1:10, 1:6]
 ```
 
 
@@ -176,7 +176,8 @@ head(summarizedDF)
 Following the summarization of technical replicates, the data can be filtered to
 only contain compounds present in a specified proportion of samples. To do so, 
 the `msFilter()` function is provided. By default, `msFilter()` uses the 80% 
-rule and removes compounds which are are not present in 80% of the samples.
+rule and filters the compounds in the data set leaving only those which are
+present in 80% of the samples.
 
 ```{r}
 filteredDF <- msFilter(summarizedDF,
@@ -187,7 +188,7 @@ filteredDF <- msFilter(summarizedDF,
 ```
 
 ```{r, echo = FALSE}
-head(filteredDF)
+filteredDF[1:10, 1:6]
 ```
 
 ## Imputation
@@ -223,7 +224,7 @@ imputedDF <- msImpute(filteredDF,
 ```
 
 ```{r, echo = FALSE}
-head(imputedDF)
+imputedDF[1:10, 1:6]
 ```
 
 ## Normalization
@@ -242,9 +243,9 @@ eight normalization strategies:
 8. SVA
 
 `msNormalize()` also provides options to transform the data using a log base 10
-(default) or log base 2 transformation. To select either option, or to forego 
-transformation, use the `transform` argument to specify `"log10"`, `"log2"`, or
-`"none"` respectively. 
+(default), log base 2, or natural log transformation. To select either option, 
+or to forego transformation, use the `transform` argument to specify `"log10"`, 
+`"log2"`, `"ln"`, or `"none"` respectively. 
 
 Quantile normalization, provided by the `preprocessCore` package, ensures that
 the provided samples have the same quantiles. Median normalization subtracts
@@ -261,12 +262,11 @@ or in conjunction with quantile or median normalization. When using ComBat, a
 
 RUV and SVA normalization each estimate a matrix of unobserved factors of 
 importance using different methods of supervised factor analysis. For both 
-methods, known covariates should be provided using the `covariatesOfInterest` 
-parameter, and must correspond to the sample variables specified by `sampleVars`
-in the case of a data frame or `colData` in the case of a 
-`SummarizedExperiment`. For RUV normalization, the `kRUV` argument specifies the
-number of factors on which the 
-data is normalized.
+methods, known covariates (e.g. sex, age) should be provided using the 
+`covariatesOfInterest` parameter, and must correspond to the sample variables 
+specified by `sampleVars` in the case of a data frame or `colData` in the case 
+of a `SummarizedExperiment`. For RUV normalization, the `kRUV` argument 
+specifies the number of factors on which the data is normalized.
 
 Cross-Contribution Compensating Multiple Standard Normalization (CRMN), provided
 by the `crmn` package, normalizes based on internal standards. The sample 
@@ -290,7 +290,7 @@ normalizedDF <- msNormalize(imputedDF,
 ```
 
 ```{r, echo = FALSE}
-head(normalizedDF)
+normalizedDF[1:10, 1:6]
 ```
 
 ## Pipeline
@@ -316,7 +316,7 @@ preparedDF <- msPrepare(msquant,
 ```
 
 ```{r, echo = FALSE}
-head(preparedDF)
+preparedDF[1:10, 1:6]
 ```
 
 # Example Two - Biological Data Set
@@ -333,7 +333,7 @@ This data set differs from `msquant` in several ways. First, it has a column
 `Compound.Name` which specifies compound names, and the mass-to-charge ratio and
 retention-time columns are named `Mass` and `Retention.Time` respectively. 
 Second, this data set does not have spike-ins or batches (but it does have 
-technical replicates). Finally, the data has already been normalized so that 
+technical replicates). Finally, the data has already been transformed, so that 
 step of the pipeline will be excluded.
 
 ## Summarizing
@@ -384,6 +384,17 @@ imputedSE131 <- msImpute(filteredSE131,
                          imputeMethod = "bpca",
                          nPcs = 3,
                          missingValue = 0)
+```
+
+## Normalizing
+
+For this example, `msNormalize()` will be called using median normalization with
+no transformation applied.
+
+```{r}
+normalizedSe131 <- msNormalize(imputedSE131,
+                               normalizeMethod = "median",
+                               transform = "none")
 ```
 
 ```{r, echo = FALSE}

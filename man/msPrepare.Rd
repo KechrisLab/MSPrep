@@ -92,7 +92,7 @@ element in `sampleVars` or a column in the column data of a
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}
 
-\item{sampleVars}{Vector of the ordered sample variables found in each sample 
+\item{sampleVars}{Vector of the ordered sample variables found in each sample
 column.}
 
 \item{colExtraText}{Any extra text to ignore at the beginning of the sample 

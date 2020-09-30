@@ -1,9 +1,9 @@
 #' Function for performing normalization and batch corrections on imputed data.
 #' 
-#' Perform normalization and batch corrections on specified imputation dataset.
+#' Perform normalization and batch corrections on specified imputed dataset.
 #' Routines included are quantile, RUV (remove unwanted variation), SVA 
 #' (surrogate variable analysis), median, CRMN (cross-contribution 
-#' compensating multiple standard normalization), ComBat to remove batch 
+#' compensating multiple standard normalization), and ComBat to remove batch 
 #' effects in raw, quantile, and median normalized data. Generates data 
 #' driven controls if none exist.
 #' 
@@ -103,7 +103,7 @@ msNormalize <- function(data,
                                             "SVA"),
                         nControl = 10, controls  = NULL, nComp = 2, kRUV = 3,
                         batch = NULL, covariatesOfInterest = NULL,
-                        transform = c("log10", "log2", "none"),
+                        transform = c("log10", "log2", "ln", "none"),
                         compVars = c("mz", "rt"),
                         sampleVars = c("subject_id"),
                         colExtraText = NULL,
@@ -151,7 +151,6 @@ msNormalize <- function(data,
         "NA values present in data"
     }
     
-    ## Normalize with appropriate method
     normalizedData <-
         switch(normalizeMethod,
                "ComBat" = .dfNormalizeCombat(abundanceColumns, batch, 
@@ -225,10 +224,7 @@ msNormalize <- function(data,
                                 fit$fitted.values
                                 },
                             numeric(ncol(data)))
-    # for(j in 1:nrow(matData)) {
-    #     fit <- lm(matData[j, ] ~ as.matrix(factors, ncol = 1))
-    #     matData[j, ] <- fit$fitted.values
-    # }
+    
     normalizedData <- t(normalizedData)
     
     rownames(normalizedData) <- rownames(data)
@@ -455,5 +451,6 @@ msNormalize <- function(data,
     data <- switch(transform,
                    "log10" = log10(data),
                    "log2" = log2(data),
+                   "ln" = log(data),
                    "none" = data)
 }

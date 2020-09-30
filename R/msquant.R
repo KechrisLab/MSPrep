@@ -1,6 +1,7 @@
 #' Example mass spectrometry dataset. 
 #'
-#' Data contains LC-MS samples for 2 subjects, each with three features: 
+#' Data contains LC-MS samples for 2 subjects, each run with several different 
+#' study design settings: 
 #' spike-in (1x, 2x, 4x), batch (01, 02, 03), and technical replicate (A, B, C).
 #' The first two columns indicate mass-to-charge ratio and retention-time for
 #' the 2644 unique metabolites observed in the samples. The remaining 54 

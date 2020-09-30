@@ -1,6 +1,6 @@
 #' Function for filtering abundance data set.
 #'
-#' Filters compounds to those found in specified proportion of subjects.
+#' Filters compounds to those found in specified proportion of samples.
 #' 
 #' @param data Data set as either a data frame or `SummarizedExperiement`.
 #' @param filterPercent Decimal value indicating filtration threshold. 
@@ -23,13 +23,6 @@
 #' @return A data frame or `SummarizedExperiment` with filtered abundance data.
 #' Default return type is set to match the data input but may be altered with 
 #' the `returnToSE` or `returnToDF` arguments.
-#' 
-#' @references 
-#'   Oba, S.et al.(2003) A Bayesian missing value estimation for gene
-#'   expression profile data. Bioinformatics, 19, 2088-2096
-#'
-#'   Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
-#'   PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 #'   
 #' @examples
 #'

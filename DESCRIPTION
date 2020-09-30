@@ -23,9 +23,9 @@ Authors@R:
            email = "Katerina.Kechris@cuanschutz.edu",
            role = c("aut", "cph", "ths")))
 Description:
-  Package performs summarization of replicates, filtering by frequency, three
-  different options for missing data, and a variety of options for normalizing 
-  dataset.
+  Package performs summarization of replicates, filtering by frequency, several
+  different options for imputing missing data, and a variety of options for 
+  transforming, batch correcting, and normalizing data.
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:

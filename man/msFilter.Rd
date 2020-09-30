@@ -26,7 +26,7 @@ will be removed.}
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}
 
-\item{sampleVars}{Vector of the ordered sample variables found in each sample 
+\item{sampleVars}{Vector of the ordered sample variables found in each sample
 column.}
 
 \item{colExtraText}{Any extra text to ignore at the beginning of the sample 
@@ -49,7 +49,7 @@ Default return type is set to match the data input but may be altered with
 the `returnToSE` or `returnToDF` arguments.
 }
 \description{
-Filters compounds to those found in specified proportion of subjects.
+Filters compounds to those found in specified proportion of samples.
 }
 \examples{
 
@@ -74,11 +74,4 @@ filteredDF <- msFilter(summarizedDF,
                        separator = "_")
 
 
-}
-\references{
-Oba, S.et al.(2003) A Bayesian missing value estimation for gene
-  expression profile data. Bioinformatics, 19, 2088-2096
-
-  Stacklies, W.et al.(2007) pcaMethods A bioconductor package providing
-  PCA methods for incomplete data. Bioinformatics, 23, 1164-1167.
 }

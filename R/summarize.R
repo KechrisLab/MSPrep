@@ -3,8 +3,8 @@
 #' Reads data and summarizes technical replicates as the
 #' mean of observations for compounds found in 2 or 3 replicates and with
 #' coefficient of variation below specified level, or median for those found in
-#' 3 replicates but excessive coefficient of variation (CV). Compounds found in
-#' only 1 replicate are assigned as missing.
+#' 3 replicates but with excessive coefficient of variation (CV). Compounds 
+#' found in only 1 replicate are assigned as missing.
 #' 
 #' @param data Data set as either a data frame or `SummarizedExperiement`.
 #' @param cvMax Decimal value from 0 to 1 representing the acceptable level of 
