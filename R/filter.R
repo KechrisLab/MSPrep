@@ -80,7 +80,7 @@ msFilter <- function(data,
     sampleVars <- colnames(colData(SE))
     
     ## Tidy Data
-    tidyData <- msTidy(data = SE, missingValue = missingValue)
+    tidyData <- .msTidy(data = SE, missingValue = missingValue)
     
     ## Filter Data
     filteredData <- .tidyFilter(tidyData, compVars, filterPercent)
@@ -94,9 +94,9 @@ msFilter <- function(data,
 .dfFilter <- function(data, filterPercent, compVars, sampleVars, colExtraText,
                       separator, missingValue, returnToSE) {
     ## Tidy Data
-    tidyData <- msTidy(data = data, compVars = compVars, 
-                       sampleVars = sampleVars, colExtraText = colExtraText, 
-                       separator = separator, missingValue = missingValue)
+    tidyData <- .msTidy(data = data, compVars = compVars, 
+                        sampleVars = sampleVars, colExtraText = colExtraText,
+                        separator = separator, missingValue = missingValue)
     
     ## Filter Data
     filteredData <- .tidyFilter(tidyData, compVars, filterPercent)

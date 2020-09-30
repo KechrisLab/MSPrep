@@ -1,4 +1,4 @@
-context("msTidy() and msReturn()")
+context(".msTidy() and return functions")
 
 data(msquant)
 
@@ -28,7 +28,7 @@ SE <- SummarizedExperiment(abundanceMatrix, colData = colnamesDF,
                            rowData = rownamesDF, 
                            metadata = metaData)
 
-tidySE <- msTidy(SE, missingValue = 1, setMissing = 1)
+tidySE <- .msTidy(SE, missingValue = 1, setMissing = 1)
 
 returnedSE <- .tidyReturn(tidySE,
                         compVars = c("mz", "rt"),

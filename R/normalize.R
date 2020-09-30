@@ -339,7 +339,7 @@ msNormalize <- function(data,
     
     # Transform data to tidy
     fullData <- bind_cols(compCols, abCols)
-    data <- msTidy(fullData, compVars, sampleVars, colExtraText, separator)
+    data <- .msTidy(fullData, compVars, sampleVars, colExtraText, separator)
     
     ISVec <- .isIS(data, compVars, sampleVars, svaFactors, nCompounds, 
                    nControl, controls)
@@ -427,7 +427,7 @@ msNormalize <- function(data,
     
     # ctl -- n compounds w/ lowest CV and no missing
     fullData <- bind_cols(compCols, abCols)
-    data <- msTidy(fullData, compVars, sampleVars, colExtraText, separator)
+    data <- .msTidy(fullData, compVars, sampleVars, colExtraText, separator)
     controlSummary <- .controlSummary(data, compVars, sampleVars)
     ctl <- .ctlCompounds(controlSummary, nControl, controls)
     

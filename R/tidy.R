@@ -12,7 +12,7 @@
 #' @importFrom rlang !!!
 #' @importFrom rlang syms
 #' @import SummarizedExperiment
-msTidy <- function(data,
+.msTidy <- function(data,
                    compVars = c("mz", "rt"),
                    sampleVars = c("subject_id"),
                    colExtraText = NULL,

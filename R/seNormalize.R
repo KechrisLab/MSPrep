@@ -142,7 +142,7 @@
     sampleInfo <- model.matrix(~ -1 + ., data = sampleInfo)
     
     # Transform data to tidy
-    data <- msTidy(SE)
+    data <- .msTidy(SE)
     
     ISVec <- .isIS(data, compVars=colnames(rowData(SE)), 
                    sampleVars=colnames(colData(SE)), svaFactors, nCompounds, 
@@ -172,7 +172,7 @@
 .seRUVFactors <- function(SE, kRUV, nControl, controls) {
     
     # ctl -- n compounds w/ lowest CV and no missing
-    data <- msTidy(SE)
+    data <- .msTidy(SE)
     compVars <- colnames(rowData(SE))
     sampleVars <- colnames(colData(SE))
     controlSummary <- .controlSummary(data, compVars, sampleVars)

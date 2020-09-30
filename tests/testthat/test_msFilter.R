@@ -35,19 +35,19 @@ filteredDF3 <- msFilter(summarizedDF,
                         separator = "_",
                         returnToSE = FALSE)
 
-tidyData1 <- msTidy(filteredDF1,
+tidyData1 <- .msTidy(filteredDF1,
                  compVars = c("mz", "rt"),
                  sampleVars = c("spike", "batch", "subject_id"),
                  separator = "_",
                  missingValue = 0,
                  setMissing = 0)
-tidyData2 <- msTidy(filteredDF2,
+tidyData2 <- .msTidy(filteredDF2,
                     compVars = c("mz", "rt"),
                     sampleVars = c("spike", "batch", "subject_id"),
                     separator = "_",
                     missingValue = 0,
                     setMissing = 0)
-tidyData3 <- msTidy(filteredDF3,
+tidyData3 <- .msTidy(filteredDF3,
                     compVars = c("mz", "rt"),
                     sampleVars = c("spike", "batch", "subject_id"),
                     separator = "_",

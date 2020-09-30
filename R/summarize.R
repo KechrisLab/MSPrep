@@ -101,7 +101,7 @@ msSummarize <- function(data,
     sampleVars <- sampleVars[sampleVars != replicate]
     
     ## Tidy Data
-    tidyData <- msTidy(data = SE, missingValue = missingValue, setMissing = NA)
+    tidyData <- .msTidy(data = SE, missingValue = missingValue, setMissing = NA)
     
     ## Summarize Replicates
     summarizedData <- .tidySummarize(tidyData = tidyData, compVars = compVars,
@@ -123,8 +123,8 @@ msSummarize <- function(data,
                          sampleVars, colExtraText, separator, missingValue, 
                          returnSummaryDetails, returnToSE) {
     
-    tidyData <- msTidy(data, compVars, sampleVars, colExtraText, separator,
-                       missingValue, setMissing = NA) 
+    tidyData <- .msTidy(data, compVars, sampleVars, colExtraText, separator,
+                        missingValue, setMissing = NA) 
     
     sampleVars <- sampleVars[sampleVars != replicate]
     

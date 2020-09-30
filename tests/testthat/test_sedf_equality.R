@@ -30,9 +30,9 @@ se <- SummarizedExperiment(abundanceMatrix, colData = colnamesDF,
                            metadata = "Test Metadata")
 
 ## Run msTidy with SE and data frame
-tidySE <- msTidy(se, missingValue = 1)
+tidySE <- .msTidy(se, missingValue = 1)
 
-tidyDF <- msTidy(msquant,
+tidyDF <- .msTidy(msquant,
                  compVars = c("mz", "rt"),
                  sampleVars = c("spike", "batch", "replicate", "subject_id"),
                  colExtraText = "Neutral_Operator_Dif_Pos_",
@@ -187,7 +187,7 @@ ruvNormalizedSE <- msNormalize(hmImputedSE,
 
 ## Check that results are equal
 ## msTidy()
-test_that("Check msTidy()", {
+test_that("Check .msTidy()", {
     expect_true(all(tidySE == tidyDF | is.na(tidySE == tidyDF)))
 })
 
