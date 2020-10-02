@@ -5,7 +5,7 @@
 \alias{msquant}
 \title{Example mass spectrometry dataset.}
 \format{
-Data frame containing 2644 observations of 56 variables
+Data frame containing 2644 observations of 56 samples
 \describe{
   \item{mz}{Mass-to-charge ratio}
   \item{rt}{Retention-time}

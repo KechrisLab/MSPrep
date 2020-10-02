@@ -2,13 +2,13 @@
 #' 
 #' Data contains LC-MS metabolite analysis for samples from 131 subjects 
 #' with 3 technical replicates per subject. The first three columns indicate 
-#' "Mass" indicating the mass-to-charge ratio, 
-#' "Retention.Time", and "Compound.Name" for each metabolite present in the data
-#' set. The remaining columns indicate abundance for each of the 662 
+#' "Mass" (mass-to-charge ratio), 
+#' "Retention.Time", and "Compound.Name" for the 662 unique metabolites observed
+#' in the samples. The remaining columns indicate abundance for each of the 662
 #' mass/retention-time combination for each subject/replicate combination.
 #' 
 #' @docType data
-#' @format Data frame containing 662 observations of 396 variables.
+#' @format Data frame containing 662 observations of 396 samples
 #' \describe{
 #'   \item{Mass}{Mass-to-charge ratio}
 #'   \item{Retention.Time}{Retention-time}

@@ -9,7 +9,7 @@
 #' batch/replicate combination.
 #'
 #' @docType data
-#' @format Data frame containing 2644 observations of 56 variables
+#' @format Data frame containing 2644 observations of 56 samples
 #' \describe{
 #'   \item{mz}{Mass-to-charge ratio}
 #'   \item{rt}{Retention-time}
