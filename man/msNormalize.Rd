@@ -34,10 +34,11 @@ batch correction), "CRMN" (cross-contribution compensating multiple
 standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
 variable analysis)}
 
-\item{nControl}{Number of controls to estimate/utilize.}
+\item{nControl}{Number of controls to estimate/utilize (for CRMN and RUV).}
 
 \item{controls}{Vector of control identifiers.  Leave blank for data driven
-controls. Vector of column numbers from metafin dataset of that control.}
+controls. Vector of column numbers from metafin dataset of that control (for
+CRMN and RUV).}
 
 \item{nComp}{Number of factors to use in CRMN algorithm.}
 
@@ -46,10 +47,10 @@ controls. Vector of column numbers from metafin dataset of that control.}
 \item{batch}{Name of the sample variable identifying batch.}
 
 \item{covariatesOfInterest}{Sample variables used as covariates in
-normalization algorithms.}
+normalization algorithms (required for ComBat, CRMN, and SVA).}
 
 \item{transform}{Select transformation to apply to data prior to 
-normalization. Options are "log10", "log2", and "none".}
+normalization. Options are "log10", "log2", "ln" and "none".}
 
 \item{compVars}{Vector of the columns which identify compounds. If a 
 `SummarizedExperiment` is used for `data`, row variables will be used.}

@@ -1,4 +1,5 @@
-# MSPrep 
+MSPrep
+======
 
 A processing pipeline for summarizing, filtering, imputing, and normalizing 
 LC/MS metabolomics data.
@@ -15,3 +16,8 @@ if (!require("devtools")) install.packages("devtools")
 devtools::install_github("KechrisLab/MSPrep")
 
 ```
+Bug reports
+===========
+
+Report bugs as issues on the [GitHub repository new
+issue](https://github.com/KechrisLab/MSPrep/issues/new)

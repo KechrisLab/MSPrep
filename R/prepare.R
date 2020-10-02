@@ -28,13 +28,14 @@
 #' batch correction), "CRMN" (cross-contribution compensating multiple 
 #' standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
 #' variable analysis), or "none" to skip normalization.
-#' @param nControl Number of controls to estimate/utilize.
+#' @param nControl Number of controls to estimate/utilize (for CRMN and RUV).
 #' @param controls Vector of control identifiers.  Leave blank for data driven
-#' controls. Vector of column numbers from metafin dataset of that control.
+#' controls. Vector of column numbers from metafin dataset of that control (for
+#' CRMN and RUV).
 #' @param nComp Number of factors to use in CRMN algorithm. 
 #' @param kRUV Number of factors to use in RUV algorithm.
 #' @param covariatesOfInterest Sample variables used as covariates in
-#' normalization algorithms.
+#' normalization algorithms (required for ComBat, CRMN, and SVA).
 #' @param batch Name of the sample variable identifying batch.
 #' @param transform  Select transformation to apply to data prior to 
 #' normalization. Options are "log10", "log2", and "none".

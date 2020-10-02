@@ -68,17 +68,18 @@ batch correction), "CRMN" (cross-contribution compensating multiple
 standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
 variable analysis), or "none" to skip normalization.}
 
-\item{nControl}{Number of controls to estimate/utilize.}
+\item{nControl}{Number of controls to estimate/utilize (for CRMN and RUV).}
 
 \item{controls}{Vector of control identifiers.  Leave blank for data driven
-controls. Vector of column numbers from metafin dataset of that control.}
+controls. Vector of column numbers from metafin dataset of that control (for
+CRMN and RUV).}
 
 \item{nComp}{Number of factors to use in CRMN algorithm.}
 
 \item{kRUV}{Number of factors to use in RUV algorithm.}
 
 \item{covariatesOfInterest}{Sample variables used as covariates in
-normalization algorithms.}
+normalization algorithms (required for ComBat, CRMN, and SVA).}
 
 \item{batch}{Name of the sample variable identifying batch.}
 
