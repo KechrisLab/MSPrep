@@ -1,42 +1,46 @@
 #' Function for performing normalization and batch corrections on imputed data.
 #' 
-#' Perform normalization and batch corrections on specified imputation dataset.
-#' Routines included are: 
-#' - quantile
-#' - RUV (remove unwanted variation)
-#' - SVA (surrogate variable analysis)
-#' - median 
-#' - CRMN(cross-contribution compensating multiple standard normalization)  
+#' Perform normalization and batch corrections on specified imputed dataset.
+#' Routines included are quantile, RUV (remove unwanted variation), SVA 
+#' (surrogate variable analysis), median, CRMN (cross-contribution 
+#' compensating multiple standard normalization), and ComBat to remove batch 
+#' effects in raw, quantile, and median normalized data. Generates data 
+#' driven controls if none exist.
 #' 
-#' Combat to remove batch effects in raw, quantile, and median normalized data.
-#' Generates data driven controls if none exist.
-#' 
-#' @param msprep_obj Imputed MSPrep object.
-#' @param method Name of normalization method.
-#' - ComBat (only ComBat batch correction)
-#' - quantile + ComBat (quantile with ComBat batch correction)
-#' - median + ComBat (median with ComBat batch correction)
-#' - CRMN
-#' - RUV
-#' - SVA
-#' @param n_control Number of controls to estimate/utilize.
+#' @param data Data set as either a data frame or `SummarizedExperiement`.
+#' @param normalizeMethod  Name of normalization method.
+#' "ComBat" (only ComBat batch correction), "quantile" (only quantile 
+#' normalization), "quantile + ComBat" (quantile with ComBat batch correction),
+#' "median" (only median normalization), "median + ComBat" (median with ComBat
+#' batch correction), "CRMN" (cross-contribution compensating multiple 
+#' standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
+#' variable analysis)
+#' @param nControl Number of controls to estimate/utilize.
 #' @param controls Vector of control identifiers.  Leave blank for data driven
 #' controls. Vector of column numbers from metafin dataset of that control.
-#' @param n_comp Number of factors to use in CRMN algorithm.
-#' @return controls List of compounds that were used as controls.
-#' @return crmn_adj Log2 CRMN normalized data.
-#' @return log_data Log2 dataset (no normalization)
-#' @return log_data_combat Log2 with ComBat batch effect corrected dataset.
-#' @return log_quant Log2 quantile normalized dataset.
-#' @return log_quant_combat Log2 quantile with ComBat correction normalized dataset.
-#' @return med_adj Median normalized dataset.
-#' @return med_combat Median with ComBat normalized dataset.
-#' @return ruv_adj Log2 RUV normalized dataset .
-#' @return ruv_factors Matrix of factors generated in RUV for use as covariates
-#' in later analysis.
-#' @return sva_adj Log2 SVA normalized dataset.
-#' @return sva_factors Matrix of factors generated in SVA for use as covariates
-#' in later analysis.
+#' @param nComp Number of factors to use in CRMN algorithm. 
+#' @param kRUV Number of factors to use in RUV algorithm.
+#' @param batch Name of the sample variable identifying batch.
+#' @param covariatesOfInterest Sample variables used as covariates in
+#' normalization algorithms.
+#' @param transform  Select transformation to apply to data prior to 
+#' normalization. Options are "log10", "log2", and "none".
+#' @param compVars Vector of the columns which identify compounds. If a 
+#' `SummarizedExperiment` is used for `data`, row variables will be used.
+#' @param sampleVars Vector of the ordered sample variables found in each sample
+#' column.
+#' @param colExtraText Any extra text to ignore at the beginning of the sample 
+#' columns names. Unused for `SummarizedExperiments`.
+#' @param separator Character or text separating each sample variable in sample
+#' columns. Unused for `SummarizedExperiment`.
+#' @param returnToSE Logical value indicating whether to return as 
+#' `SummarizedExperiment`
+#' @param returnToDF Logical value indicating whether to return as data frame.
+#' 
+#' @return  A data frame or `SummarizedExperiment` with transformed and
+#' normalized data. Default return type is set to match the data input but may 
+#' be altered with the `returnToSE` or `returnToDF` arguments.
+#' 
 #' @references 
 #' Bolstad, B.M.et al.(2003) A comparison of normalization methods for high
 #' density oligonucleotide array data based on variance and bias.
@@ -59,446 +63,430 @@
 #' 4818-4826.
 #' 
 #' @examples
-#' library(magrittr)
-#'
-#' # Load object generated from readdata() function
+#' # Load, tidy, summarize, filter, and impute example dataset
 #' data(msquant)
-#'
-#' imputed_data <-
-#'   msquant %>%
-#'   ms_tidy %>%
-#'   ms_prepare(replicate = "replicate", batch = "batch", groupingvars = "spike") %>%
-#'   ms_filter(filter_percent = 0.80) %>%
-#'   ms_impute(method = "halfmin")
-#' normalized_data_qC   <- ms_normalize(imputed_data, method = "quantile + ComBat")
-#' normalized_data_C    <- ms_normalize(imputed_data, method = "ComBat")
-#' normalized_data_sva  <- ms_normalize(imputed_data, method = "SVA")
-#' normalized_data_ruv  <- ms_normalize(imputed_data, method = "RUV")
-#' normalized_data_crmn <- ms_normalize(imputed_data, method = "CRMN")
-#' normalized_data_medC <- ms_normalize(imputed_data, method = "median + ComBat")
-#'
-#'
-#' @importFrom dplyr case_when
-#' @export
-ms_normalize <- function(msprep_obj,
-                         method = c("ComBat",
-                                    "quantile + ComBat",
-                                    "median + ComBat",
-                                    "CRMN",
-                                    "RUV",
-                                    "SVA"),
-                         n_control = 10,
-                         controls  = NULL,
-                         n_comp    = 2) {
-
-  # Validate inputs
-  stopifnot(class(msprep_obj) == "msprep")
-  # NOTE: check whether all require imputation or if other valid stages
-  stopifnot(stage(msprep_obj) %in% c("imputed"))
-  method <- match.arg(method) # requires 1 argument from vec in function arg
-
-  # Grab attributes for passing to fns
-  groupingvars <- grouping_vars(msprep_obj)
-  batch        <- batch_var(msprep_obj)
-  data         <- msprep_obj$data
-
-  # normalize/batch correct data
-  data <-
-    switch(method,
-           "ComBat"            = normalize_combat(data, groupingvars, batch),
-           "quantile + ComBat" = normalize_quantile_combat(data, groupingvars, batch),
-           "median + ComBat"   = normalize_median_combat(data, groupingvars, batch, n_control, controls),
-           "CRMN"              = normalize_crmn(data, groupingvars, batch, n_comp, n_control, controls),
-           "RUV"               = normalize_ruv(data, groupingvars, batch, n_control, controls),
-           "SVA"               = normalize_sva(data, groupingvars, batch),
-           stop("Invalid normalize method - provide argument from list in",
-                "function definition and help file"))
-
-  # Prep output object
-  msprep_obj$data  <- data
-  attr(msprep_obj, "normalize_method") <- method
-  stage(msprep_obj) <- "normalized"
-
-  # ...and:
-  return(msprep_obj)
-
-
-}
-
-#' Apply only batch correction via ComBat
 #' 
-#' @param data The 'data' element from MSPrep object (msprep_obj).
-#' @param groupingvars The groupingvars element from MSPrep object, aka
-#' phenotypes.
-#' @param batch The 'batch' element from MSPrep object. Name for batch variable
-normalize_combat <- function(data, groupingvars, batch) {
-
-  # Combat batch correction
-  rtn <- combat(data, groupingvars, batch, log2_transform = TRUE)
-
-  return(rtn)
-
-}
-
-
-#' @importFrom preprocessCore normalize.quantiles
-normalize_quantile_combat <- function(data, groupingvars, batch) {
-
-  # Quantile normalization
-  mat   <- data_to_wide_matrix(data, groupingvars, batch)
-  rwnm  <- rownames(mat)
-  colnm <- colnames(mat)
-  rtn   <- t(normalize.quantiles(t(mat)))
-  rownames(rtn) <- rwnm
-  colnames(rtn) <- colnm
-
-  # This is backtransforming to 'tidy' dataset before combat, which then
-  # transforms back to wide matrix and then back to tidy.  This could be skipped
-  # if have time to generalize/separate out a 'prep for combat' fuinction or add
-  # checks for current format.
-  rtn <- wide_matrix_to_data(rtn, groupingvars, batch)
-
-  # Combat batch correction
-  rtn <- combat(rtn, groupingvars, batch)
-
-  return(rtn)
-
-}
-
-
-#' @importFrom crmn normalize
-normalize_crmn <- function(data, groupingvars, batch, n_comp, n_control, controls) {
-
-  crmn_inputs <- create_crmn_inputs(data, groupingvars, batch, n_control, controls)
-  # Requires:
-  # - Y -> long, not logged, matrix w/ record id as column names and mz_rt as rownames
-  # - G -> sample_info_modmat -> cell means model matrix of phenotypes/sample info
-  # - isIS -> result of isIS() function
-  # - n_comp -> user input to main ms_normalize() function
-
-  normed.crmn  <- normalize(crmn_inputs$longmat,
-                            method    = "crmn",
-                            factors   = crmn_inputs$model_matrix,
-                            standards = crmn_inputs$isIS_vec,
-                            ncomp     = n_comp)
-  lnormed.crmn <- log_base2(normed.crmn)
-  final_crmn   <- as.data.frame(t(lnormed.crmn))
-  final_crmn   <- wide_matrix_to_data(final_crmn, groupingvars, batch)
-
-  return(final_crmn)
-
-}
-
-normalize_ruv <- function(data, groupingvars, batch, n_control, controls) {
-
-  ruv_factors <- ruvfactors(data, groupingvars, batch, n_control, controls)
-  adjusted    <- genadj(data, groupingvars, batch, ruv_factors)
-
-  cat("\n")
-  return(adjusted)
-
-}
-
-
-normalize_sva <- function(data, groupingvars, batch) {
-
-  sva_factors <- svafactors(data, groupingvars, batch)
-  adjusted    <- genadj(data, groupingvars, batch, sva_factors)
-
-  cat("\n")
-  return(adjusted)
-
-}
-
-
-normalize_median_combat <- function(data, groupingvars, batch, n_control, controls) {
-
-#   # For normalize/median, we need
-#   #   - Y     <- transposed (converts to matrix) final_shift <- final <- dataframed <- input dataset in wide_matrix format
-#   #   - G     <- cell means model matrix of groupingvars
-#   #   - isIS
-#   # TODO: Now figure out what these are and simplist way to get them.
-#   normed.med   <- crmn::normalize(Y, "median", factors = G, standards = isIS)
-#   med_com      <- combat(as.data.frame(t(normed.med)), pheno, batch)
-
-  # from normalize_crmn -- verify if true 
-  # - Y -> long, not logged, matrix w/ record id as column names and mz_rt as rownames
-  # - G -> sample_info_modmat -> cell means model matrix of phenotypes/sample info
-  # - isIS -> result of isIS() function
-  # - n_comp -> user input to main ms_normalize() function
-
-  crmn_inputs <- create_crmn_inputs(data, groupingvars, batch, n_control, controls)
-  # Requires:
-  # - Y -> long, not logged, matrix w/ record id as column names and mz_rt as rownames
-  # - G -> sample_info_modmat -> cell means model matrix of phenotypes/sample info
-  # - isIS -> result of isIS() function
-  # - n_comp -> user input to main ms_normalize() function
-
-  normed_med  <- normalize(object    = crmn_inputs$longmat,
-                           method    = "median",
-                           factors   = crmn_inputs$model_matrix,
-                           standards = crmn_inputs$isIS_vec)
-  normed_med <- wide_matrix_to_data(t(normed_med), groupingvars, batch)
-  rtn        <- combat(normed_med, groupingvars, batch, log2_transform = FALSE)
-
-  return(rtn)
-
-}
-
-
-
-create_crmn_inputs <- function(data, groupingvars, batch, n_control, controls) {
-
-  internal_id <- internal_id_order(groupingvars, batch)
-
-  sva         <- svafactors(data, groupingvars, batch)
-  widedf      <- data_to_wide_matrix(data, groupingvars, batch, asmatrix = FALSE)
-
-  n_compounds <- ncol(widedf)
-  long_data   <- t(widedf) # For crmn::normalize()
-
-  wide_plus_rownames <- rownames_to_column(widedf) # for model.matrix
-  wide_plus_rownames <- separate(wide_plus_rownames, col = "rowname", into = internal_id, remove = FALSE)
-  sample_info_dat    <- select(wide_plus_rownames, groupingvars)
-  sample_info_dat    <- mutate_if(sample_info_dat, is.character, funs(as.factor))
-  sample_info_modmat <- model.matrix(~ -1 + ., data = sample_info_dat)
-
-  isIS_vec <- isIS(data, sva, n_control, n_compounds, controls)
-
-  return(structure(list("longmat"      = long_data,
-                        "model_matrix" = sample_info_modmat,
-                        "isIS_vec"     = isIS_vec),
-                   class = "crmn_inputs"))
-
-}
-
-# Not entirely sure what this function is/does
-isIS <- function(data, factors, n_control, n_compounds, controls) {
-  # compounds -> number of mz_rt
-  # ctlo -> ctl[order(ctl)]
-
-  control_sum   <- control_summary(data)
-  ctl       <- ctl_compounds(control_sum, factors, n_control, controls)
-  ctlo      <- ctl[order(ctl)]
-  j         <- 1
-  isISvec      <- rep(FALSE, n_compounds)
-
-  for (i in 1:n_compounds) {
-    if (j <= 10) {
-      if (ctlo[j] == i) {
-        isISvec[i] <- TRUE
-        j       <- j + 1
-      } else {
-        isISvec[i] <- FALSE
-      }
+#' summarizedDF <- msSummarize(msquant,
+#'                             compVars = c("mz", "rt"),
+#'                             sampleVars = c("spike", "batch", "replicate", 
+#'                             "subject_id"),
+#'                             cvMax = 0.50,
+#'                             minPropPresent = 1/3,
+#'                             colExtraText = "Neutral_Operator_Dif_Pos_",
+#'                             separator = "_",
+#'                             missingValue = 1)
+#'                             
+#' filteredDF <- msFilter(summarizedDF,
+#'                        filterPercent = 0.8,
+#'                        compVars = c("mz", "rt"),
+#'                        sampleVars = c("spike", "batch", "subject_id"),
+#'                        separator = "_")
+#' 
+#' hmImputedDF <- msImpute(filteredDF, imputeMethod = "halfmin",
+#'                         compVars = c("mz", "rt"),
+#'                         sampleVars = c("spike", "batch", "subject_id"),
+#'                         separator = "_",
+#'                         missingValue = 0)
+#' 
+#' # Normalize data set
+#' medianNormalizedDF <- msNormalize(hmImputedDF, normalizeMethod = "median",
+#'                                   compVars = c("mz", "rt"),
+#'                                   sampleVars = c("spike", "batch", 
+#'                                   "subject_id"),
+#'                                   separator = "_")
+#'
+#' @export
+msNormalize <- function(data, 
+                        normalizeMethod = c("median", "ComBat", "quantile",
+                                            "quantile + ComBat", 
+                                            "median + ComBat", "CRMN", "RUV",
+                                            "SVA"),
+                        nControl = 10, controls  = NULL, nComp = 2, kRUV = 3,
+                        batch = "batch", covariatesOfInterest = NULL,
+                        transform = c("log10", "log2", "ln", "none"),
+                        compVars = c("mz", "rt"),
+                        sampleVars = c("subject_id"),
+                        colExtraText = NULL,
+                        separator = NULL,
+                        returnToSE = FALSE,
+                        returnToDF = FALSE) {
+    
+    normalizeMethod <- match.arg(normalizeMethod)
+    transform <- match.arg(transform)
+    
+    .normalizeParamValidation(data, normalizeMethod, nControl, controls, nComp,
+                              kRUV, batch, covariatesOfInterest, transform, 
+                              compVars, sampleVars, colExtraText, separator, 
+                              returnToSE, returnToDF)
+    
+    if (is(data, "SummarizedExperiment")) {
+        return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp,
+                               kRUV, batch, transform, covariatesOfInterest)
+        if (returnToDF) {
+            return <- .seToDF(return)
+        }
+    } else if (is(data, "data.frame")) {
+        return <- .dfNormalize(data, normalizeMethod, nControl, controls, nComp,
+                               kRUV, batch, transform, compVars, 
+                               sampleVars, colExtraText, separator, returnToSE, 
+                               covariatesOfInterest)
+        if (returnToSE) {
+            return <- .dfToSE(return, compVars, sampleVars, separator,
+                              colExtraText)
+        }
+    } else {
+        stop("'data' must be a data frame or SummarizedExperiment")
     }
-  }
-
-  return(isISvec)
-
+    
+    return(return)
 }
 
-
-
-ctl_compounds <- function(control_summary_data, factors, n_control, controls) {
-
-  if (length(controls) > 0) { 
-    dat <- controls 
-  } else {
-    dat <- arrange(control_summary_data, .data$counteq0, .data$cv)
-    dat <- dat[1:max(n_control, ncol(factors) + 5), "number"]
-    dat <- dat[["number"]]
-  }
-
-  return(dat)
-
+.dfNormalize <- function(data, normalizeMethod, nControl, controls, nComp, kRUV,
+                         batch, transform, compVars, sampleVars, 
+                         colExtraText, separator, returnToSE, 
+                         covariatesOfInterest) {
+    
+    ## Get abundance and compound columns, transform data
+    abundanceColumns <- select(data, -compVars) %>%
+        .dfLogTransform(transform)
+    compColumns <- select(data, compVars)
+    
+    ## Check for NA values
+    if (any(apply(abundanceColumns, 2, function(x) any(is.na(x))))) {
+        "NA values present in data"
+    }
+    
+    normalizedData <-
+        switch(normalizeMethod,
+               "ComBat" = .dfNormalizeCombat(abundanceColumns, batch, 
+                                             sampleVars, colExtraText, 
+                                             separator, covariatesOfInterest),
+               "quantile" = .normalizeQuantile(abundanceColumns),
+               "quantile + ComBat" = 
+                   .dfNormalizeQuantileCombat(abundanceColumns, batch, 
+                                              sampleVars, colExtraText, 
+                                              separator, covariatesOfInterest),
+               "median" = .normalizeMedian(abundanceColumns),
+               "median + ComBat" = 
+                   .dfNormalizeMedianCombat(abundanceColumns, batch, sampleVars,
+                                            colExtraText, separator,
+                                            covariatesOfInterest),
+               "CRMN" = .normalizeCRMN(abundanceColumns, compColumns, compVars, 
+                                       sampleVars, colExtraText, separator, 
+                                       covariatesOfInterest, nComp, nControl, 
+                                       controls),
+               "RUV" = .normalizeRUV(abundanceColumns, compColumns, compVars, 
+                                     sampleVars, kRUV, nControl, controls, 
+                                     colExtraText, separator),
+               "SVA" = .normalizeSVA(abundanceColumns, sampleVars, 
+                                     colExtraText, separator, 
+                                     covariatesOfInterest),
+               stop("Invalid normalize method - provide argument from list in",
+                    "function definition and help file"))
+    
+    ## Recombine data
+    if(normalizeMethod != "CRMN") {
+        normalizedData <- bind_cols(compColumns, normalizedData)
+    }
+    
+    return(normalizedData)
 }
 
-
-# NOTE: returns log base 2 results
-
-#' @importFrom dplyr mutate_if
-#' @importFrom stats model.matrix
-combat <- function(data, groupingvars, batch, log2_transform = TRUE) {
-
-  internal_id <- internal_id_order(groupingvars, batch)
-
-  # Function dev
-  # Convert to wide matrix -- do we want spike in the ID?
-  wide <- data_to_wide_matrix(data, groupingvars, batch, asmatrix = FALSE)
-  wide <- rownames_to_column(wide)
-  wide <- separate(wide, col = "rowname",
-                   into = internal_id,
-                   remove = FALSE)
-
-  # Generate long matrix  for feeding to ComBat()
-  widemat <- data_to_wide_matrix(data, groupingvars, batch, asmatrix = TRUE)
-  longmat <- t(widemat)
-
-  # combat + median is not log2'd, otherwise should be
-  if (log2_transform) {
-    longmat <- log_base2(longmat)
-  }
-
-  # Create model matrix of sample_info variables (soon to be formerly groupingvars)
-  sample_info_dat    <- select(wide, groupingvars)
-  sample_info_dat    <- mutate_if(sample_info_dat, is.character, funs(as.factor))
-  sample_info_modmat <- model.matrix(~ ., data = sample_info_dat)
-
-  # Create model matrix of batch variable
-  if (length(batch) > 1) stop("only one batch variable allowed for ComBat") 
-  batch_dat <- select(wide, batch)
-  batch_dat <- mutate_if(batch_dat, is.character, funs(as.factor))
-  batch_vec <- batch_dat[, 1]
-
-  comadj <- sva::ComBat(longmat, mod = sample_info_modmat, batch = batch_vec) 
-  comadj <- t(comadj)
-
-  comadj_tidy <- wide_matrix_to_data(comadj, groupingvars, batch)
-
-  # What form to return this in??
-  return(comadj_tidy)
-
+.normalizeSVA <- function(data, sampleVars, colExtraText, separator, 
+                          covariatesOfInterest) {
+    
+    svaFactors <- .svaFactors(data, sampleVars, colExtraText, separator, 
+                              covariatesOfInterest)
+    
+    normalizedData <- .genAdj(data, svaFactors)
 }
 
-
-#' @importFrom dplyr mutate_if
-#' @importFrom dplyr select
-#' @importFrom tibble rownames_to_column
-#' @importFrom tidyr separate
 #' @importFrom stats model.matrix
 #' @importFrom sva sva
-svafactors <- function(data, groupingvars, batch) {
-
-  # This can probably be simplified some more
-
-  # Create long, logged matrix for sva
-  wide      <- data_to_wide_matrix(data, groupingvars, batch, asmatrix = FALSE)
-  wide_log2 <- log_base2(wide)
-  long_log2 <- t(wide_log2)
-
-  # Create model matrix of sample_info variables (soon to be formerly groupingvars)
-  internal_id        <- internal_id_order(groupingvars, batch)
-  wide               <- rownames_to_column(wide)
-  wide               <- separate(wide, col = "rowname", into = internal_id, remove = FALSE)
-  sample_info_dat    <- select(wide, groupingvars)
-  sample_info_dat    <- mutate_if(sample_info_dat, is.character, funs(as.factor))
-  sample_info_modmat <- model.matrix(~ ., data = sample_info_dat)
-
-  svaadj <- sva(long_log2, sample_info_modmat, method = "irw")
-  rtn    <- svaadj$sv
-  colnames(rtn) <- paste0("f", 1:ncol(rtn))
-
-  return(rtn)
-
-}
-
-
-ruvfactors <- function(data, groupingvars, batch, n_control, controls) {
-
-  # Prep datasets/matrices
-  wide        <- data_to_wide_matrix(data, groupingvars, batch)
-  dset        <- log_base2(wide)
-  Y           <- t(dset) # Only data Used in calculation
-
-  # Get num factors from sva -- why sva? who knows
-  sva_factors <- svafactors(data, groupingvars, batch)
-
-  # ctl -- n compounds w/ lowest CV and no missing
-  control_sum  <- control_summary(data)
-  ctl      <- ctl_compounds(control_sum, sva_factors, n_control, controls)
-
-  # Calculate RUV 
-  #   Uses: Y, ctl, sva_factors
-  Z   <- matrix(rep(1, ncol(Y)))
-  RZY <- Y - Y %*% Z %*% solve(t(Z) %*% Z) %*% t(Z)
-  W   <- svd(RZY[ctl, ])$v
-  W   <- W[, 1:ncol(sva_factors)]
-
-  # Format output
-  rtn <- as.matrix(W, ncol = ncol(sva))
-  colnames(rtn) <- paste0("f", 1:ncol(rtn))
-
-  return(rtn)
-
+#' @importFrom tidyr separate
+#' @importFrom ddpcr quiet
+.svaFactors <- function(data, sampleVars, colExtraText, separator, 
+                        covariatesOfInterest) {
+    
+    colNames <- data.frame("colNames" = colnames(data))
+    colData <- separate(colNames, col = "colNames", into = sampleVars, 
+                        sep = separator, remove = FALSE)
+    
+    sampleInfo <- select(colData, covariatesOfInterest)
+    sampleInfo <- model.matrix(~ ., data = sampleInfo)
+    
+    svaFactors <- sva(as.matrix(data), sampleInfo, method = "irw")
+    svaFactors <- svaFactors$sv
 }
 
 #' @importFrom stats lm
-genadj <- function(data, groupingvars, batch, factors) {
-  # dset      == log_final
-  # factors   == sva or ruv_raw factors/loadings?
-  # compounds == num mz_rt
-
-  wide      <- data_to_wide_matrix(data, groupingvars, batch, asmatrix = FALSE)
-  wide_log2 <- log_base2(wide)
-
-  out <- sapply(1:ncol(wide_log2),
-    function(j) {
-      fit <- lm(wide_log2[, j] ~ as.matrix(factors, ncol = 1))
-      fit$fitted.values
-    })
-
-  colnames(out) <- colnames(wide_log2)
-  rownames(out) <- rownames(wide_log2)
-
-  rtn <- wide_matrix_to_data(out, groupingvars, batch)
-
-  return(rtn)
-
+.genAdj <- function(data, factors) {
+    matData <- as.matrix(data)
+    normalizedData <- vapply(seq_len(nrow(matData)),
+                            function(j) {
+                                fit <- lm(matData[j, ] ~
+                                              as.matrix(factors, ncol = 1))
+                                fit$fitted.values
+                                },
+                            numeric(ncol(data)))
+    
+    normalizedData <- t(normalizedData)
+    
+    rownames(normalizedData) <- rownames(data)
+    as.data.frame(normalizedData)
 }
 
+#' @importFrom sva ComBat
+#' @importFrom dplyr mutate_if
+.dfNormalizeCombat <- function(data, batch, sampleVars, colExtraText, separator,
+                               covariatesOfInterest) {
+    
+    if (is.null(batch) & "batch" %in% sampleVars) {
+        batch <- "batch"
+    } 
+    
+    if (is.null(batch)) {
+        stop("'batch' must be included for ComBat normalization methods")
+    }
+    
+    if (length(batch) > 1) stop("only one batch variable allowed for ComBat") 
+    
+    colNames <- data.frame("colNames" = colnames(data))
+    colData <- separate(colNames, col = "colNames", into = sampleVars, 
+                     sep = separator, remove = FALSE)
 
-#' Summarise dataset for use in control compounds (ctl_compounds) function
-#' 
-#' @param data tidy dataset from msprep_obj (msprep_obj$data)
-#' @importFrom dplyr group_by
-#' @importFrom dplyr summarise_at
-#' @importFrom dplyr ungroup
-#' @importFrom dplyr mutate
-#' @importFrom dplyr select
-#' @importFrom rlang .data
-control_summary <- function(data) {
-
-  counteq0 <- function(x) sum(x == 0)
-  rtn <- group_by(data, .data$mz, .data$rt)
-  rtn <- summarise_at(rtn, vars(.data$abundance_summary),
-                      funs(mean, sd, counteq0)) #, na.rm = TRUE)
-  rtn <- ungroup(rtn)
-  rtn <- mutate(rtn, cv = sd / mean, number = 1:n())
-  rtn <- select(rtn, .data$mz, .data$rt, .data$number, .data$mean, .data$sd,
-                .data$cv, .data$counteq0)
-  return(rtn)
-
+    # Create model matrix of ColData
+    sampleInfo <- select(colData, covariatesOfInterest)
+    sampleInfo <- model.matrix(~ ., data = sampleInfo)
+    
+    batchInfo <- select(colData, batch) %>%
+        mutate_if(is.character, as.factor)
+    batchVec <- batchInfo[, 1]
+    
+    normalizedData <- sva::ComBat(data, mod = sampleInfo, batch = batchVec)
+    
+    as.data.frame(normalizedData)
 }
 
+#' @importFrom preprocessCore normalize.quantiles
+.normalizeQuantile <- function(data) {
+    colNames <- colnames(data)
+    normalizedData <- as.data.frame(normalize.quantiles(as.matrix(data)))
+    colnames(normalizedData) <- colNames
+    return(normalizedData)
+}
 
-# Utility functions for ms_normalize()
-log_base2 <- function(wide_matrix) apply(wide_matrix, 2, log2)
+.dfNormalizeQuantileCombat <- function(data, batch, sampleVars, colExtraText, 
+                                       separator, covariatesOfInterest) {
+    quantNormalized <- .normalizeQuantile(data)
+    quantCombNormalize <- .dfNormalizeCombat(quantNormalized, batch, sampleVars,
+                                             colExtraText, separator,
+                                             covariatesOfInterest)
+    return(quantCombNormalize)
+}
 
-# ################################################################################
-# # testing setup
-# ################################################################################
-# # New testing
-# dat <- imputed_data
-# data         <- dat$data
-# groupingvars <- MSPrep:::grouping_vars(dat)
-# batch        <- MSPrep:::batch_var(dat)
-################################################################################
-# Old testing
-#   # data == wide matrix data w/ rownames
-#   # batch == "Operator" -- i.e. 
-#   # pheno == "Spike"
-#   # clindat == Clinical.csv
-#   # link1 == "SubjectID"
-# path_olddata <- system.file("extdata", "old_object.Rda", package = "MSPrep")
-# load(path_olddata)
-# clinical <- read_csv("data-raw/Clinical.csv")
-# pheno    <- "Spike"
-# batch    <- "Operator"
-# link1    <- "SubjectID"
-# olddata  <- as.data.frame(old_readdata_result$sum_data)
-# clindat  <- clinical
-################################################################################
+.normalizeMedian <- function(data) {
+    
+    ## Subtracts median of each COMPOUND
+    ## normalizedData <- sweep(data, 1, apply(data, 1, median), "-")
+    
+    ## Subtracts median of each SAMPLE
+    normalizedData <- as.data.frame(vapply(data, function(x) x - median(x),
+                                    FUN.VALUE = numeric(nrow(data))))
+    
+}
 
+.dfNormalizeMedianCombat <- function(data, batch, sampleVars, colExtraText, 
+                                   separator, covariatesOfInterest) {
+    medNormalized <- .normalizeMedian(data)
+    medCombNormalized <- .dfNormalizeCombat(data, batch, sampleVars,
+                                           colExtraText, separator,
+                                           covariatesOfInterest)
+    return(medCombNormalized)
+}
 
+#' @importFrom crmn normalize
+.normalizeCRMN <- function(abCols, compCols, compVars, sampleVars, colExtraText,
+                           separator, covariatesOfInterest, nComp, nControl, 
+                           controls) {
+    
+    crmnInputs <- .createCRMNInputs(abCols, compCols, compVars, sampleVars, 
+                                    colExtraText, separator, 
+                                    covariatesOfInterest, nComp, nControl, 
+                                    controls)
+    
+    crmnNormalized  <- normalize(as.matrix(crmnInputs$data),
+                                 method = "crmn",
+                                 factors = crmnInputs$modelMatrix,
+                                 standards = crmnInputs$ISVec,
+                                 lg = FALSE)
+    
+    compCols <- compCols[!crmnInputs$ISVec, ]
+    
+    cbind(compCols, as.data.frame(crmnNormalized))
+    
+}
 
+.createCRMNInputs <- function(abCols, compCols, compVars, sampleVars, 
+                              colExtraText, separator, covariatesOfInterest, 
+                              nComp, nControl, controls) {
+    
+    svaFactors <- .svaFactors(abCols, sampleVars, colExtraText, separator, 
+                              covariatesOfInterest)
+    
+    nCompounds <- nrow(abCols)
+    
+    colNames <- data.frame("colNames" = colnames(abCols))
+    colData <- separate(colNames, col = "colNames", into = sampleVars, 
+                        sep = separator, remove = FALSE)
+    sampleInfo <- select(colData, covariatesOfInterest)
+    sampleInfo <- model.matrix(~ -1 + ., data = sampleInfo)
+    
+    # Transform data to tidy
+    fullData <- bind_cols(compCols, abCols)
+    data <- .msTidy(fullData, compVars, sampleVars, colExtraText, separator)
+    
+    ISVec <- .isIS(data, compVars, sampleVars, svaFactors, nCompounds, 
+                   nControl, controls)
+    
+    list("data" = abCols, "modelMatrix" = sampleInfo, "ISVec" = ISVec)
+    
+}
+
+## Requires tidy data
+.isIS <- function(data, compVars, sampleVars, svaFactors, nComp, nControl, 
+                  controls) {
+    
+    controlSummary <- .controlSummary(data, compVars, sampleVars)
+    ctl <- .ctlCompounds(controlSummary, nControl, controls)
+    ctlo <- ctl[order(ctl)]
+    j <- 1
+    ISvec <- rep(FALSE, nComp)
+    
+    for (i in seq_len(nComp)) {
+        if (j <= 10) {
+            if (ctlo[j] == i) {
+                ISvec[i] <- TRUE
+                j       <- j + 1
+            } else {
+                ISvec[i] <- FALSE
+            }
+        }
+    }
+    
+    return(ISvec)
+    
+}
+
+#' @importFrom dplyr rowwise
+## Requires tidy data
+.controlSummary <- function(data, compVars, sampleVars) {
+    
+    compVars <- syms(compVars)
+    
+    counteq0 <- function(x) sum(x == 0)
+    
+    rtn <- group_by(data, `!!!`(compVars)) %>% 
+        summarise(mean = mean(.data$abundance), sd = sd(.data$abundance),
+                     counteq0 = counteq0(.data$abundance))
+    rtn <- ungroup(rtn)
+    rtn <- mutate(rtn, cv = sd / mean, number = seq_len(n()))
+    rtn <- select(rtn, `!!!`(compVars), .data$number, .data$mean, .data$sd,
+                  .data$cv, .data$counteq0)
+    
+}
+
+#' @importFrom dplyr arrange
+.ctlCompounds <- function(data, nControl, controls) {
+    
+    if (length(controls) > 0) { 
+        dat <- controls 
+    } else {
+        dat <- arrange(data, .data$counteq0, .data$cv)
+        dat <- dat[seq_len(nControl), "number"]
+        dat <- dat[["number"]]
+    }
+    
+    return(dat)
+}
+
+.normalizeRUV <- function(abCols, compCols, compVars, sampleVars, kRUV, 
+                          nControl, controls, colExtraText, separator) {
+    
+    if(kRUV > nControl){
+        stop ("kRUV must be less than or equal to nControl")
+    }
+    
+    ruvFactors <- .ruvFactors(abCols, compCols, compVars, sampleVars, kRUV,
+                              nControl, controls, colExtraText, separator)
+    
+    adjusted <- .genAdj(abCols, ruvFactors)
+    
+    cat("\n")
+    
+    return(adjusted)
+}
+
+.ruvFactors <- function(abCols, compCols, compVars, sampleVars, kRUV, nControl, 
+                        controls, colExtraText, separator) {
+    
+    # ctl -- n compounds w/ lowest CV and no missing
+    fullData <- bind_cols(compCols, abCols)
+    data <- .msTidy(fullData, compVars, sampleVars, colExtraText, separator)
+    controlSummary <- .controlSummary(data, compVars, sampleVars)
+    ctl <- .ctlCompounds(controlSummary, nControl, controls)
+    
+    Y <- as.matrix(abCols) # Only data Used in calculation
+    
+    # Calculate RUV 
+    #   Uses: Y, ctl, sva_factors
+    Z   <- matrix(rep(1, ncol(Y)))
+    RZY <- Y - Y %*% Z %*% solve(t(Z) %*% Z) %*% t(Z)
+    W   <- svd(RZY[ctl, ])$v
+    W   <- W[, seq_len(kRUV)]
+    
+    # Format output
+    rtn <- as.matrix(W, ncol = kRUV)
+    colnames(rtn) <- paste0("f", seq_len(ncol(rtn)))
+    
+    return(rtn)
+}
+
+.dfLogTransform <- function(data, transform) {
+    data <- switch(transform,
+                   "log10" = log10(data),
+                   "log2" = log2(data),
+                   "ln" = log(data),
+                   "none" = data)
+}
+
+.normalizeParamValidation <- function(data, normalizeMethod, nControl, controls,
+                                      nComp, kRUV, batch, covariatesOfInterest,
+                                      transform, compVars, sampleVars, 
+                                      colExtraText, separator, returnToSE, 
+                                      returnToDF) {
+    
+    c("median", "ComBat", "quantile", "quantile + ComBat", "median + ComBat", 
+      "CRMN", "RUV", "SVA")
+    
+    if (returnToSE && returnToDF) {
+        stop("Only one of returnToSE and returnToDF may be TRUE")
+    }
+    
+    if(is.null(covariatesOfInterest) && normalizeMethod %in% 
+       c("quantile + ComBat", "median + ComBat", "CRMN", "SVA")) {
+        stop("covariatesOfInterest must be included for ComBat, CRMN, and SVA")
+    }
+    
+    if (is(data, "data.frame")) {
+        
+        .dfParamValidation(data, compVars, sampleVars, colExtraText, separator)
+        
+    } else if (is(data, "SummarizedExperiment")) {
+        
+        if (length(assays(data)) != 1) {
+            stop("Current version of MSPrep only supports one assay")
+        }
+        
+    }
+}

@@ -3,33 +3,41 @@
 \docType{data}
 \name{msquant}
 \alias{msquant}
-\title{Example quantification dataset}
-\format{\code{
-'data.frame':   2654 obs. of  29 variables:
- $ mz                              : num  577 539 724 525 483 ...
- $ rt                              : Factor w/ 2510 levels "0.481","0.58933336",..: 3 2 6 15 10 8 22 18 17 13 ...
- $ Neutral_Operator_Dif_Pos_1x_O1_A_01: num  1 1 36270 105305 1 ...
- $ Neutral_Operator_Dif_Pos_1x_O1_B_01 num  1 1 35271 92489 1 ...
- $ Neutral_Operator_Dif_Pos_1x_O1_C_01 num  1 1 39355 105189 1 ...
- $ Neutral_Operator_Dif_Pos_1x_O2_A_01 num  24182 20686 57021 141999 67760 ...
- $ Neutral_Operator_Dif_Pos_1x_O2_B_01 num  25857 24500 60641 151657 73151 ...
- $ Neutral_Operator_Dif_Pos_1x_O2_C_01 num  24616 22820 61023 144739 71789 ...
-}}
+\title{Example mass spectrometry dataset.}
+\format{
+Data frame containing 2644 observations of 56 variables
+\describe{
+  \item{mz}{Mass-to-charge ratio}
+  \item{rt}{Retention-time}
+  \item{Neutral_Operator_Dif_Pos_1x_O1_A_01}{The remaining columns specify
+  metabolite abundances found in each subject/spike-in/batch/replicate 
+  combination. Each columns begins with
+  'Neutral_Operator_Dif_Pos' followed by the spike-in (1x, 2x, or 4x), then
+  the batch (01, 02, or 03), the replicate (A, B, or C), and finally the
+  subject ID (01 or 02), each seperated by '_'.}
+}
+}
 \usage{
 msquant
 }
 \description{
-Mass spec example dataset with 2 subjects.
-}
-\details{
-mz = Mass/Charge ratio
-rt = Retention time
-
-The indicators in the column names are spike-in (e.g. 1x), batch (e.g. 01),
-technical replicate (e.g. A), and subject ID (e.g. 01).
+Data contains LC-MS samples for 2 subjects, each run with several different 
+study design settings: 
+spike-in (1x, 2x, 4x), batch (01, 02, 03), and technical replicate (A, B, C).
+The first two columns indicate mass-to-charge ratio and retention-time for
+the 2644 unique metabolites observed in the samples. The remaining 54 
+columns indicate metabolite abundance for each subject/spike-in/
+batch/replicate combination.
 }
 \examples{
   data(msquant)
-  str(msquant)
+}
+\references{
+Hughes, G., Cruickshank-Quinn, C., Reisdorph, R., Lutz, S., Petrache, I.,
+    Reisdorph, N., … Kechris, K. (2014). MSPrep--summarization, normalization
+    and diagnostics for processing of mass spectrometry-based metabolomic 
+    data. 
+    Bioinformatics (Oxford, England), 30(1), 133–134. 
+    doi:10.1093/bioinformatics/btt589
 }
 \keyword{datasets}

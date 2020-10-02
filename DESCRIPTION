@@ -1,11 +1,15 @@
 Package: MSPrep
 Title:
-  Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics Data
-Version: 0.0.2
+  Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics 
+  Data
+Version: 0.99.0
 Authors@R:
-  c(person("Matt", "Mulvahill",
-           email = "matthew.mulvahill@ucdenver.edu",
+  c(person("Max", "McGrath",
+           email = "max.mcgrath@ucdenver.edu",
            role = c("aut", "cre")),
+    person("Matt", "Mulvahill",
+           email = "matt.mulvahill@gmail.com",
+           role = c("aut")),
     person("Grant", "Hughes",
            email = "",
            role = c("aut")),
@@ -13,20 +17,22 @@ Authors@R:
            email = "jacobsonseanr@gmail.com",
            role = c("aut")),
     person("Harrison", "Pielke-lombardo",
-           email = "harrison.pielke-lombardo@ucdenver.edu",
+           email = "harrison.pielke-lombardo@cuanschutz.edu",
            role = c("aut")),
     person("Katerina", "Kechris",
-           email = "Katerina.Kechris@ucdenver.edu",
+           email = "Katerina.Kechris@cuanschutz.edu",
            role = c("aut", "cph", "ths")))
 Description:
-  Package performs summarization of replicates, filtering by frequency, three
-  different options for missing data, and five options for normalizing dataset.
-  Also generates diagnostic plots of imputations and normalizations.
+  Package performs summarization of replicates, filtering by frequency, several
+  different options for imputing missing data, and a variety of options for 
+  transforming, batch correcting, and normalizing data.
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
-  R (>= 3.4)
+  R (>= 4.0)
 Imports:
+  SummarizedExperiment,
+  S4Vectors,
   pcaMethods (>= 1.24.0),
   VIM,
   crmn,
@@ -37,16 +43,21 @@ Imports:
   tibble (>= 1.2),
   magrittr,
   rlang,
+  stats,
   stringr,
+  methods,
+  ddpcr
 Suggests:
   BiocStyle,
   knitr,
   rmarkdown,
-  testthat (>= 1.0.2),
+  testthat (>= 1.0.2)
 VignetteBuilder: knitr
 LazyData: true
 NeedsCompilation: no
 License: GPL-3
-biocViews: TBD
+biocViews: Metabolomics,
+  MassSpectrometry,
+  Preprocessing
 Encoding: UTF-8
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.1

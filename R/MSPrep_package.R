@@ -1,21 +1,25 @@
-#' Package for summarizing, filtering, imputing, and normalizing metabolomics data.
+#' Package for summarizing, filtering, imputing, and normalizing metabolomics 
+#' data.
 #' 
-#' This package performs summarization of replicates, filtering by frequency,
-#' three different options for handling/imputing missing data, and five options for normalizing
-#' data. 
+#' Package performs summarization of replicates, filtering by frequency, several
+#' different options for imputing missing data, and a variety of options for 
+#' transforming, batch correcting, and normalizing data
 #'
-#' @author Grant Hughes
+#' @author Max McGrath
 #' @author Matt Mulvahill
+#' @author Grant Hughes
 #' @author Sean Jacobson
-#' @author Katerina Kechris
 #' @author Harrison Pielke-Lombardo
+#' @author Katerina Kechris
 #' @docType package
 #' @name MSPrep 
 #' @details
-#' Package for processing of mass spectrometry quantification data. Five functions are provided
-#' and are intended to be used in sequence (as a pipeline) to produce cleaned and normalized data.
-#' These are ms_tidy, ms_prepare, ms_filter, ms_impute, and ms_normalize.
-#' 
+#' Package for pre-analytic processing of mass spectrometry quantification data.
+#' Four functions are provided and are intended to be used in sequence (as a 
+#' pipeline) to produce processed and normalized data. These are  
+#' msSummarize(), msFilter(), msImpute(), and msNormalize(). 
+#' The function msPrepare() is also provided as a wrapper function combining 
+#' the four previously mentioned functions.
 #' 
 #' @references
 #' Bolstad, B.M.et al.(2003) A comparison of normalization methods for high
@@ -27,6 +31,12 @@
 #' 
 #' Gagnon-Bartsh, J.A.et al.(2012) Using control genes to correct for unwanted
 #' variation in microarray data. Biostatistics, 13, 539-552.
+#' 
+#' Hughes G, Cruickshank-Quinn C, Reisdorph R, Lutz S, Petrache I, Reisdorph N, 
+#' Bowler R, Kechris K. MSPrep--Summarization, normalization and diagnostics for
+#'  processing of mass spectrometry-based metabolomic data. Bioinformatics. 
+#'  2014;30(1):133-4. Epub 2013/11/01. doi: 10.1093/bioinformatics/btt589. 
+#'  PubMed PMID: 24174567; PMCID: PMC3866554.
 #' 
 #' Johnson, W.E.et al.(2007) Adjusting batch effects in microarray expression
 #' data using Empirical Bayes methods. Biostatistics, 8, 118-127.
@@ -49,70 +59,22 @@
 #' 4818-4826.
 #' 
 #' @examples
-#'    #  #library(crmn)
-#'    #  #library(preprocessCore)
-#'    #  #library(sva)
-#'    #  #library(psych)
-#'    #  #library(Hmisc)
-#'    #  #library(limma)
-#'    #  #library(pcaMethods)
-#'    #  #library(multcomp)
-#'    #  
-#'    #  
-#'    #  ### Specify primary directory for input dataset
-#'    #  #my_dir <- c("<my_dir>")
-#'    #  #data(test2)
-#'    #  
-#'    #  ### Specify location of data files
-#'    #  #clinicalfile       <- c("Clinical.csv")
-#'    #  #quantificationfile <- c("Quantification.csv")
-#'    #  #linkfile           <- c("SubjectLinks.csv")
-#'    #  
-#'    #  ### Set variables for program
-#'    #  cvmax   <- 0.5
-#'    #  missing <- 1
-#'    #  linktxt <- "LCMS_Run_ID"
-#'    #  
-#'    #  test <- readdata(directory, clinicalfile, quantificationfile, linkfile,
-#'    #                   cvmax = 0.50, missing = 1, linktxt)
-#'    #  
-#'    #  test2 <- filterft(test$sum_data1, 0.80)
-#'    #  
-#'    #  directory <- "/home/grant/"
-#'    #  minval    <- test2$minval
-#'    #  withzero  <- test2$withzero
-#'    #  bpca      <- test2$bpca
-#'    #  
-#'    #  graphimputations(directory, minval, withzero, bpca, meanval1 = 0,
-#'    #                   meanval2 = 200000, xmax1 = 400000, ymax1 = 800, 
-#'    #                   xmax2 = 20, ymax2 = 600, xmax3 = 20, ymax3 = 175, 
-#'    #                   nbreaks = 200)
-#'    #  
-#'    #  metafin  <- test2$bpca
-#'    #  clindat  <- test$clinical
-#'    #  link1    <- "SubjectID"
-#'    #  pheno    <- "Spike"
-#'    #  batch    <- "Operator"
-#'    #  ncont    <- 10
-#'    #  controls <- c()
-#'    #  ncomp    <- 2
-#'    #  
-#'    #  test3 <- normdata(metafin, clindat, link1, pheno, batch, ncont = 10,
-#'    #                    controls, ncomp)
-#'    #  
-#'    #  testobj   <- test3
-#'    #  clindat   <- test$clinical
-#'    #  link1     <- "SubjectID"
-#'    #  pheno     <- "Spike"
-#'    #  batch     <- "Operator"
-#'    #  directory <- "/home/grant/"
-#'    #  ylim2     <- c(10,28)
-#'    #  ### For median
-#'    #  ylim1     <- c(-15,15)
-#'    #  ### for crmn
-#'    #  ylim3     <- c(18,37)
-#'    #  
-#'    #  diagnosticgen(testobj, clindat, link1, batch, pheno, directory, ylim1,
-#'    #                ylim2, ylim3)
+#' # Load example data
+#' data(msquant)
+#' 
+#' # Call function to tidy, summarize, filter, impute, and normalize data
+#' preparedDF <- msPrepare(msquant,
+#'                         minPropPresent = 1/3,
+#'                         missingValue = 1,
+#'                         filterPercent = 0.8,
+#'                         imputeMethod = "knn",
+#'                         normalizeMethod = "quantile + ComBat",
+#'                         transform = "log10",
+#'                         covariatesOfInterest = c("spike"),
+#'                         compVars = c("mz", "rt"),
+#'                         sampleVars = c("spike", "batch", "replicate", 
+#'                                        "subject_id"),
+#'                         colExtraText = "Neutral_Operator_Dif_Pos_",
+#'                         separator = "_")
 #' 
 NULL

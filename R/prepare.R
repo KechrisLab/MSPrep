@@ -1,283 +1,130 @@
-#' Function for summarizing tidied dataset and preparing for filtering, imputation, 
-#' and normalization.
-#'
-#' Prepares a mass spec quantification data frame for filtering, imputation,
-#' and normalization. Also provides summaries of data structure (replicates,
-#' subjects, groupingvars, etc.)
-#'
-#' Function reads in raw data files and summarizes technical replicates as the
-#' mean of observations for compounds found in 2 or 3 replicates and with
-#' coefficient of variation below specified level, or median for those found in
-#' 3 replicates but excess CV.
-#'
-#' @param data Tidied dataset.
-#' @param subject_id Name of the subject ID column.
-#' @param replicate Name of the replicate column. Set to NULL if no
-#' replicates.
-#' @param abundance Name of the abundance column.
-#' @param groupingvars Variable name or vector of names of the
-#' phenotypes or comparison groups.
-#' @param batch Name of the column representing batches.
-#' @param mz Name of mass-to-charge ratio variable.
-#' @param rt Name of retention time variable.
-#' @param cvmax Decimal value from 0 to 1 representing the acceptable level of coefficient 
-#' of variation between replicates.
-#' @param missing_val Value of missing data in the quantification data file.
-#' @param min_proportion_present  Decimal value from 0 to 1 representing the minimum proportion present 
-#' to summarize with median or mean. Below this the compound will be set to 0.
-#' @return An `msprep` object with `stage(rtn) == "prepared"` containing
-#' summarised quantification data, a dataset of compounds summarised by medians,
-#' and other related summaries.
-#' @examples
-#'
-#' # Read in data file
+#' Summarize, filter, impute, transform and normalize metabolomics dataset
+#' 
+#' Wrapper function for the entire MSPrep pre-analytics pipeline. Calls 
+#' msSummarize(), msFilter, msImpute(), and msNormalize().
+#' 
+#' @param data Data set as either a data frame or `SummarizedExperiement`.
+#' @param cvMax Decimal value from 0 to 1 representing the acceptable level of 
+#' coefficient of variation between replicates.
+#' @param minPropPresent  Decimal value from 0 to 1 representing the 
+#' minimum proportion present to summarize with median or mean. Below this the 
+#' compound will be set to 0.
+#' @param filterPercent Decimal value indicating filtration threshold. 
+#' Compounds which are present in fewer samples than the specified proportion 
+#' will be removed. 
+#' @param imputeMethod String specifying imputation method. 
+#' Options are "halfmin" (half the minimum value), "bpca" (Bayesian PCA), 
+#' and "knn" (k-nearest neighbors), or "none" to skip imputation.
+#' @param kKnn Number of clusters for 'knn' method.
+#' @param nPcs Number of  principle components used for re-estimation for 
+#' 'bpca' method.
+#' @param compoundsAsNeighbors For KNN imputation. If TRUE, compounds will be 
+#' used as neighbors rather than samples. Note that using compounds as 
+#' neighbors is significantly slower than using samples.
+#' @param normalizeMethod  Name of normalization method.
+#' "ComBat" (only ComBat batch correction), "quantile" (only quantile 
+#' normalization), "quantile + ComBat" (quantile with ComBat batch correction),
+#' "median" (only median normalization), "median + ComBat" (median with ComBat
+#' batch correction), "CRMN" (cross-contribution compensating multiple 
+#' standard normalization), "RUV" (remove unwanted variation), "SVA" (surrogate 
+#' variable analysis), or "none" to skip normalization.
+#' @param nControl Number of controls to estimate/utilize.
+#' @param controls Vector of control identifiers.  Leave blank for data driven
+#' controls. Vector of column numbers from metafin dataset of that control.
+#' @param nComp Number of factors to use in CRMN algorithm. 
+#' @param kRUV Number of factors to use in RUV algorithm.
+#' @param covariatesOfInterest Sample variables used as covariates in
+#' normalization algorithms.
+#' @param batch Name of the sample variable identifying batch.
+#' @param transform  Select transformation to apply to data prior to 
+#' normalization. Options are "log10", "log2", and "none".
+#' @param replicate Name of sample variable specifying replicate. Must match an
+#' element in `sampleVars` or a column in the column data of a 
+#' `SummarizedExperiment`.
+#' @param compVars Vector of the columns which identify compounds. If a 
+#' `SummarizedExperiment` is used for `data`, row variables will be used.
+#' @param sampleVars Vector of the ordered sample variables found in each sample
+#' column.
+#' @param colExtraText Any extra text to ignore at the beginning of the sample 
+#' columns names. Unused for `SummarizedExperiments`.
+#' @param separator Character or text separating each sample variable in sample
+#' columns. Unused for `SummarizedExperiment`.
+#' @param missingValue Specifies the abundance value which indicates missing 
+#' data. May be a numeric or `NA`.
+#' @param returnSummaryDetails Logical value specifying whether to return
+#' details of replicate summarization.
+#' @param returnToSE Logical value specifying whether to return as 
+#' `SummarizedExperiment`
+#' @param returnToDF Logical value specifying whether to return as data frame.
+#' 
+#' @examples 
+#' # Load example data
 #' data(msquant)
 #' 
-#' # Convert dataset to tidy format
-#' tidy_data    <- ms_tidy(msquant, mz = "mz", rt = "rt")
-#' prepped_data <- ms_prepare(tidy_data, 
-#'                            replicate = "replicate", 
-#'                            batch = "batch",
-#'                            groupingvars = "spike")
-#'
-#' # Or, using tidyverse/magrittr pipes 
-#' library(magrittr)
-#' prepped_data <- msquant %>% ms_tidy %>%
-#'   ms_prepare(replicate = "replicate",
-#'              batch = "batch",
-#'              groupingvars = "spike")
-#'
-#' str(prepped_data)
-#' str(prepped_data$summary_data)
-#'
-#' @importFrom dplyr select
-#' @importFrom dplyr select_at
-#' @importFrom dplyr mutate 
-#' @importFrom dplyr mutate_at
-#' @importFrom dplyr group_by 
-#' @importFrom dplyr summarise 
-#' @importFrom dplyr ungroup 
-#' @importFrom dplyr case_when
-#' @importFrom dplyr distinct
-#' @importFrom dplyr filter
-#' @importFrom dplyr vars
-#' @importFrom tibble as_tibble
-#' @importFrom rlang .data
-#' @importFrom rlang UQ
-#' @importFrom rlang sym
-#' @importFrom rlang as_string
-#' @importFrom stats median
-#' @importFrom stats sd
+#' # Call function to tidy, summarize, filter, impute, and normalize data
+#' peparedData <- msPrepare(msquant, cvMax = 0.50, minPropPresent = 1/3,
+#'                          filterPercent = 0.8, imputeMethod = "halfmin",
+#'                          normalizeMethod = "quantile",
+#'                          compVars = c("mz", "rt"),
+#'                          sampleVars = c("spike", "batch", "replicate", 
+#'                                         "subject_id"),
+#'                          colExtraText = "Neutral_Operator_Dif_Pos_",
+#'                          separator = "_", missingValue = 1, 
+#'                          returnToSE = FALSE)
+#' 
+#' @return A data frame or `SummarizedExperiment` with summarized technical 
+#' replicates (if present), filtered compounds, missing values imputed, and 
+#' transformed and normalized abundances. Default return type is set to match 
+#' the data input but may be altered with the `returnToSE` or `returnToDF` 
+#' arguments.
+#' 
 #' @export
-ms_prepare <- function(data,
-                       abundance     = "abundance",
-                       mz            = "mz",
-                       rt            = "rt",
-                       subject_id    = "subject_id",
-                       replicate     = NULL,
-                       batch         = NULL,
-                       groupingvars = NULL,
-                       cvmax         = 0.50,
-                       missing_val   = 1,
-                       min_proportion_present = 1/3) {
-  # TODO: test replicate = NULL.
-
-  # Check args
-  stopifnot(is.data.frame(data))
-  # my_args  <- mget(names(formals()), sys.frame(sys.nframe()))
-  stopifnot(is.null(batch) | length(batch) == 1)
-  stopifnot(is.null(replicate) | length(replicate) == 1)
-
-  # rlang magic 
-  grouping_quo = syms(groupingvars)
-
-  # Convert to tibble data frame
-  data <- as_tibble(data)
-
-  # Replace provided variable names with standardized ones
-  data <- standardize_dataset(data, subject_id, replicate, abundance,
-                              grouping_quo, batch, mz, rt)
-
-  # Replace miss val with NAs 
-  data <- mutate_at(data, vars("abundance"), replace_missing, missing_val)
-
-  # Check/error on datatypes
-  #stopifnot(is.numeric(data[rt], data[mz]))
-
-  # Get replicate count for each mz/rt/grouping_quo/subject combo
-  replicate_count <- length(unique(data[["replicate"]]))
-
-  # Roughly check if all compounds are present in each replicate
-  stopifnot(nrow(data) %% replicate_count == 0)
-
-  quant_summary <- ms_arrange(data, batch, groupingvars, replicate)
-  quant_summary <- group_by(quant_summary, subject_id, batch, mz, rt, `!!!`(grouping_quo))
-
-  # Calculate remaining summary measures
-  quant_summary <- summarise(quant_summary,
-                             n_present        = sum(!is.na(.data$abundance)),
-                             prop_present     = UQ(sym("n_present")) / replicate_count,
-                             mean_abundance   = mean(.data$abundance, na.rm = T),
-                             sd_abundance     = sd(.data$abundance, na.rm = T),
-                             median_abundance = median(.data$abundance, na.rm = T))
-  quant_summary <- mutate(quant_summary, cv_abundance = .data$sd_abundance / .data$mean_abundance)
-  quant_summary <- ungroup(quant_summary)
-
-  # Identify and select summary measure -- TODO: decompose this to get rid of 'no
-  #                                              visible binding error'
-  quant_summary <-
-    mutate(quant_summary,
-           summary_measure = 
-             select_summary_measure(.data$n_present, .data$cv_abundance, replicate_count,
-                                    min_proportion_present, cvmax))
-  quant_summary <-
-    mutate(quant_summary,
-           abundance_summary = 
-             case_when(.data$summary_measure == "median" ~ .data$median_abundance,
-                       .data$summary_measure == "mean"   ~ .data$mean_abundance,
-                       TRUE                              ~ 0))
-  quant_summary <- mutate_at(quant_summary,
-                             vars(subject_id, "summary_measure", batch, `!!!`(grouping_quo)),
-                             factor)
-
-  # Extract summarized dataset
-  summary_data  <- select_at(quant_summary, 
-                             vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "abundance_summary"))
-  summary_data <- ms_arrange(summary_data, batch, groupingvars)
-
-  # Additional info extracted in summarizing replicates
-  replicate_info <- select_at(quant_summary, 
-                              vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt", "n_present",
-                                   "cv_abundance", "summary_measure"))
-
-  # Summaries that used medians
-  medians        <- filter(quant_summary, .data$summary_measure == "median")
-  medians        <- select_at(medians, vars(subject_id, batch, `!!!`(grouping_quo), "mz", "rt",
-                                            "abundance_summary"))
-
-  # Total number of compounds identified
-  n_compounds    <- nrow(distinct(select(quant_summary, "mz", "rt")))
-
-  # Create return object & return
-  structure(list("data" = summary_data,
-                 replicate_info  = replicate_info,
-                 medians         = medians),
-            replicate_count        = replicate_count,
-            cvmax                  = cvmax,
-            min_proportion_present = min_proportion_present,
-            groupingvars          = groupingvars,
-            batch_var              = batch,
-            replicate_var          = replicate,
-            stage = "prepared",
-            class = "msprep")
-
+msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
+                      filterPercent = 0.8, imputeMethod = c("halfmin", "bpca", 
+                                                          "knn", "none"),
+                      kKnn = 5, nPcs = 3, compoundsAsNeighbors = FALSE,
+                      normalizeMethod = c("ComBat", "quantile", 
+                                          "quantile + ComBat", "median",
+                                          "median + ComBat", "CRMN", "RUV",
+                                          "SVA", "none"),
+                      nControl = 10, controls  = NULL, nComp = 2, kRUV = 3,
+                      covariatesOfInterest = NULL, batch = NULL,
+                      transform = c("log10", "log2", "none"),
+                      replicate = "replicate", compVars = c("mz", "rt"),
+                      sampleVars = c("subject_id"), colExtraText = NULL,
+                      separator = NULL, missingValue = NA,
+                      returnSummaryDetails = FALSE, returnToSE = FALSE,
+                      returnToDF = FALSE) {
+    
+    imputeMethod <- match.arg(imputeMethod)
+    normalizeMethod <- match.arg(normalizeMethod)
+    transform <- match.arg(transform)
+    
+    cat("Summarizing\n")
+    data <- msSummarize(data, cvMax, minPropPresent, replicate, compVars,
+                        sampleVars, colExtraText, separator, missingValue,
+                        returnSummaryDetails)
+    
+    sampleVars <- sampleVars[sampleVars != replicate]
+    
+    cat("Filtering\n")  
+    data <- msFilter(data, filterPercent, compVars, sampleVars, colExtraText,
+                     separator, missingValue = 0)
+    
+    if (imputeMethod != "none") {
+        cat("Imputing\n")
+        data <- msImpute(data, imputeMethod, kKnn, nPcs, compoundsAsNeighbors,
+                         compVars, sampleVars, colExtraText, separator,
+                         missingValue = 0, returnToSE, returnToDF)
+    }
+    
+    if (normalizeMethod != "none") {
+        cat("Normalizing\n")
+        data <- msNormalize(data, normalizeMethod, nControl, controls, nComp,
+                            kRUV, batch, covariatesOfInterest, transform,
+                            compVars, sampleVars, colExtraText, separator,
+                            returnToSE, returnToDF)
+    }
+    
+    return(data)
 }
-
-print.msprep <- function(x) {
-
-  stage <- stage(x)
-  if (is.null(batch_var(x)))  {
-    batch_statement <- "" 
-  } else {
-    batch_statement <- paste0("; Batch var: ", batch_var(x))
-  }
-
-  cat("msprep dataset\n")
-  cat(paste("    Stage:", stage, "\n"))
-  cat("    Replicate count: ", attr(x, "replicate_count"), "\n")
-  cat("    Patient count: ", length(unique(x$data$subject_id)), "\n")
-  cat("    Grouping vars:", paste(grouping_vars(x), collapse = ", "),
-      batch_statement, "\n")
-  cat("    Count of patient-compounds summarized by median: ", nrow(x$medians), "\n")
-  cat("    Prepare summary: \n")
-  cat("        User-defined parameters: \n")
-  cat("          cvmax = ", attr(x, "cvmax"), "\n")
-  cat("          min_proportion_present = ", round(attr(x, "min_proportion_present"), digits=3), "\n")
-  if (stage %in% msprep_stages()[2:4]) {
-    cat("    Filter summary:\n")
-    cat("      User-defined parameters: \n")
-    cat("        filter percent = ", attr(x, "filter_percent"), "\n")
-    cat("      Resulting stats: \n")
-    cat("        Count of compounds present in >= ", 
-        round(attr(x, "filter_percent")*100, digits = 3), "% of patients = ", 
-        sum(attr(x, "filter_status")$keep), "\n")
-  }
-
-  cat("    Dataset:\n")
-  print(x$data, n = 6)
-
-}
-
-
-
-#
-# Internal ms_prepare functions
-#
-
-#' @importFrom dplyr case_when
-select_summary_measure <- function(n_present,
-                                   cv_abundance,
-                                   n_replicates,
-                                   min_proportion_present,
-                                   cv_max) {
-
-  case_when((n_present / n_replicates) <= min_proportion_present
-              ~ "none: proportion present <= min_proportion_present",
-            cv_abundance > cv_max & (n_replicates == 3 & n_present == 2) 
-              ~ "none: cv > cvmax & 2 present",
-            cv_abundance > cv_max & (n_present == n_replicates) 
-              ~ "median",
-            TRUE ~ "mean")
-
-}
-
-#' @importFrom dplyr rename
-#' @importFrom rlang sym
-#' @importFrom rlang UQ
-standardize_dataset <- function(data, subject_id, replicate, abundance, groupingvars,
-                                batch, mz, rt) {
-
-  # Rename required variables
-  subject_id = sym(subject_id)
-  abundance  = sym(abundance)
-  mz         = sym(mz)
-  rt         = sym(rt)
-
-  data <- data %>% 
-    rename("subject_id" = UQ(subject_id),
-           "abundance"  = UQ(abundance),
-           "mz"         = UQ(mz),
-           "rt"         = UQ(rt))
-
-  data <- standardize_datatypes(data, groupingvars, batch)
-
-  # Rename optional variables if present
-  if (!is.null(replicate)) {
-    replicate <- sym(replicate)
-    data      <- data %>% rename("replicate" = UQ(replicate))
-  } #else {
-#     data$replicate <- "01"
-  #}
-
-  if (!is.null(batch)) {
-    batch <- sym(batch)
-    data      <- data %>% rename("batch" = UQ(batch))
-  } #else {
-#     data$batch <- "01"
-  #}
-
-  return(data)
-
-}
-
-standardize_datatypes <- function(data, groupingvars, batch) {
-
-  count_var   <- c("abundance_summary", "abundance")
-  count_var   <- count_var[count_var %in% colnames(data)]
-  factor_vars <- c("subject_id", as.character(groupingvars), batch)
-  data <- mutate_at(data, factor_vars, as.factor)
-  data <- mutate_at(data, c("mz", "rt", count_var), as.numeric) 
-
-}
-
-

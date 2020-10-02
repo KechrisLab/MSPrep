@@ -1,0 +1,437 @@
+---
+title: "Using MSPrep"
+author: 
+    - name: Max McGrath
+      email: max.mcgrath@ucdenver.edu
+      affiliation: University of Colorado Anschutz Medical Campus
+    - name: Matt Mulvahill
+      email: matt.mulvahill@gmail.com
+      affiliation: Charter Communications
+    - name: Grant Hughes
+      email: dydxhughes@gmail.com
+    - name: Sean Jacobson
+      email: jacobsons@njhealth.org
+      affiliation: National Jewish Hospital
+    - name: Harrison Pielke-Lombardo
+      email: harrison.pielke-lombardo@cuanschutz.edu
+      affiliation: University of Colorado Anschutz Medical Campus
+    - name: Katerina Kechris
+      email: katerina.kechris@cuanschutz.edu
+      affiliation: University of Colorado Anschutz Medical Campus
+package: MSPrep
+output: 
+  BiocStyle::html_document:
+    highlight: "tango"
+    code_folding: show
+    toc: true
+    toc_float: 
+      collapsed: false
+vignette: |
+  %\VignetteIndexEntry{Using MSPrep}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+
+```{r, include=FALSE, echo=FALSE}
+# date: "`r doc_date()`"
+# "`r pkg_ver('BiocStyle')`"
+# <style>
+#     pre {
+#     white-space: pre !important;
+#     overflow-y: scroll !important;
+#     height: 50vh !important;
+#     }
+# </style>
+```
+
+# Introduction
+
+`MSPrep` provides a convenient set of functionalities used in the pre-analytic 
+processing pipeline for mass spectrometry based metabolomics data. Functions are
+included for the following processes commonly performed prior to analysis of 
+such data:
+
+1. Summarization of technical replicates (if available)
+2. Filtering of metabolites
+3. Imputation of missing values
+4. Transformation, normalization, and batch correction
+
+The sections which follow provide an explanation of each function contained in 
+`MSPrep`, those functions' respective options, and examples of the pre-analysis 
+pipeline using two data sets provided in the `MSPrep` package, `MSQuant` and 
+`COPD_131`.
+
+For further information, please see *MSPrep—Summarization, normalization and 
+diagnostics for processing of mass spectrometry–based metabolomic data* 
+(Hughes et al., 2014) and *Pre-analytic Considerations for Mass Spectrometry-Bas
+ed Untargeted Metabolomics Data* (Reinhold et al., 2019).
+
+```{r, echo=FALSE}
+library(MSPrep)
+```
+
+# Expected Data Format
+
+Data my be input as a Data Frame or `SummarizedExperiment`.
+
+## Data Frame
+
+When using the functions provided by `MSPrep` on a data frame, the following 
+format is expected throughout the pipeline.
+
+Most often, two or more columns of the data frame will identify unique 
+compounds. This may include columns which specify the mass-to-charge ratio, the 
+retention time, or the name of each compound. Using the parameter `compVars`, 
+the names of these columns should be provided to each function as a vector of 
+character strings.
+
+The remainder of the columns in the data frame should specify the respective 
+abundances of each compound for each sample. It is expected that one or more 
+identifying variables for each sample will be specified by the column name (e.g.
+Sample ID, batch number, or replicate). Each piece of information contained in 
+the column names must be separated by a consistent character not present 
+anywhere else in the column name. Using the parameter `sampleVars`, the sample 
+variables present in the column names should be provided to each function as a 
+vector of character strings specifying the order the variables appear, and the 
+parameter `separator` should identify the character which separates each sample
+variable. Each column name may also include consistent non-identifying text at
+the beginning of each column name. This text should be provided to each function
+using the `colExtraText` parameter.
+
+As an example see the provided data set `msquant` and its use in the pipeline
+below.
+
+## SummarizedExperiment
+
+When using the functions provided by `MSPrep` on a `SummarizedExperiment`, it is
+expected that the data will include a single `assay` of abundances, `rowData`
+identifying characteristics of each metabolite, and `colData` specifying
+characteristics of each sample. The parameters discussed in the previous section
+may be ignored.
+
+# Example One - Technical Data Set
+
+```{r}
+data("msquant")
+colnames(msquant)[3]
+```
+
+Above is the third column name in `msquant`. The first part 
+"Neutral_Operator_Dif_Pos_" will not be used in this analysis, so we will assign
+it to `colExtraText` parameter. The next value, "1x", is the spike-in value. 
+The following value, "O1", specifies the sample's batch. The remaining values, 
+"A" and "01", specify the replicate and subject IDs. We will pass these
+sample variables to each function with the `sampleVars` parameter. Finally, note
+that `msquant` contains two columns, `mz` and `rt` which identify each 
+compounds' mass-to-charge ratio and retention time, respectively. We will pass 
+these column names to each function using the `compVars` parameter.
+
+With our data in this format, we can start the pipeline.
+
+## Summarizing
+
+This step summarizes the technical replicates using the following procedure for 
+each compound in each batch.
+
+1. If there are less than a minimum proportion of the values found among the 
+replicates (usually one or zero), leave the value empty. Otherwise proceed.
+2. Calculate the coefficient of variation between the replicates using 
+$c_v = \frac{\sigma}{\mu}$, where $\mu$ is the mean and $\sigma$ is the
+standard deviation.
+3. For three replicates, if the coefficient of variation is above a specified 
+level, use the median value for the compound, to correct for the large 
+dispersion.
+4. Otherwise, use the mean value of the replicates for the compound.
+
+If the name of variable specifying replicate in `sampleVars` for a data frame 
+or the column data of a `SummarizedExperiment`, specify the name of the variable
+using the `replicate` parameter.
+
+The technical replicates in `MSQuant` are summarized below using a CV maximum of
+.50 and a minimum proportion present of 1 out of 3 replicates. Note that in the 
+`MSQuant` dataset, missing values are represented as '1', which is specified in 
+the `missingValue` argument below. `msSummarize()` will replace these missing 
+values with '0' in all instances where the summarization algorithm determines 
+the values to be truly missing.
+
+```{r}
+summarizedDF <- msSummarize(msquant,
+                            cvMax = 0.50,
+                            minPropPresent = 1/3,
+                            compVars = c("mz", "rt"),
+                            sampleVars = c("spike", "batch", "replicate", 
+                                           "subject_id"),
+                            colExtraText = "Neutral_Operator_Dif_Pos_",
+                            separator = "_",
+                            missingValue = 1)
+```
+
+```{r, echo = FALSE}
+summarizedDF[1:10, 1:6]
+```
+
+
+## Filtering
+
+Following the summarization of technical replicates, the data can be filtered to
+only contain compounds present in a specified proportion of samples. To do so, 
+the `msFilter()` function is provided. By default, `msFilter()` uses the 80% 
+rule and filters the compounds in the data set leaving only those which are
+present in 80% of the samples.
+
+```{r}
+filteredDF <- msFilter(summarizedDF,
+                       filterPercent = 0.8,
+                       compVars = c("mz", "rt"),
+                       sampleVars = c("spike", "batch", "subject_id"),
+                       separator = "_")
+```
+
+```{r, echo = FALSE}
+filteredDF[1:10, 1:6]
+```
+
+## Imputation
+
+Next, depending on the downstream analysis, you may need to impute missing data.
+Three imputation methods are provided:
+
+1. half-min (half the minimum value)
+2. bpca (Bayesian PCA), 
+3. knn (k-nearest neighbors)
+
+Half-min imputes each missing value as one half of the minimum observed value 
+for that compound. Half-min imputation performs faster than other methods, 
+but may introduce bias. The BPCA algorithm, provided by the `pcaMethods` 
+package, estimates the missing value by a linear combination
+of principle axis vectors, with the number of principle components specified by 
+the user with the `nPcs` argument. KNN uses a K-Nearest Neighbors algorithm 
+provided by the `VIM` package. Users may provide 
+their preferred value of k using the `kKnn` argument. By default, KNN 
+uses samples as neighbors, but by specifying `compoundsAsNeighbors = TRUE`, 
+compounds will be used as neighbors instead. Note that this is significantly 
+slower than using samples as neighbors and may take several minutes or more to 
+run depending on the size of your data set.
+
+```{r}
+imputedDF <- msImpute(filteredDF,
+                      imputeMethod = "knn",
+                      compVars = c("mz", "rt"),
+                      sampleVars = c("spike", "batch", "subject_id"),
+                      separator = "_",
+                      returnToSE = FALSE,
+                      missingValue = 0)
+```
+
+```{r, echo = FALSE}
+imputedDF[1:10, 1:6]
+```
+
+## Normalization
+
+In order to make comparisons between samples, the data may need to be 
+transformed and normalized This step transforms the data and performs one of 
+eight normalization strategies:
+
+1. Median
+2. ComBat
+3. Quantile
+4. Quantile + ComBat
+5. Median + ComBat
+6. CRMN
+7. RUV
+8. SVA
+
+`msNormalize()` also provides options to transform the data using a log base 10
+(default), log base 2, or natural log transformation. To select either option, 
+or to forego transformation, use the `transform` argument to specify `"log10"`, 
+`"log2"`, `"ln"`, or `"none"` respectively. 
+
+Quantile normalization, provided by the `preprocessCore` package, ensures that
+the provided samples have the same quantiles. Median normalization subtracts
+the median abundance of each sample from every compound in that sample, thereby
+aligning the median abundance of each sample at 0.
+
+ComBat, provided by the `sva` package, is an empirical Bayes batch effect
+correction algorithm to remove unwanted batch effects and may be used separately
+or in conjunction with quantile or median normalization. When using ComBat, a 
+`sampleVar` called "batch" must be present for data frames, or for 
+`SummarizedExperiment` "batch" must be present in the columns names of 
+`colData`. Or, if the sample variable corresponding to batch differs from 
+"batch", you may specify the batch variables name using the `batch` parameter.
+
+RUV and SVA normalization each estimate a matrix of unobserved factors of 
+importance using different methods of supervised factor analysis. For both 
+methods, known covariates (e.g. sex, age) should be provided using the 
+`covariatesOfInterest` parameter, and must correspond to the sample variables 
+specified by `sampleVars` in the case of a data frame or `colData` in the case 
+of a `SummarizedExperiment`. For RUV normalization, the `kRUV` argument 
+specifies the number of factors on which the data is normalized.
+
+Cross-Contribution Compensating Multiple Standard Normalization (CRMN), provided
+by the `crmn` package, normalizes based on internal standards. The sample 
+variable identifying internal standards must be provided using the
+`covariatesOfInterest` parameter. For experiments which have control compounds, 
+a vector of the row numbers containing them should be provided in the 
+controls variable. If a vector of control compounds is not provided, data driven
+controls will be generated.
+
+Below, we apply a log base 10 transformation, quantile normalization, and ComBat
+batch correction.
+
+```{r, message = FALSE, results = 'hide'}
+normalizedDF <- msNormalize(imputedDF,
+                            normalizeMethod = "quantile + ComBat",
+                            transform = "log10",
+                            compVars = c("mz", "rt"),
+                            sampleVars = c("spike", "batch", "subject_id"),
+                            covariatesOfInterest = c("spike"),
+                            separator = "_")
+```
+
+```{r, echo = FALSE}
+normalizedDF[1:10, 1:6]
+```
+
+## Pipeline
+
+Often, all the above steps will need to be conducted. This can be done in a 
+single statement using the `msPrepare()` function. Simply provide the 
+function the same arguments that you would provide to the individual functions. 
+
+```{r, message = FALSE, results = 'hide'}
+preparedDF <- msPrepare(msquant,
+                        minPropPresent = 1/3,
+                        missingValue = 1,
+                        filterPercent = 0.8,
+                        imputeMethod = "knn",
+                        normalizeMethod = "quantile + ComBat",
+                        transform = "log10",
+                        covariatesOfInterest = c("spike"),
+                        compVars = c("mz", "rt"),
+                        sampleVars = c("spike", "batch", "replicate", 
+                                       "subject_id"),
+                        colExtraText = "Neutral_Operator_Dif_Pos_",
+                        separator = "_")
+```
+
+```{r, echo = FALSE}
+preparedDF[1:10, 1:6]
+```
+
+# Example Two - Biological Data Set
+
+Next, the functionality of `MSPrep` will be demonstrated using the included data
+`COPD_131`. The raw data set can be found [here, at Metabolomics Workbench.](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438) 
+Note that only a portion of the compounds in the original `COPD_131` data set 
+are included in this package in order to limit file size and example run time.
+Generally, the number of compounds in a data set will greatly 
+exceed the number of samples, and the functions included in this package will 
+take more time to process the data.
+
+This data set differs from `msquant` in several ways. First, it has a column 
+`Compound.Name` which specifies compound names, and the mass-to-charge ratio and
+retention-time columns are named `Mass` and `Retention.Time` respectively. 
+Second, this data set does not have spike-ins or batches (but it does have 
+technical replicates). Finally, the data has already been transformed, so that 
+step of the pipeline will be excluded.
+
+## Summarizing
+
+Next, the technical replicates in `COPD_131` need to be summarized. This process
+is largely the same as before, but with different column names passed to 
+`compVars`, so `msSummarize()` is called as follows:
+
+```{r}
+summarizedSE131 <- msSummarize(COPD_131,
+                               cvMax = 0.5,
+                               minPropPresent = 1/3,
+                               replicate = "replicate",
+                               compVars = c("Mass", "Retention.Time", 
+                                            "Compound.Name"),
+                               sampleVars = c("subject_id", "replicate"),
+                               colExtraText = "X",
+                               separator = "_",
+                               returnToSE = TRUE)
+
+```
+
+```{r, echo = FALSE}
+#head(assay(summarizedSE131))
+```
+
+## Filtering
+
+Again, this process is largely the same as before, choosing a filter percentage 
+of 0.8. So, we call `msFilter()` as follows:
+
+```{r}
+filteredSE131 <- msFilter(summarizedSE131,
+                          filterPercent = 0.8)
+```
+
+```{r, echo = FALSE}
+#head(assay(filteredSE131))
+```
+
+## Imputing
+
+For this example, `msImpute()` will be called using Bayesian PCA using three 
+principle components to impute the missing values for the data.
+
+```{r}
+imputedSE131 <- msImpute(filteredSE131,
+                         imputeMethod = "bpca",
+                         nPcs = 3,
+                         missingValue = 0)
+```
+
+## Normalizing
+
+For this example, `msNormalize()` will be called using median normalization with
+no transformation applied.
+
+```{r}
+normalizedSe131 <- msNormalize(imputedSE131,
+                               normalizeMethod = "median",
+                               transform = "none")
+```
+
+```{r, echo = FALSE}
+#head(assay(imputedSE131))
+```
+
+## Pipeline
+
+As with the previous example, the above steps can be performed in a pipeline 
+using the `msPrepare()` function. To skip the normalization step of the 
+pipeline, set the `normalizeMethod` parameter to "none" (note that the same can 
+be done for `imputationMethod`).
+
+```{r}
+preparedSE <- msPrepare(COPD_131,
+                        cvMax = 0.5,
+                        minPropPresent = 1/3,
+                        compVars = c("Mass", "Retention.Time", 
+                                     "Compound.Name"),
+                        sampleVars = c("subject_id", "replicate"),
+                        colExtraText = "X",
+                        separator = "_",
+                        filterPercent = 0.8,
+                        imputeMethod = "bpca",
+                        normalizeMethod = "none",
+                        nPcs = 3,
+                        missingValue = 0,
+                        returnToSE = TRUE)
+```
+
+```{r, echo = FALSE}
+#head(assay(imputedSE131))
+```
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+

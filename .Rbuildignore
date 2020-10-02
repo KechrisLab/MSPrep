@@ -8,10 +8,10 @@ test/
 ^\.Rproj\.user$
 README.Rmd
 old_NAMESPACE
-msprep.Rmd
-msprep.md
 ^data-raw$
 readdata_session
 readdata_workspace
 old-R-scripts
 tags
+^doc$
+^Meta$
