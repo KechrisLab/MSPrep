@@ -99,6 +99,10 @@ msImpute <- function(data,
     
     imputeMethod <- match.arg(imputeMethod)
     
+    .imputeParamValidation(data, imputeMethod, kKnn, nPcs, compoundsAsNeighbors,
+                           compVars, sampleVars, colExtraText, separator, 
+                           missingValue, returnToSE, returnToDF)
+    
     if (is(data, "SummarizedExperiment")) {
         return <- .seImpute(data, imputeMethod, kKnn, nPcs, 
                             compoundsAsNeighbors, missingValue)
@@ -231,3 +235,25 @@ msImpute <- function(data,
 }
 
 .setMissingNegativeVals <- function(var) ifelse(var < 0, NA, var)
+
+.imputeParamValidation <- function(data, imputeMethod, kKnn, nPcs, 
+                                   compoundsAsNeighbors, compVars, sampleVars,
+                                   colExtraText, separator, missingValue,
+                                   returnToSE, returnToDF) {
+    
+    if (returnToSE && returnToDF) {
+        stop("Only one of returnToSE and returnToDF may be TRUE")
+    }
+    
+    if (is(data, "data.frame")) {
+        
+        .dfParamValidation(data, compVars, sampleVars, colExtraText, separator)
+        
+    } else if (is(data, "SummarizedExperiment")) {
+        
+        if (length(assays(data)) != 1) {
+            stop("Current version of MSPrep only supports one assay")
+        }
+        
+    }
+}

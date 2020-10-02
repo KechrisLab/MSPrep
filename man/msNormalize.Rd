@@ -12,7 +12,7 @@ msNormalize(
   controls = NULL,
   nComp = 2,
   kRUV = 3,
-  batch = NULL,
+  batch = "batch",
   covariatesOfInterest = NULL,
   transform = c("log10", "log2", "ln", "none"),
   compVars = c("mz", "rt"),

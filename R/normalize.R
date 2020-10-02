@@ -102,7 +102,7 @@ msNormalize <- function(data,
                                             "median + ComBat", "CRMN", "RUV",
                                             "SVA"),
                         nControl = 10, controls  = NULL, nComp = 2, kRUV = 3,
-                        batch = NULL, covariatesOfInterest = NULL,
+                        batch = "batch", covariatesOfInterest = NULL,
                         transform = c("log10", "log2", "ln", "none"),
                         compVars = c("mz", "rt"),
                         sampleVars = c("subject_id"),
@@ -113,6 +113,11 @@ msNormalize <- function(data,
     
     normalizeMethod <- match.arg(normalizeMethod)
     transform <- match.arg(transform)
+    
+    .normalizeParamValidation(data, normalizeMethod, nControl, controls, nComp,
+                              kRUV, batch, covariatesOfInterest, transform, 
+                              compVars, sampleVars, colExtraText, separator, 
+                              returnToSE, returnToDF)
     
     if (is(data, "SummarizedExperiment")) {
         return <- .seNormalize(data, normalizeMethod, nControl, controls, nComp,
@@ -453,4 +458,35 @@ msNormalize <- function(data,
                    "log2" = log2(data),
                    "ln" = log(data),
                    "none" = data)
+}
+
+.normalizeParamValidation <- function(data, normalizeMethod, nControl, controls,
+                                      nComp, kRUV, batch, covariatesOfInterest,
+                                      transform, compVars, sampleVars, 
+                                      colExtraText, separator, returnToSE, 
+                                      returnToDF) {
+    
+    c("median", "ComBat", "quantile", "quantile + ComBat", "median + ComBat", 
+      "CRMN", "RUV", "SVA")
+    
+    if (returnToSE && returnToDF) {
+        stop("Only one of returnToSE and returnToDF may be TRUE")
+    }
+    
+    if(is.null(covariatesOfInterest) && normalizeMethod %in% 
+       c("quantile + ComBat", "median + ComBat", "CRMN", "SVA")) {
+        stop("covariatesOfInterest must be included for ComBat, CRMN, and SVA")
+    }
+    
+    if (is(data, "data.frame")) {
+        
+        .dfParamValidation(data, compVars, sampleVars, colExtraText, separator)
+        
+    } else if (is(data, "SummarizedExperiment")) {
+        
+        if (length(assays(data)) != 1) {
+            stop("Current version of MSPrep only supports one assay")
+        }
+        
+    }
 }

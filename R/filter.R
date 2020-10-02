@@ -58,6 +58,10 @@ msFilter <- function(data,
                      returnToSE = FALSE,
                      returnToDF = FALSE) {
     
+    .filterParamValidation(data, filterPercent, compVars, sampleVars,
+                           colExtraText, separator, missingValue, returnToSE,
+                           returnToDF)
+    
     if (is(data, "SummarizedExperiment")) {
         rtn <- .seFilter(data, filterPercent, missingValue, returnToDF)
     } else if (is(data, "data.frame")) {
@@ -130,4 +134,30 @@ msFilter <- function(data,
                               by = compVars) %>% 
         filter(.data$keep) %>% 
         select(-.data$keep)
+}
+
+.filterParamValidation <- function(data, filterPercent, compVars, sampleVars,
+                                   colExtraText, separator, missingValue,
+                                   returnToSE, returnToDF) {
+    
+    if (returnToSE && returnToDF) {
+        stop("Only one of returnToSE and returnToDF may be TRUE")
+    }
+    
+    if (filterPercent < 0 || filterPercent > 1) {
+        stop("filterPercent must be between 0 and 1")
+    }
+    
+    if (is(data, "data.frame")) {
+        
+        .dfParamValidation(data, compVars, sampleVars, colExtraText, separator)
+        
+        
+    } else if (is(data, "SummarizedExperiment")) {
+        
+        if (length(assays(data)) != 1) {
+            stop("Current version of MSPrep only supports one assay")
+        }
+        
+    }
 }

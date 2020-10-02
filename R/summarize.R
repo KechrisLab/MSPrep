@@ -70,6 +70,10 @@ msSummarize <- function(data,
                         returnToSE = FALSE,
                         returnToDF = FALSE) {
     
+    .summarizeParamValidation(data, cvMax, minPropPresent, replicate, compVars, 
+                              sampleVars, colExtraText, separator, missingValue,
+                              returnSummaryDetails, returnToSE, returnToDF)
+    
     if (is(data, "SummarizedExperiment")) {
         return <- .seSummarize(data, cvMax, minPropPresent, replicate,
                                missingValue, returnSummaryDetails, returnToDF)
@@ -88,11 +92,6 @@ msSummarize <- function(data,
 #' @importFrom S4Vectors metadata
 .seSummarize <- function(SE, cvMax, minPropPresent, replicate, missingValue, 
                          returnSummaryDetails, returnToDF) {
-    
-    ## Check for presence of 'replicate' in column data
-    if(replicate %notin% colnames(colData(SE))) {
-        stop("'replicate' must correspond to a column name in 'colData'")
-    }
     
     ## Store existing metadata, get compVars and sampleVars (w/o replicate)
     metaData <- metadata(SE)
@@ -247,3 +246,67 @@ msSummarize <- function(data,
 }
 
 `%notin%` <- Negate(`%in%`)
+
+.summarizeParamValidation <- function(data, cvMax, minPropPresent, replicate,
+                                      compVars, sampleVars, colExtraText,
+                                      separator, missingValue,
+                                      returnSummaryDetails, returnToSE,
+                                      returnToDF) {
+    
+    if (returnToSE && returnToDF) {
+        stop("Only one of returnToSE and returnToDF may be TRUE")
+    }
+    
+    if (minPropPresent < 0 || minPropPresent > 1) {
+        stop("minPropPresent must be between 0 and 1")
+    }
+    
+    if (is(data, "data.frame")) {
+        
+        .dfParamValidation(data, compVars, sampleVars, colExtraText, separator)
+        
+        if (replicate %notin% sampleVars) {
+            stop("'replicate' must equal an element in 'sampleVars'")
+        }
+        
+    } else if (is(data, "SummarizedExperiment")) {
+        
+        if (length(assays(data)) != 1) {
+            stop("Current version of MSPrep only supports one assay")
+        }
+        
+        if (replicate %notin% colnames(colData(data))) {
+            stop("'replicate' must equal a column name in 'colData'")
+        }
+    }
+}
+
+#' @importFrom dplyr all_of
+.dfParamValidation <- function(data, compVars, sampleVars, colExtraText, 
+                               separator) {
+    
+    if (any(compVars %notin% colnames(data))) {
+        stop("Columns given by compVars not found")
+    }
+    
+    sampleColNames <- select(data, -all_of(compVars)) %>%
+        colnames()
+    
+    uniqueSampleLength <- sampleColNames
+    
+    if (!is.null(colExtraText)) {
+        uniqueSampleLength <- str_replace_all(uniqueSampleLength, 
+                                              colExtraText, "")
+    }
+    uniqueSampleLength <- strsplit(uniqueSampleLength, separator) %>%
+        lapply(length)
+    sampleVarsLength <- length(sampleVars)
+    
+    equalLengths <- all(uniqueSampleLength == sampleVarsLength)
+    
+    if(!equalLengths) {
+        stop(paste0("Number of sampleVars does not equal number indicated by ",
+                   "column names"))
+    }
+    
+}

@@ -96,6 +96,10 @@ msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
                       returnSummaryDetails = FALSE, returnToSE = FALSE,
                       returnToDF = FALSE) {
     
+    imputeMethod <- match.arg(imputeMethod)
+    normalizeMethod <- match.arg(normalizeMethod)
+    transform <- match.arg(transform)
+    
     cat("Summarizing\n")
     data <- msSummarize(data, cvMax, minPropPresent, replicate, compVars,
                         sampleVars, colExtraText, separator, missingValue,
