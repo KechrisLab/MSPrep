@@ -2,7 +2,7 @@ Package: MSPrep
 Title:
   Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics 
   Data
-Version: 0.99.0
+Version: 0.99.1
 Authors@R:
   c(person("Max", "McGrath",
            email = "max.mcgrath@ucdenver.edu",
@@ -53,7 +53,7 @@ Suggests:
   rmarkdown,
   testthat (>= 1.0.2)
 VignetteBuilder: knitr
-LazyData: true
+LazyData: false
 NeedsCompilation: no
 License: GPL-3
 biocViews: Metabolomics,

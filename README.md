@@ -7,17 +7,21 @@ LC/MS metabolomics data.
 Original manuscript published in
 [Bioinformatics](https://academic.oup.com/bioinformatics/article/30/1/133/236721)
 
-To install and use the package use the R code below.
+### Installation
 
-```{r, install-and-example}
+Install via Bioconductor:
 
-# Install package
-if (!require("devtools")) install.packages("devtools")
-devtools::install_github("KechrisLab/MSPrep")
+    if (!requireNamespace("BiocManager", quietly=TRUE))
+        install.packages("BiocManager")
+    
+    BiocManager::install("MSPrep")
 
-```
-Bug reports
-===========
+Install via Github:
+
+    if (!require("devtools")) install.packages("devtools")
+    devtools::install_github("KechrisLab/MSPrep")
+
+### Bug Reports
 
 Report bugs as issues on the [GitHub repository new
 issue](https://github.com/KechrisLab/MSPrep/issues/new)

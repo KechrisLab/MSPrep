@@ -112,7 +112,7 @@ may be ignored.
 # Example One - Technical Data Set
 
 ```{r}
-data("msquant")
+data(msquant)
 colnames(msquant)[3]
 ```
 
@@ -343,6 +343,8 @@ is largely the same as before, but with different column names passed to
 `compVars`, so `msSummarize()` is called as follows:
 
 ```{r}
+data(COPD_131)
+
 summarizedSE131 <- msSummarize(COPD_131,
                                cvMax = 0.5,
                                minPropPresent = 1/3,
@@ -404,9 +406,9 @@ normalizedSe131 <- msNormalize(imputedSE131,
 ## Pipeline
 
 As with the previous example, the above steps can be performed in a pipeline 
-using the `msPrepare()` function. To skip the normalization step of the 
-pipeline, set the `normalizeMethod` parameter to "none" (note that the same can 
-be done for `imputationMethod`).
+using the `msPrepare()` function. To skip the transformation step of the 
+pipeline, set the `transform` parameter to "none" (note that the same can 
+be done for `imputationMethod` and `normalizationMethod`).
 
 ```{r}
 preparedSE <- msPrepare(COPD_131,
@@ -419,7 +421,8 @@ preparedSE <- msPrepare(COPD_131,
                         separator = "_",
                         filterPercent = 0.8,
                         imputeMethod = "bpca",
-                        normalizeMethod = "none",
+                        normalizeMethod = "median",
+                        transform = "none",
                         nPcs = 3,
                         missingValue = 0,
                         returnToSE = TRUE)

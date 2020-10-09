@@ -1,4 +1,5 @@
 context("msFilter()")
+data(msquant)
 
 summarizedDF <- msSummarize(msquant,
                             compVars = c("mz", "rt"),

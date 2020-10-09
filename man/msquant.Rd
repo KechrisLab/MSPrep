@@ -18,7 +18,7 @@ Data frame containing 2644 observations of 56 samples
 }
 }
 \usage{
-msquant
+data(msquant)
 }
 \description{
 Data contains LC-MS samples for 2 subjects, each run with several different 

@@ -30,6 +30,7 @@
 #' Project ID PR000438. The data can be accessed directly via its Project DOI: 
 #' 10.21228/M8FC7C. This work is supported by NIH grant, U2C-DK119886.
 #' @keywords datasets
+#' @usage data(COPD_131)
 #' @examples
 #' data(COPD_131)
 "COPD_131"

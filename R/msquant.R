@@ -28,6 +28,7 @@
 #'     data. 
 #'     Bioinformatics (Oxford, England), 30(1), 133–134. 
 #'     doi:10.1093/bioinformatics/btt589
+#' @usage data(msquant)
 #' @examples
 #'   data(msquant)
 "msquant"

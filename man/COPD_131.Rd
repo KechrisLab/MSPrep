@@ -21,7 +21,7 @@ Data frame containing 662 observations of 396 samples
 \url{https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR000438}
 }
 \usage{
-COPD_131
+data(COPD_131)
 }
 \description{
 Data contains LC-MS metabolite analysis for samples from 131 subjects 
