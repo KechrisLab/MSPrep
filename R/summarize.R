@@ -298,10 +298,13 @@ msSummarize <- function(data,
         uniqueSampleLength <- str_replace_all(uniqueSampleLength, 
                                               colExtraText, "")
     }
-    uniqueSampleLength <- strsplit(uniqueSampleLength, separator) %>%
-        lapply(length)
-    sampleVarsLength <- length(sampleVars)
     
+    if (!is.null(separator)) {
+        uniqueSampleLength <- strsplit(uniqueSampleLength, separator)
+    }
+    
+    uniqueSampleLength <- lapply(uniqueSampleLength, length)
+    sampleVarsLength <- length(sampleVars)
     equalLengths <- all(uniqueSampleLength == sampleVarsLength)
     
     if(!equalLengths) {
