@@ -10,6 +10,9 @@
 #' @param kKnn Number of clusters for 'knn' method.
 #' @param nPcs Number of  principle components used for re-estimation for 
 #' 'bpca' method.
+#' @param maxIterRf Maximum number of iterations to be performed given the
+#' stopping criterion is not met beforehand for 'rf' method.
+#' @param nTreeRf Number of trees to grow in each forest for 'rf' method.
 #' @param compoundsAsNeighbors For KNN imputation. If TRUE, compounds will be 
 #' used as neighbors rather than samples. Note that using compounds as 
 #' neighbors is significantly slower than using samples.
@@ -40,6 +43,10 @@
 #'   
 #'   A. Kowarik, M. Templ (2016) Imputation with R package VIM. Journal of 
 #'   Statistical Software, 74(7), 1-16.
+#'   
+#'   Stekhoven D. J., & Buehlmann, P. (2012). MissForest - non-parametric 
+#'   missing value imputation for mixed-type data. Bioinformatics, 28(1), 
+#'   112-118.
 #'   
 #' @examples
 #' # Load, tidy, summarize, and filter example dataset
@@ -85,9 +92,11 @@
 #'
 #' @export
 msImpute <- function(data,
-                     imputeMethod = c("halfmin", "bpca", "knn"),
+                     imputeMethod = c("halfmin", "bpca", "knn", "rf"),
                      kKnn = 5, 
                      nPcs = 3, 
+                     maxIterRf = 10,
+                     nTreeRf = 100,
                      compoundsAsNeighbors = FALSE,
                      compVars = c("mz", "rt"),
                      sampleVars = c("subject_id"),
@@ -104,13 +113,13 @@ msImpute <- function(data,
                            missingValue, returnToSE, returnToDF)
     
     if (is(data, "SummarizedExperiment")) {
-        return <- .seImpute(data, imputeMethod, kKnn, nPcs, 
+        return <- .seImpute(data, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf,
                             compoundsAsNeighbors, missingValue)
         if (returnToDF) {
             return <- .seToDF(return)
         }
     } else if (is(data, "data.frame")) {
-        return <- .dfImpute(data, imputeMethod, kKnn, nPcs, 
+        return <- .dfImpute(data, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf,
                             compoundsAsNeighbors, compVars, sampleVars, 
                             missingValue)
         if (returnToSE) {
@@ -124,8 +133,8 @@ msImpute <- function(data,
     return(return)
 }
 
-.seImpute <- function(SE, imputeMethod, kKnn, nPcs, compoundsAsNeighbors,
-                      missingValue) {
+.seImpute <- function(SE, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf,
+                      compoundsAsNeighbors, missingValue) {
     
     ## Get assay from SE
     assayData <- as_tibble(assay(SE))
@@ -140,6 +149,7 @@ msImpute <- function(data,
                           "bpca" = .imputeBpca(assayData, nPcs),
                           "knn" = .imputeKnn(assayData, kKnn, 
                                              compoundsAsNeighbors),
+                          "rf" = .imputeRf(assayData, maxIterRf, nTreeRf),
                           stop("Invalid impute method - you should never see 
                                this warning."))
     
@@ -153,8 +163,9 @@ msImpute <- function(data,
 #' @importFrom dplyr mutate_all
 #' @importFrom dplyr summarise_all
 #' @importFrom dplyr bind_cols
-.dfImpute <- function(data, imputeMethod, kKnn, nPcs, compoundsAsNeighbors,
-                      compVars, sampleVars, missingValue) {
+.dfImpute <- function(data, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf,
+                      compoundsAsNeighbors, compVars, sampleVars, 
+                      missingValue) {
     
     ## Select abundance columns to impute, replace missingValue w/ NA
     abundanceColumns <- select(data, -compVars) %>%
@@ -173,6 +184,8 @@ msImpute <- function(data,
                                                nPcs = nPcs),
                           "knn" = .imputeKnn(abundanceColumns, kKnn, 
                                              compoundsAsNeighbors),
+                          "rf" = .imputeRf(abundanceColumns, maxIterRf, 
+                                           nTreeRf),
                           stop("Invalid impute method - you should never see 
                                this warning."))
     
@@ -194,6 +207,16 @@ msImpute <- function(data,
 
     data <- .halfminIfAnyNegative(data, "knn")
     
+}
+
+#' @importFrom missForest missForest
+.imputeRf <- function(data, maxIterRf, nTreeRf) {
+    transposeData <- t(data)
+    
+    imputedData <- missForest(xmis = transposeData, maxiter = maxIterRf, 
+                              ntree = nTreeRf)
+    
+    returnData <- as.data.frame(t(imputedData$ximp))
 }
 
 

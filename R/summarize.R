@@ -114,7 +114,7 @@ msSummarize <- function(data,
     ## Return data according to user preference
     rtn <- .returnSummarized(data = summarizedData, compVars = compVars,
                              sampleVars = sampleVars, metaData = metaData,
-                             returnSummaryDetail = returnSummaryDetails,
+                             returnSummaryDetails = returnSummaryDetails,
                              toSE = !returnToDF)
 }
 
@@ -133,7 +133,7 @@ msSummarize <- function(data,
     
     rtn <- .returnSummarized(data = summarizedData, compVars = compVars,
                              sampleVars = sampleVars, metaData = NULL,
-                             returnSummaryDetail = returnSummaryDetails,
+                             returnSummaryDetails = returnSummaryDetails,
                              toSE = returnToSE)
 }
 
@@ -225,15 +225,15 @@ msSummarize <- function(data,
 
 # Internal function to return data in right format and with requested metadata
 .returnSummarized <- function(data, compVars, sampleVars, metaData, 
-                              returnSummaryDetail, toSE) {
-    if (returnSummaryDetail & toSE) {
+                              returnSummaryDetails, toSE) {
+    if (returnSummaryDetails & toSE) {
         returnSE <- .tidyReturn(tidyData = data$data, compVars = compVars,
                                 metaData = metaData, sampleVars = sampleVars,
                                 toSE = toSE)
         
         metadata(returnSE)$summaryDetails <- data$summaryDetails
         return(returnSE)
-    } else if (returnSummaryDetail) {
+    } else if (returnSummaryDetails) {
         summaryData <- .tidyReturn(tidyData = data$data, compVars = compVars, 
                                    sampleVars = sampleVars, toSE = toSE)
         summaryDetails <- data$summaryDetails
@@ -298,10 +298,13 @@ msSummarize <- function(data,
         uniqueSampleLength <- str_replace_all(uniqueSampleLength, 
                                               colExtraText, "")
     }
-    uniqueSampleLength <- strsplit(uniqueSampleLength, separator) %>%
-        lapply(length)
-    sampleVarsLength <- length(sampleVars)
     
+    if (!is.null(separator)) {
+        uniqueSampleLength <- strsplit(uniqueSampleLength, separator)
+    }
+    
+    uniqueSampleLength <- lapply(uniqueSampleLength, length)
+    sampleVarsLength <- length(sampleVars)
     equalLengths <- all(uniqueSampleLength == sampleVarsLength)
     
     if(!equalLengths) {

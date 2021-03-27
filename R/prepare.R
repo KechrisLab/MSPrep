@@ -18,6 +18,9 @@
 #' @param kKnn Number of clusters for 'knn' method.
 #' @param nPcs Number of  principle components used for re-estimation for 
 #' 'bpca' method.
+#' @param maxIterRf Maximum number of iterations to be performed given the
+#' stopping criterion is not met beforehand for 'rf' method.
+#' @param nTreeRf Number of trees to grow in each forest for 'rf' method.
 #' @param compoundsAsNeighbors For KNN imputation. If TRUE, compounds will be 
 #' used as neighbors rather than samples. Note that using compounds as 
 #' neighbors is significantly slower than using samples.
@@ -82,8 +85,9 @@
 #' @export
 msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
                       filterPercent = 0.8, imputeMethod = c("halfmin", "bpca", 
-                                                          "knn", "none"),
-                      kKnn = 5, nPcs = 3, compoundsAsNeighbors = FALSE,
+                                                          "knn", "rf", "none"),
+                      kKnn = 5, nPcs = 3, maxIterRf = 10, nTreeRf = 100,
+                      compoundsAsNeighbors = FALSE,
                       normalizeMethod = c("ComBat", "quantile", 
                                           "quantile + ComBat", "median",
                                           "median + ComBat", "CRMN", "RUV",
@@ -114,9 +118,10 @@ msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
     
     if (imputeMethod != "none") {
         cat("Imputing\n")
-        data <- msImpute(data, imputeMethod, kKnn, nPcs, compoundsAsNeighbors,
-                         compVars, sampleVars, colExtraText, separator,
-                         missingValue = 0, returnToSE, returnToDF)
+        data <- msImpute(data, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf, 
+                         compoundsAsNeighbors, compVars, sampleVars, 
+                         colExtraText, separator, missingValue = 0, returnToSE, 
+                         returnToDF)
     }
     
     if (normalizeMethod != "none") {

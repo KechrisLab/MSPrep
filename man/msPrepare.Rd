@@ -9,9 +9,11 @@ msPrepare(
   cvMax = 0.5,
   minPropPresent = 1/3,
   filterPercent = 0.8,
-  imputeMethod = c("halfmin", "bpca", "knn", "none"),
+  imputeMethod = c("halfmin", "bpca", "knn", "rf", "none"),
   kKnn = 5,
   nPcs = 3,
+  maxIterRf = 10,
+  nTreeRf = 100,
   compoundsAsNeighbors = FALSE,
   normalizeMethod = c("ComBat", "quantile", "quantile + ComBat", "median",
     "median + ComBat", "CRMN", "RUV", "SVA", "none"),
@@ -55,6 +57,11 @@ and "knn" (k-nearest neighbors), or "none" to skip imputation.}
 
 \item{nPcs}{Number of  principle components used for re-estimation for 
 'bpca' method.}
+
+\item{maxIterRf}{Maximum number of iterations to be performed given the
+stopping criterion is not met beforehand for 'rf' method.}
+
+\item{nTreeRf}{Number of trees to grow in each forest for 'rf' method.}
 
 \item{compoundsAsNeighbors}{For KNN imputation. If TRUE, compounds will be 
 used as neighbors rather than samples. Note that using compounds as 
