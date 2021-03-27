@@ -3,6 +3,9 @@ context("msImpute()")
 set.seed(9999)
 data(msquant)
 
+# Note on future test to add:
+#   Check that all non-missing values remain the same after imputation
+
 preppedData <- msSummarize(msquant,
                            compVars = c("mz", "rt"),
                            sampleVars = c("spike", "batch", "replicate",
@@ -34,6 +37,14 @@ knnImputedDF <- msImpute(preppedData, imputeMethod = "knn",
                          separator = "_",
                          returnToSE = FALSE,
                          missingValue = 0)
+
+ddpcr::quiet(rfImputedDF <- msImpute(preppedData, imputeMethod = "rf",
+                         compVars = c("mz", "rt"),
+                         sampleVars = c("spike", "batch", "subject_id"),
+                         separator = "_",
+                         returnToSE = FALSE,
+                         missingValue = 0),
+             all = FALSE)
 
 # test_that("Check dataset columns", {
 # 
@@ -68,9 +79,13 @@ bpcaImputedVec <- select(bpcaImputedDF, -all_of(compVars)) %>%
 knnImputedVec <- select(knnImputedDF, -all_of(compVars)) %>%
     as.matrix() %>%
     c()
+rfImputedVec <- select(rfImputedDF, -all_of(compVars)) %>%
+    as.matrix() %>%
+    c()
 
 # Get values which were originally missing
 missingVals <- which(abundanceVec == 0)
+nonmissingVals <- which(abundanceVec != 0)
 
 test_that("Check imputations",{
     expect_true(all(hmImputedVec != 0))
@@ -78,4 +93,16 @@ test_that("Check imputations",{
     expect_true(all(knnImputedVec != 0))
     expect_true(sum(hmImputedVec[missingVals] == 
                         bpcaImputedVec[missingVals]) == 8)
+    expect_true(all(rfImputedVec != 0))
+})
+
+test_that("Check that no nonmissing values change or move", {
+    expect_true(all(abundanceVec[nonmissingVals] ==
+                        hmImputedVec[nonmissingVals]))
+    expect_true(all(abundanceVec[nonmissingVals] ==
+                        bpcaImputedVec[nonmissingVals]))
+    expect_true(all(abundanceVec[nonmissingVals] ==
+                        knnImputedVec[nonmissingVals]))
+    expect_true(all(abundanceVec[nonmissingVals] ==
+                        rfImputedVec[nonmissingVals]))
 })

@@ -46,7 +46,8 @@ Imports:
   stats,
   stringr,
   methods,
-  ddpcr
+  ddpcr,
+  missForest
 Suggests:
   BiocStyle,
   knitr,

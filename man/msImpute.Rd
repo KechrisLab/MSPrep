@@ -6,9 +6,11 @@
 \usage{
 msImpute(
   data,
-  imputeMethod = c("halfmin", "bpca", "knn"),
+  imputeMethod = c("halfmin", "bpca", "knn", "rf"),
   kKnn = 5,
   nPcs = 3,
+  maxIterRf = 10,
+  nTreeRf = 100,
   compoundsAsNeighbors = FALSE,
   compVars = c("mz", "rt"),
   sampleVars = c("subject_id"),
@@ -30,6 +32,11 @@ and "knn" (k-nearest neighbors).}
 
 \item{nPcs}{Number of  principle components used for re-estimation for 
 'bpca' method.}
+
+\item{maxIterRf}{Maximum number of iterations to be performed given the
+stopping criterion is not met beforehand for 'rf' method.}
+
+\item{nTreeRf}{Number of trees to grow in each forest for 'rf' method.}
 
 \item{compoundsAsNeighbors}{For KNN imputation. If TRUE, compounds will be 
 used as neighbors rather than samples. Note that using compounds as 
@@ -116,4 +123,8 @@ Oba, S.et al.(2003) A Bayesian missing value estimation for gene
   
   A. Kowarik, M. Templ (2016) Imputation with R package VIM. Journal of 
   Statistical Software, 74(7), 1-16.
+  
+  Stekhoven D. J., & Buehlmann, P. (2012). MissForest - non-parametric 
+  missing value imputation for mixed-type data. Bioinformatics, 28(1), 
+  112-118.
 }

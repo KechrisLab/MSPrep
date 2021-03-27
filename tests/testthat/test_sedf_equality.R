@@ -74,6 +74,14 @@ knnImputedDF <- msImpute(filteredDF, imputeMethod = "knn",
                          separator = "_",
                          returnToSE = FALSE,
                          missingValue = 0)
+set.seed(123)
+ddpcr::quiet(rfImputedDF <- msImpute(filteredDF, imputeMethod = "rf",
+                        compVars = c("mz", "rt"),
+                        sampleVars = c("spike", "batch", "subject_id"),
+                        separator = "_",
+                        returnToSE = FALSE,
+                        missingValue = 0),
+             all = FALSE)
 
 hmImputedSE <- msImpute(filteredSE, imputeMethod = "halfmin", 
                         returnToSE = TRUE,
@@ -84,6 +92,11 @@ bpcaImputedSE <- msImpute(filteredSE, imputeMethod = "bpca",
 knnImputedSE <- msImpute(filteredSE, imputeMethod = "knn",
                          returnToSE = TRUE,
                          missingValue = 0)
+set.seed(123)
+ddpcr::quiet(rfImputedSE <- msImpute(filteredSE, imputeMethod = "rf",
+                        returnToSE = TRUE,
+                        missingValue = 0),
+             all = FALSE)
 
 ## Run msNormalize with DF and SE
 ddpcr::quiet(svaNormalizedDF <- msNormalize(hmImputedDF,
@@ -222,6 +235,14 @@ test_that("Check msImpute(knn)", {
                             as.data.frame(knnImputedDF[, 1:2]))))
     expect_true(all(rownames(colData(knnImputedSE)) == 
                         colnames(knnImputedDF[3:20])))
+})
+test_that("Check msImpute(rf)", {
+    expect_true(identical(assay(rfImputedSE), 
+                          as.matrix(rfImputedDF[, 3:20])))
+    expect_true(all(all(rowData(rfImputedSE) == 
+                            as.data.frame(rfImputedDF[, 1:2]))))
+    expect_true(all(rownames(colData(rfImputedSE)) == 
+                        colnames(rfImputedDF[3:20])))
 })
 
 ## msNormalize()
