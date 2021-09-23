@@ -88,8 +88,8 @@ msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
                                                           "knn", "rf", "none"),
                       kKnn = 5, nPcs = 3, maxIterRf = 10, nTreeRf = 100,
                       compoundsAsNeighbors = FALSE,
-                      normalizeMethod = c("ComBat", "quantile", 
-                                          "quantile + ComBat", "median",
+                      normalizeMethod = c( "median", "ComBat", "quantile", 
+                                          "quantile + ComBat",
                                           "median + ComBat", "CRMN", "RUV",
                                           "SVA", "none"),
                       nControl = 10, controls  = NULL, nComp = 2, kRUV = 3,
@@ -105,12 +105,15 @@ msPrepare <- function(data, cvMax = 0.50, minPropPresent = 1/3,
     normalizeMethod <- match.arg(normalizeMethod)
     transform <- match.arg(transform)
     
-    cat("Summarizing\n")
-    data <- msSummarize(data, cvMax, minPropPresent, replicate, compVars,
-                        sampleVars, colExtraText, separator, missingValue,
-                        returnSummaryDetails)
     
-    sampleVars <- sampleVars[sampleVars != replicate]
+    if (replicate %in% sampleVars) {
+        cat("Summarizing\n")
+        data <- msSummarize(data, cvMax, minPropPresent, replicate, compVars,
+                            sampleVars, colExtraText, separator, missingValue,
+                            returnSummaryDetails)
+        
+        sampleVars <- sampleVars[sampleVars != replicate]
+    }
     
     cat("Filtering\n")  
     data <- msFilter(data, filterPercent, compVars, sampleVars, colExtraText,
