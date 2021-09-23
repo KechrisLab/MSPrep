@@ -15,7 +15,7 @@ msPrepare(
   maxIterRf = 10,
   nTreeRf = 100,
   compoundsAsNeighbors = FALSE,
-  normalizeMethod = c("ComBat", "quantile", "quantile + ComBat", "median",
+  normalizeMethod = c("median", "ComBat", "quantile", "quantile + ComBat",
     "median + ComBat", "CRMN", "RUV", "SVA", "none"),
   nControl = 10,
   controls = NULL,

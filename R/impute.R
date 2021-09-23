@@ -133,6 +133,7 @@ msImpute <- function(data,
     return(return)
 }
 
+#' @importFrom SummarizedExperiment assay<-
 .seImpute <- function(SE, imputeMethod, kKnn, nPcs, maxIterRf, nTreeRf,
                       compoundsAsNeighbors, missingValue) {
     

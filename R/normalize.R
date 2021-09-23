@@ -205,7 +205,6 @@ msNormalize <- function(data,
 #' @importFrom stats model.matrix
 #' @importFrom sva sva
 #' @importFrom tidyr separate
-#' @importFrom ddpcr quiet
 .svaFactors <- function(data, sampleVars, colExtraText, separator, 
                         covariatesOfInterest) {
     

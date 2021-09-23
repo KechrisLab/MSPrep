@@ -11,7 +11,9 @@
 #' @importFrom rlang UQ
 #' @importFrom rlang !!!
 #' @importFrom rlang syms
-#' @import SummarizedExperiment
+#' @importFrom S4Vectors metadata<-
+#' @importFrom SummarizedExperiment colData<-
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 .msTidy <- function(data,
                    compVars = c("mz", "rt"),
                    sampleVars = c("subject_id"),
@@ -46,6 +48,8 @@
 
 
 #' @importFrom SummarizedExperiment assay
+#' @importFrom SummarizedExperiment rowData
+#' @importFrom SummarizedExperiment colData
 #' @importFrom dplyr as_tibble
 #' @importFrom dplyr bind_cols
 #' @importFrom dplyr left_join

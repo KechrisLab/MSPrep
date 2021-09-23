@@ -75,13 +75,12 @@ knnImputedDF <- msImpute(filteredDF, imputeMethod = "knn",
                          returnToSE = FALSE,
                          missingValue = 0)
 set.seed(123)
-ddpcr::quiet(rfImputedDF <- msImpute(filteredDF, imputeMethod = "rf",
+rfImputedDF <- msImpute(filteredDF, imputeMethod = "rf",
                         compVars = c("mz", "rt"),
                         sampleVars = c("spike", "batch", "subject_id"),
                         separator = "_",
                         returnToSE = FALSE,
-                        missingValue = 0),
-             all = FALSE)
+                        missingValue = 0)
 
 hmImputedSE <- msImpute(filteredSE, imputeMethod = "halfmin", 
                         returnToSE = TRUE,
@@ -93,20 +92,18 @@ knnImputedSE <- msImpute(filteredSE, imputeMethod = "knn",
                          returnToSE = TRUE,
                          missingValue = 0)
 set.seed(123)
-ddpcr::quiet(rfImputedSE <- msImpute(filteredSE, imputeMethod = "rf",
+rfImputedSE <- msImpute(filteredSE, imputeMethod = "rf",
                         returnToSE = TRUE,
-                        missingValue = 0),
-             all = FALSE)
+                        missingValue = 0)
 
 ## Run msNormalize with DF and SE
-ddpcr::quiet(svaNormalizedDF <- msNormalize(hmImputedDF,
+svaNormalizedDF <- msNormalize(hmImputedDF,
                                  normalizeMethod = "SVA",
                                  compVars = c("mz", "rt"),
                                  sampleVars = c("spike", "batch", "subject_id"),
                                  covariatesOfInterest = c("spike"),
                                  separator = "_",
-                                 returnToSE = FALSE),
-             all = FALSE)
+                                 returnToSE = FALSE)
 combatNormalizedDF <- msNormalize(hmImputedDF, normalizeMethod = "ComBat", 
                                 compVars = c("mz", "rt"),
                                 sampleVars = c("spike", "batch", "subject_id"),
@@ -123,14 +120,14 @@ medianNormalizedDF <- msNormalize(hmImputedDF, normalizeMethod = "median",
                                 sampleVars = c("spike", "batch", "subject_id"),
                                 separator = "_",
                                 returnToSE = FALSE)
-ddpcr::quiet(quantCombatNormalizedDF <- msNormalize(hmImputedDF,
+quantCombatNormalizedDF <- msNormalize(hmImputedDF,
                                        normalizeMethod = "quantile + ComBat",
                                        compVars = c("mz", "rt"),
                                        sampleVars = c("spike", "batch", 
                                                       "subject_id"),
                                        covariatesOfInterest = c("spike"),
                                        separator = "_",
-                                       returnToSE = FALSE), all = FALSE)
+                                       returnToSE = FALSE)
 medCombatNormalizedDF <- msNormalize(hmImputedDF,
                                    normalizeMethod = "median + ComBat",
                                    compVars = c("mz", "rt"),
@@ -139,13 +136,13 @@ medCombatNormalizedDF <- msNormalize(hmImputedDF,
                                    covariatesOfInterest = c("spike"),
                                    separator = "_",
                                    returnToSE = FALSE)
-ddpcr::quiet(crmnNormalizedDF <- msNormalize(hmImputedDF, 
+crmnNormalizedDF <- msNormalize(hmImputedDF, 
                                 normalizeMethod = "CRMN",
                                 compVars = c("mz", "rt"),
                                 sampleVars = c("spike", "batch", "subject_id"),
                                 covariatesOfInterest = c("spike"),
                                 separator = "_",
-                                returnToSE = FALSE), all = FALSE)
+                                returnToSE = FALSE)
 ruvNormalizedDF <- msNormalize(hmImputedDF, 
                                normalizeMethod = "RUV",
                                compVars = c("mz", "rt"),
@@ -155,10 +152,9 @@ ruvNormalizedDF <- msNormalize(hmImputedDF,
                                separator = "_",
                                returnToSE = FALSE)
 
-ddpcr::quiet(svaNormalizedSE <- msNormalize(hmImputedSE,
+svaNormalizedSE <- msNormalize(hmImputedSE,
                                normalizeMethod = "SVA",
-                               covariatesOfInterest = c("spike")),
-             all = FALSE)
+                               covariatesOfInterest = c("spike"))
 combatNormalizedSE <- msNormalize(hmImputedSE, normalizeMethod = "ComBat",
                                   covariatesOfInterest = c("spike"),
                                   returnToSE = TRUE)
@@ -166,18 +162,18 @@ quantileNormalizedSE <- msNormalize(hmImputedSE, normalizeMethod = "quantile",
                                     returnToSE = TRUE)
 medNormalizedSE <- msNormalize(hmImputedSE, normalizeMethod = "median",
                                returnToSE = TRUE)
-ddpcr::quiet(quantCombatNormalizedSE <- msNormalize(hmImputedSE,
+quantCombatNormalizedSE <- msNormalize(hmImputedSE,
                                        normalizeMethod = "quantile + ComBat",
                                        covariatesOfInterest = c("spike"),
-                                       returnToSE = TRUE), all = FALSE)
+                                       returnToSE = TRUE)
 medCombatNormalizedSE <- msNormalize(hmImputedSE,
                                      normalizeMethod = "median + ComBat",
                                      covariatesOfInterest = c("spike"),
                                      returnToSE = TRUE)
-ddpcr::quiet(crmnNormalizedSE <- msNormalize(hmImputedSE, 
+crmnNormalizedSE <- msNormalize(hmImputedSE, 
                                 normalizeMethod = "CRMN",
                                 covariatesOfInterest = c("spike"),
-                                returnToSE = TRUE), all = FALSE)
+                                returnToSE = TRUE)
 ruvNormalizedSE <- msNormalize(hmImputedSE, 
                                normalizeMethod = "RUV",
                                controls = NULL,  nControl = 5, kRUV = 5,

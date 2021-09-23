@@ -74,7 +74,6 @@ msFilter <- function(data,
     
 }
 
-#' @import SummarizedExperiment
 #' @importFrom S4Vectors metadata
 .seFilter <- function(SE, filterPercent, missingValue, returnToDF) {
     

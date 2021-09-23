@@ -247,6 +247,7 @@ msSummarize <- function(data,
 
 `%notin%` <- Negate(`%in%`)
 
+#' @importFrom SummarizedExperiment assays
 .summarizeParamValidation <- function(data, cvMax, minPropPresent, replicate,
                                       compVars, sampleVars, colExtraText,
                                       separator, missingValue,

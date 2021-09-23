@@ -34,10 +34,8 @@ Imports:
   SummarizedExperiment,
   S4Vectors,
   pcaMethods (>= 1.24.0),
-  VIM,
   crmn,
   preprocessCore,
-  sva,
   dplyr (>= 0.7),
   tidyr,
   tibble (>= 1.2),
@@ -46,8 +44,9 @@ Imports:
   stats,
   stringr,
   methods,
-  ddpcr,
-  missForest
+  missForest,
+  sva,
+  VIM,
 Suggests:
   BiocStyle,
   knitr,

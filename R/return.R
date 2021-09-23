@@ -2,8 +2,8 @@
 #' @importFrom tidyr separate
 #' @importFrom dplyr select
 #' @importFrom tibble tibble
-#' @import SummarizedExperiment
 #' @importFrom magrittr %>%
+#' @importFrom SummarizedExperiment SummarizedExperiment
 ## Returns tidy data to SE or DF
 .tidyReturn <- function(tidyData, compVars, sampleVars, metaData = NULL, toSE) {
     
@@ -41,7 +41,6 @@
 #' @importFrom dplyr select
 #' @importFrom tibble tibble
 #' @importFrom magrittr %>%
-#' @import SummarizedExperiment
 ## Converts DF to SE
 .dfToSE <- function(DF, compVars, sampleVars, separator, colExtraText = NULL, 
                     metaData = NULL) {
@@ -74,7 +73,6 @@
                                 metadata = metaData)
 }
 
-#' @import SummarizedExperiment
 ## Converts SE to DF
 ## Note: Currently metadata is lost in conversion
 .seToDF <- function(SE, colExtraText = NULL, seperator = "_") {
