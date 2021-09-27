@@ -38,13 +38,12 @@ knnImputedDF <- msImpute(preppedData, imputeMethod = "knn",
                          returnToSE = FALSE,
                          missingValue = 0)
 
-ddpcr::quiet(rfImputedDF <- msImpute(preppedData, imputeMethod = "rf",
+rfImputedDF <- msImpute(preppedData, imputeMethod = "rf",
                          compVars = c("mz", "rt"),
                          sampleVars = c("spike", "batch", "subject_id"),
                          separator = "_",
                          returnToSE = FALSE,
-                         missingValue = 0),
-             all = FALSE)
+                         missingValue = 0)
 
 # test_that("Check dataset columns", {
 # 
