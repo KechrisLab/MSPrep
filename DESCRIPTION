@@ -29,7 +29,7 @@ Description:
 URL: https://github.com/KechrisLab/MSPrep
 BugReports: https://github.com/KechrisLab/MSPrep/issues
 Depends:
-  R (>= 4.0)
+  R (>= 4.1.0)
 Imports:
   SummarizedExperiment,
   S4Vectors,
@@ -60,4 +60,4 @@ biocViews: Metabolomics,
   MassSpectrometry,
   Preprocessing
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
