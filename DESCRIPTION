@@ -2,7 +2,7 @@ Package: MSPrep
 Title:
   Package for Summarizing, Filtering, Imputing, and Normalizing Metabolomics 
   Data
-Version: 1.6.0
+Version: 1.7.0
 Authors@R:
   c(person("Max", "McGrath",
            email = "max.mcgrath@ucdenver.edu",
