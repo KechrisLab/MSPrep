@@ -214,6 +214,8 @@ msImpute <- function(data,
 .imputeRf <- function(data, maxIterRf, nTreeRf) {
     transposeData <- t(data)
     
+    colnames(transposeData) <- paste0("V", 1:ncol(transposeData))
+    
     imputedData <- missForest(xmis = transposeData, maxiter = maxIterRf, 
                               ntree = nTreeRf)
     

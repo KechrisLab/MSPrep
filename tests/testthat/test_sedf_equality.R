@@ -4,7 +4,7 @@ set.seed(9997)
 
 data(msquant)
 
-se <- .dfToSE(msquant,
+se <- MSPrep:::.dfToSE(msquant,
               compVars = c("mz", "rt"),
               sampleVars = c("spike", "batch", "replicate", "subject_id"),
               colExtraText = "Neutral_Operator_Dif_Pos_",
@@ -17,9 +17,9 @@ metadata(se) <- list(test1 = "test",
                      test4 = TRUE)
 
 ## Run msTidy with SE and data frame
-tidySE <- .msTidy(se, missingValue = 1)
+tidySE <- MSPrep:::.msTidy(se, missingValue = 1)
 
-tidyDF <- .msTidy(msquant,
+tidyDF <- MSPrep:::.msTidy(msquant,
                  compVars = c("mz", "rt"),
                  sampleVars = c("spike", "batch", "replicate", "subject_id"),
                  colExtraText = "Neutral_Operator_Dif_Pos_",
@@ -136,6 +136,7 @@ medCombatNormalizedDF <- msNormalize(hmImputedDF,
                                    covariatesOfInterest = c("spike"),
                                    separator = "_",
                                    returnToSE = FALSE)
+set.seed(123)
 crmnNormalizedDF <- msNormalize(hmImputedDF, 
                                 normalizeMethod = "CRMN",
                                 compVars = c("mz", "rt"),
@@ -170,6 +171,7 @@ medCombatNormalizedSE <- msNormalize(hmImputedSE,
                                      normalizeMethod = "median + ComBat",
                                      covariatesOfInterest = c("spike"),
                                      returnToSE = TRUE)
+set.seed(123)
 crmnNormalizedSE <- msNormalize(hmImputedSE, 
                                 normalizeMethod = "CRMN",
                                 covariatesOfInterest = c("spike"),
